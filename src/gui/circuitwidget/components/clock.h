@@ -25,7 +25,7 @@
 
 class LibraryItem;
 
-class Clock : public LogicInput
+class MAINMODULE_EXPORT Clock : public LogicInput
 {
     Q_OBJECT
     Q_PROPERTY( int Freq  READ freq   WRITE setFreq   DESIGNABLE true USER true )
@@ -38,6 +38,8 @@ class Clock : public LogicInput
 
         static Component* construct( QObject* parent, QString type, QString id );
         static LibraryItem *libraryItem();
+
+        void updateStep();
         
         int freq() { return m_freq; }
         void setFreq( int freq );
@@ -47,8 +49,11 @@ class Clock : public LogicInput
     public slots:
         virtual void onbuttonclicked();
         virtual void setVChanged();
+        virtual void remove();
+
     private:
         bool m_isRunning;
+        bool m_changed;
         
         int m_step;
         int m_stepsPC;

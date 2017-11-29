@@ -26,7 +26,7 @@
 
 class LibraryItem;
 
-class Inductor : public Component, public eInductor
+class MAINMODULE_EXPORT Inductor : public Component, public eInductor
 {
     Q_OBJECT
     Q_PROPERTY( double Inductance  READ induc    WRITE setInduc   DESIGNABLE true USER true )

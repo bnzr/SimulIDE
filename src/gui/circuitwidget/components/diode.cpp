@@ -29,7 +29,7 @@ LibraryItem* Diode::libraryItem()
 {
     return new LibraryItem(
             tr( "Diode" ),
-            tr( "Passive" ),
+            tr( "Active" ),
             "diode.png",
             "Diode",
             Diode::construct);
@@ -40,12 +40,12 @@ Diode::Diode( QObject* parent, QString type, QString id )
 {
     m_ePin.resize(2);
     QString nodid = m_id;
-    nodid.append(QString("lnod"));
+    nodid.append(QString("-lPin"));
     QPoint nodpos = QPoint(-16, 0 );
     m_ePin[0] = new Pin( 180, nodpos, nodid, 0, this ); // pPin
 
     nodid = m_id;
-    nodid.append(QString("rnod"));
+    nodid.append(QString("-rPin"));
     nodpos = QPoint( 16, 0 );
     m_ePin[1] = new Pin( 0, nodpos, nodid, 1, this ); // nPin
 }

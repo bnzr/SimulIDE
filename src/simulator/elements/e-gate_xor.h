@@ -26,7 +26,7 @@
 
 #include "e-gate.h"
 
-class eXorGate : public eGate
+class MAINMODULE_EXPORT eXorGate : public eGate
 {
     public:
 

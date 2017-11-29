@@ -23,7 +23,7 @@
 #include "component.h"
 #include "pin.h"
 
-class Node : public Component
+class MAINMODULE_EXPORT Node : public Component
 {
     Q_OBJECT
     public:

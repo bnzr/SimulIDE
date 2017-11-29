@@ -25,7 +25,7 @@
 
 class LibraryItem;
 
-class Diode : public Component, public eDiode
+class MAINMODULE_EXPORT Diode : public Component, public eDiode
 {
     Q_OBJECT
     Q_PROPERTY( double threshold  READ threshold WRITE setThreshold DESIGNABLE true USER true )

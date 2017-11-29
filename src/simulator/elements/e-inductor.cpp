@@ -38,8 +38,8 @@ eInductor::~eInductor()
 
 void eInductor::initialize()
 {
-    if( m_ePin[0]->isConnected() ) m_ePin[0]->getEnode()->addToChangedSlow(this);
-    if( m_ePin[1]->isConnected() ) m_ePin[1]->getEnode()->addToChangedSlow(this);
+    if( m_ePin[0]->isConnected() ) m_ePin[0]->getEnode()->addToReactiveList(this);
+    if( m_ePin[1]->isConnected() ) m_ePin[1]->getEnode()->addToReactiveList(this);
     
     m_tStep = (double)Simulator::self()->reaClock()/1e6;
     
@@ -51,7 +51,7 @@ void eInductor::setVChanged()
 {
     double volt = m_ePin[0]->getVolt() - m_ePin[1]->getVolt();
     
-    if( volt == 0 ) return;
+    //if( volt == 0 ) return;
     //if( abs(m_volt-volt) < 1e-9 ) return;
     //m_volt = volt;
 
@@ -70,6 +70,6 @@ double eInductor::ind()
 void  eInductor::setInd( double h ) 
 { 
     m_ind = h; 
-    eResistor::setRes( m_ind/m_tStep ); 
+    eResistor::setResSafe( m_ind/m_tStep ); 
 }
 

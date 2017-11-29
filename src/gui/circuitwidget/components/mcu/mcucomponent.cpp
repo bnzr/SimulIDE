@@ -19,6 +19,7 @@
 
 #include <qstringlist.h>
 #include <QDomDocument>
+#include <QFileInfo>
 
 #include "mainwindow.h"
 #include "mcucomponent.h"
@@ -26,6 +27,7 @@
 #include "terminalwidget.h"
 #include "connector.h"
 #include "simulator.h"
+#include "simuapi_apppath.h"
 
 McuComponent* McuComponent::m_pSelf = 0l;
 bool McuComponent::m_canCreate = true;
@@ -33,21 +35,24 @@ bool McuComponent::m_canCreate = true;
 McuComponent::McuComponent( QObject* parent, QString type, QString id )
     : Package( parent, type, id )
 {    
-    m_canCreate = false;
-    m_serialTerm = false;
-    m_processor = 0l;
+    qDebug() << "        Initializing"<<m_id<<"...";
+    
+    m_canCreate  = false;
+    //m_serialTerm = false;
+    m_attached   = false;
+    m_processor  = 0l;
     m_symbolFile = "";
-    m_device = "";
+    m_device     = "";
+    m_error      = 0;
     
     // Id Label Pos set in Package::initPackage
-
     m_color = QColor( 50, 50, 70 );
 
-    QSettings settings("PicLinux", "SimulIDE");
-    m_lastFirmDir = settings.value("lastFirmDir").toString();
+    QSettings* settings = MainWindow::self()->settings();
+    m_lastFirmDir = settings->value("lastFirmDir").toString();
     
     if( m_lastFirmDir.isEmpty() )
-        m_lastFirmDir = QCoreApplication::applicationDirPath()+"/examples/mega48_adc/mega48_adc.hex";
+        m_lastFirmDir = QCoreApplication::applicationDirPath();
 }
 McuComponent::~McuComponent() {}
 
@@ -55,9 +60,9 @@ void McuComponent::initPackage()
 {
     QString compName = m_id.split("-").first(); // for example: "atmega328-1" to: "atmega328"
 
-    //qDebug() << "McuComponent::initPackage datafile: " << m_dataFile;
-
-    QFile file( QCoreApplication::applicationDirPath()+"/"+m_dataFile );
+    QString dfPath = SIMUAPI_AppPath::self()->availableDataFilePath(m_dataFile);
+    qDebug() << "McuComponent::initPackage datafile: " << compName << " <= " << dfPath;
+    QFile file(dfPath);
     if( !file.open(QFile::ReadOnly | QFile::Text) )
     {
         QMessageBox* msgBox = new QMessageBox( MainWindow::self() );
@@ -105,6 +110,7 @@ void McuComponent::initPackage()
                 
                 // Get device
                 m_device = element.attribute( "device" );
+                //qDebug()<<"McuComponent::initPackage" << "m_device" <<m_device;
                 
                 m_processor->setDevice( m_device );
                 //else qDebug() << compName << "ERROR!! McuComponent::initPackage m_processor: " << m_processor;
@@ -121,7 +127,11 @@ void McuComponent::initPackage()
         rNode = rNode.nextSibling();
     }
     if( m_device != "" ) Package::initPackage();
-    else qDebug() << compName << "ERROR!! McuComponent::initPackage Package not Found: " << package;
+    else 
+    {
+        m_error = 1;
+        qDebug() << compName << "ERROR!! McuComponent::initPackage Package not Found: " << package;
+    }
 }
 
 int McuComponent::freq()
@@ -131,7 +141,7 @@ int McuComponent::freq()
 void McuComponent::setFreq( int freq )
 { 
     if     ( freq < 0  ) freq = 0;
-    else if( freq > 50 ) freq = 50;
+    else if( freq > 100 ) freq = 100;
     
     Simulator::self()->setMcuClock( freq );
     m_freq = freq; 
@@ -147,10 +157,12 @@ void McuComponent::reset()
 
 void McuComponent::terminate()
 {
-    qDebug() <<"McuComponent::terminate "<<m_id<<"\n";
+    qDebug() <<"        Terminating"<<m_id<<"...";
     m_processor->terminate();
     for( int i=0; i<m_numpins; i++ ) m_pinList[i]->terminate();
+    m_pSelf = 0l;
     //reset();
+    qDebug() <<"     ..."<<m_id<<"Terminated\n";
 }
 
 void McuComponent::remove()
@@ -162,6 +174,7 @@ void McuComponent::remove()
         //delete mcupin;
     }
     slotCloseTerm();
+    slotCloseSerial();
     terminate();
     m_pinList.clear();
     
@@ -186,33 +199,60 @@ void McuComponent::contextMenuEvent( QGraphicsSceneContextMenuEvent* event )
     QAction* closeTerminal = menu->addAction( QIcon(":/closeterminal.png"),tr("Close Serial Monitor") );
     connect( closeTerminal, SIGNAL(triggered()), this, SLOT(slotCloseTerm()) );
 
+    QAction* openSerial = menu->addAction( QIcon(":/terminal.png"),tr("Open Serial Port.") );
+    connect( openSerial, SIGNAL(triggered()), this, SLOT(slotOpenSerial()) );
+
+    QAction* closeSerial = menu->addAction( QIcon(":/closeterminal.png"),tr("Close Serial Port") );
+    connect( closeSerial, SIGNAL(triggered()), this, SLOT(slotCloseSerial()) );
+
     menu->addSeparator();
 
     Component::contextMenu( event, menu );
     menu->deleteLater();
 }
 
+
+void McuComponent::slotOpenSerial()
+{
+    //if( m_serialTerm ) return;
+    CircuitWidget::self()->showSerialPortWidget( true );
+    m_processor->setSerPort( true );
+    //m_serialTerm = true;
+}
+
+void McuComponent::slotCloseSerial()
+{
+    CircuitWidget::self()->showSerialPortWidget( false );
+    //SerialPortWidget::self()->close();
+    m_processor->setSerPort( false );
+    //m_serialTerm = false;
+}
+
 void McuComponent::slotOpenTerm()
 {
+    //if( m_serialTerm ) return;
     TerminalWidget::self()->setVisible( true );
     m_processor->setUsart( true );
-    m_serialTerm = true;
+    //m_serialTerm = true;
 }
 
 void McuComponent::slotCloseTerm()
 {
     TerminalWidget::self()->setVisible( false );
     m_processor->setUsart( false );
-    m_serialTerm = false;
+    //m_serialTerm = false;
 }
 
 void McuComponent::slotLoad()
 {
     const QString dir = m_lastFirmDir;
     QString fileName = QFileDialog::getOpenFileName( 0l, tr("Load Firmware"), dir,
-                       tr("Hex Files (*.hex);;all files (*.*)"));
+                       tr("Hex Files (*.hex);;ELF Files (*.elf);;all files (*.*)"));
+    if (fileName.isEmpty())
+        return; // User cancels loading
 
-    load( fileName );
+    QDir circuitDir = QFileInfo(Circuit::self()->getFileName()).absoluteDir();
+    load( circuitDir.relativeFilePath(fileName) );
 }
 
 void McuComponent::slotReload()
@@ -223,26 +263,50 @@ void McuComponent::slotReload()
 
 void McuComponent::load( QString fileName )
 {
-    bool haveTerm = m_serialTerm;
-    if( m_serialTerm ) slotCloseTerm();
+    /*bool haveTerm = m_serialTerm;
+    if( m_serialTerm )
+    {
+        slotCloseTerm();
+        slotCloseSerial();
+    }*/
+
+    QDir circuitDir = QFileInfo(Circuit::self()->getFileName()).absoluteDir();
+    QString fileNameAbs = circuitDir.absoluteFilePath(fileName);
+    QString cleanPathAbs = circuitDir.cleanPath(fileNameAbs);
 
     bool pauseSim = Simulator::self()->isRunning();
     if( pauseSim )  Simulator::self()->pauseSim();
 
-    if( m_processor->loadFirmware( fileName ) )
+    if( m_processor->loadFirmware( cleanPathAbs ) )
     {
-        attachPins();
+        if( !m_attached ) attachPins();
         reset();
         
         m_symbolFile = fileName;
+        m_lastFirmDir = cleanPathAbs;
 
-        QSettings settings( "PicLinux", "SimulIDE" );   //*********  !!!!!!!!!!!!!!!!!  ****************
-        settings.setValue( "lastFirmDir", m_symbolFile );
+        QSettings* settings = MainWindow::self()->settings();
+        settings->setValue( "lastFirmDir", m_symbolFile );
     }
     else QMessageBox::warning( 0, tr("Error:"), tr("Could not load ")+ fileName );
     
     if( pauseSim ) Simulator::self()->runContinuous();
-    if( haveTerm ) slotOpenTerm();
+    //if( haveTerm ) slotOpenTerm();
+}
+
+void McuComponent::setProgram( QString pro )
+{
+    if( pro == "" ) return;
+    m_symbolFile = pro;
+
+    QDir circuitDir = QFileInfo(Circuit::self()->getFileName()).absoluteDir();
+    QString fileNameAbs = circuitDir.absoluteFilePath(m_symbolFile);
+
+    if( QFileInfo::exists( fileNameAbs )  // Load firmware at circuit load
+     && !m_processor->getLoadStatus())
+    {
+        load( m_symbolFile );
+    }
 }
 
 void McuComponent::paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* widget )

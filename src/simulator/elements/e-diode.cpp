@@ -17,8 +17,11 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <QDebug>
+
 #include "e-diode.h"
 #include "e-node.h"
+#include "simulator.h"
 
 eDiode::eDiode( std::string id ) : eResistor(id )
 {
@@ -33,6 +36,12 @@ eDiode::~eDiode()
 
 void eDiode::initialize()
 {
+    m_resist = high_imp;
+    m_converged = true;
+    m_voltPN  = 0;
+    m_deltaV  = 0;
+    m_current = 0;
+
     if( m_ePin[0]->isConnected() ) m_ePin[0]->getEnode()->addToNoLinList(this);
     if( m_ePin[1]->isConnected() ) m_ePin[1]->getEnode()->addToNoLinList(this);
     eResistor::initialize();
@@ -41,15 +50,16 @@ void eDiode::initialize()
 void eDiode::setVChanged()
 {
     m_voltPN = m_ePin[0]->getVolt()-m_ePin[1]->getVolt();
+    m_converged = true;
     
-    if( abs(m_voltPN) < 1e-9 ) m_voltPN = 0;
+    //if( abs(m_voltPN) < 1e-9 ) m_voltPN = 0;
 
     double deltaR = m_imped;
     double deltaV = m_threshold;
 
-    if( m_voltPN < m_threshold )   // Not conducing
+    if( m_voltPN <= m_threshold )   // Not conducing
     {
-        if( (m_zenerV > 0)&(m_voltPN <-m_zenerV) ) 
+        if( (m_zenerV > 0)&(m_voltPN <-m_zenerV) )
             deltaV =-m_zenerV;
         else                        
         {
@@ -63,6 +73,7 @@ void eDiode::setVChanged()
     {
         m_resist = deltaR;
         eResistor::stamp();
+        m_converged = false;
     }
     if( deltaV != m_deltaV )
     {
@@ -87,18 +98,27 @@ double eDiode::res()
 
 void eDiode::setRes( double resist )
 {
-    if( resist == 0 ) resist = 0.6;
+    bool pauseSim = Simulator::self()->isRunning();
+    if( pauseSim ) Simulator::self()->pauseSim();
+
+    if( resist == 0 ) resist = 0.1;
     m_imped = resist;
+    setVChanged();
+
+    if( pauseSim ) Simulator::self()->resumeSim();
 }
 
 void  eDiode::setZenerV( double zenerV ) 
 { 
     if( zenerV > 0 ) m_zenerV = zenerV; 
     else             m_zenerV = 0;
+    setResSafe( m_imped );
 }
 
 void eDiode::updateVI()
 {
+    //if( !m_converged ) return;
+
     if( m_resist == high_imp ) 
     {
         m_current = 0;

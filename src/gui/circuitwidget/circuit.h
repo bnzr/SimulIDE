@@ -1,4 +1,4 @@
-/***************************************************************************
+﻿/***************************************************************************
  *   Copyright (C) 2012 by santiago González                               *
  *   santigoro@gmail.com                                                   *
  *                                                                         *
@@ -28,27 +28,34 @@
 #include "pin.h"
 
 
-class Circuit : public QGraphicsScene
+class MAINMODULE_EXPORT Circuit : public QGraphicsScene
 {
     Q_OBJECT
     Q_PROPERTY( int ReactStep READ reactStep WRITE setReactStep DESIGNABLE true USER true )
+    Q_PROPERTY( int NoLinStep READ noLinStep WRITE setNoLinStep DESIGNABLE true USER true )
     Q_PROPERTY( int Speed     READ circSpeed WRITE setCircSpeed DESIGNABLE true USER true )
 
     public:
         Circuit(qreal x, qreal y, qreal width, qreal height, QGraphicsView*  parent);
         ~Circuit();
 
-        static Circuit*  self() { return m_pSelf; }
+ static Circuit*  self() { return m_pSelf; }
         
         int   reactStep();
         void  setReactStep( int steps );
+
+        int   noLinStep();
+        void  setNoLinStep( int steps );
         
         int  circSpeed();
         void setCircSpeed( int rate );
         
         void remove();
+        void saveState();
 
         void drawBackground(QPainter* painter, const QRectF &rect);
+
+        Pin* findPin( int x, int y, QString id );
 
         void loadCircuit( QString &fileName );
         bool saveCircuit( QString &fileName );
@@ -70,35 +77,58 @@ class Circuit : public QGraphicsScene
 
         void removeItems();
 
+        bool  pasting() { return m_pasting; }
+        QPointF deltaMove(){ return m_deltaMove; }
+
         QGraphicsView* widget(){ return m_widget; }
 
-    //public slots:
-    //    void setChanged();
+        const QString getFileName() const { return m_fileName; }
+
+    public slots:
+        void createSubcircuit();
+        void copy( QPointF eventpoint );
+        void paste( QPointF eventpoint );
+        void undo();
+        void redo();
+        void importCirc(  QPointF eventpoint  );
 
     protected:
         void mousePressEvent(QGraphicsSceneMouseEvent* event);
+        void mouseReleaseEvent(QGraphicsSceneMouseEvent* event);
         void mouseMoveEvent(QGraphicsSceneMouseEvent* event);
         void contextMenuEvent(QGraphicsSceneContextMenuEvent* event);
+        void keyPressEvent ( QKeyEvent * event );
 
     private:
         void loadProperties( QDomElement element, Component* Item );
-        void listToDom( QList<Component*>* complist );
+        void listToDom( QDomDocument* doc, QList<Component*>* complist );
+        void loadDomDoc(QDomDocument* doc );
+        void circuitToDom();
 
-        static Circuit*  m_pSelf;
+        QString getCompId( QString name );
+
+ static Circuit*  m_pSelf;
 
         QDomDocument m_domDoc;
+        QDomDocument m_copyDoc;
+        QString      m_fileName;
 
         QRect          m_scenerect;
         QGraphicsView* m_widget;
         Connector*     new_connector;
 
-        int  m_circRate;
         int  m_seqNumber;
         bool m_con_started;
-        //bool m_changed;
+        bool m_pasting;
+
+        QPointF m_eventpoint;
+        QPointF m_deltaMove;
 
         QList<Component*> m_compList;   // Component list
         QList<Component*> m_conList;    // Connector list
+
+        QList<QDomDocument*> m_undoStack;
+        QList<QDomDocument*> m_redoStack;
 
         Simulator simulator;
 };

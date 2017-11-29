@@ -13,9 +13,8 @@
  *   GNU General Public License for more details.                          *
  *                                                                         *
  *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *   along with this program; if not, see <http://www.gnu.org/licenses/>.  *
+ *                                                                         *
  ***************************************************************************/
 
 #include "gate_and.h"
@@ -30,7 +29,7 @@ LibraryItem* AndGate::libraryItem()
 {
     return new LibraryItem(
         tr( "And Gate" ),
-        tr( "Gates" ),
+        tr( "Logic" ),
         "andgate.png",
         "And Gate",
         AndGate::construct );
@@ -51,8 +50,6 @@ void AndGate::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidge
     p->setPen(pen);
 
     p->drawChord( -48, boundingRect().y(), 64, boundingRect().height(), -1440/*-16*90*/, 2880/*16*180*/ );
-    
-    Gate::paint( p, option, widget );            // draw inverted circle
 }
 
 #include "moc_gate_and.cpp"

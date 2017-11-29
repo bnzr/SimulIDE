@@ -36,7 +36,7 @@
 #include "e-element.h"
 #include "pin.h"
 
-class Pcd8544 : public Component, public eElement
+class MAINMODULE_EXPORT Pcd8544 : public Component, public eElement
 {
     Q_OBJECT
     
@@ -47,13 +47,13 @@ class Pcd8544 : public Component, public eElement
         static Component* construct( QObject* parent, QString type, QString id );
         static LibraryItem* libraryItem();
         
-        virtual void initialize();
-        
-        virtual void setVChanged();
+        void initialize();
+        void resetState();
+        void setVChanged();
         
         void updateStep();
         
-        virtual void paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* widget );
+        void paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* widget );
 
     public slots:
         void remove();

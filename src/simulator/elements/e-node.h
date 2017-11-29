@@ -23,7 +23,7 @@
 #include "e-pin.h"
 #include "e-element.h"
 
-class eNode
+class MAINMODULE_EXPORT eNode
 {
     public:
         eNode( QString id );
@@ -39,8 +39,8 @@ class eNode
         void addToChangedFast( eElement* el );
         void remFromChangedFast( eElement* el );
         
-        void addToChangedSlow( eElement* el );
-        void remFromChangedSlow( eElement* el );
+        void addToReactiveList( eElement* el );
+        void remFromReactiveList( eElement* el );
         
         void addToNoLinList( eElement* el );
         void remFromNoLinList( eElement* el );
@@ -69,7 +69,7 @@ class eNode
         QList<ePin*>     m_ePinList;
         QList<ePin*>     m_ePinSubList;  // Used by Connector to find connected dpins
         QList<eElement*> m_changedFast;
-        QList<eElement*> m_changedSlow;
+        QList<eElement*> m_reactiveList;
         QList<eElement*> m_nonLinear;
 
         QHash<ePin*, double> m_admitList;

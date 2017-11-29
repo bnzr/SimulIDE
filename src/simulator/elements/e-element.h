@@ -24,7 +24,15 @@
 #include "e-pin.h"
 #include <QPointer>
 
-class eElement
+// The following provides compatibility with gcc compiler v5 and up
+// (i.e. c++11 standard complience)
+//#if __GNUC__ >= 5
+ #define GNU_CONST_STATIC_FLOAT_DECLARATION constexpr
+//#else
+// #define GNU_CONST_STATIC_FLOAT_DECLARATION const
+//#endif
+
+class MAINMODULE_EXPORT eElement
 {
     public:
     eElement( std::string id=0 );
@@ -41,6 +49,7 @@ class eElement
         std::string getId(){ return m_elmId; }
 
         virtual void initialize(){;}
+        virtual void resetState(){;}
         virtual void stamp(){;}
 
         virtual void updateStep(){;}
@@ -48,12 +57,11 @@ class eElement
         
         virtual bool converged() { return m_converged; }
 
-        static const double cero_doub = 1e-14;
-        static const double high_imp = 1e14;
-        static const double digital_high = 5.0;
-        static const double digital_low = 0.0;
-        static const double digital_threshold = 2.5;
-
+        static GNU_CONST_STATIC_FLOAT_DECLARATION double cero_doub = 1e-14;
+        static GNU_CONST_STATIC_FLOAT_DECLARATION double high_imp  = 1e14;
+        static GNU_CONST_STATIC_FLOAT_DECLARATION double digital_high = 5.0;
+        static GNU_CONST_STATIC_FLOAT_DECLARATION double digital_low  = 0.0;
+        static GNU_CONST_STATIC_FLOAT_DECLARATION double digital_threshold = 2.5;
 
     protected:
         std::vector<ePin*> m_ePin;
@@ -64,4 +72,3 @@ class eElement
 };
 
 #endif
-

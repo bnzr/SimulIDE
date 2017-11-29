@@ -23,7 +23,7 @@
 #include "e-element.h"
 #include "e-source.h"
 
-class eOpAmp : public eElement
+class MAINMODULE_EXPORT eOpAmp : public eElement
 {
     public:
 

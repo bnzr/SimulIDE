@@ -1,24 +1,35 @@
+PLGN_DIR_DATA = $$PWD/resources/data
+PLGN_DIR_EXAMPLES = $$PWD/resources/examples
+
 include( ../commonplugin.pro )
+
+#system( cd $$PWD/src/simavr && make CROSS=$$_CROSS OBJ=$$_ARCH$$_BITS)
+#system( cd ../../dependencies && ./build-simavr-$$_ARCH)
 
 TARGET  = $$qtLibraryTarget(avrplugin)
 
-
-SOURCES =   avrcomponent.cpp \
-            ../avr_common/avrcomponentpin.cpp \
-            ../avr_common/avrprocessor.cpp \
+SOURCES =   $$PWD/src/*.cpp \
+            avrplugin.cpp \
+            src/read_elf.c
             
-HEADERS =   avrcomponent.h \
-            ../avr_common/avrcomponentpin.h \
-            ../avr_common/avrprocessor.h \
-            
-INCLUDEPATH += ../avr_common \
-            ../avr_common/simavr/sim 
+HEADERS =   $$PWD/src/*.h \
+            avrplugin.h
 
-DESTDIR = AVRplugin/AVRplugin_$$VERSION-$$_ARCH$$_BITS
+INCLUDEPATH += src \
+               ../../dependencies/build-$$_ARCH$$_BITS/include/simavr
+               
+RESOURCES = $$PWD/src/resources.qrc
 
-LIBS  += ../avr_common/simavr/lib-$$_ARCH$$_BITS/libsimavr.a
+LIBS  += ../../../dependencies/build-$$_ARCH$$_BITS/lib/libsimavr.a
 
-message( $$_ARCH )
+isEqual( _ARCH,"Lin") {
+    QMAKE_LIBS += -lutil
+}
+isEqual( _ARCH,"Win") {
 
+    INCLUDEPATH += ../../dependencies/build-$$_ARCH$$_BITS/include
+    QMAKE_LFLAGS += "-L../../../dependencies/build-$$_ARCH$$_BITS/lib"
+    QMAKE_LIBS += -lsimavr -lelf -lws2_32 -lwsock32 -lglibc_win
+}
 
-
+QMAKE_LIBS += -ldl

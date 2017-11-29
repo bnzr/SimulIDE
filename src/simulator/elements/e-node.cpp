@@ -37,6 +37,7 @@ eNode::~eNode(){ /*qDebug() << "~eNode" << m_id;Simulator::self()->remFromEnodeL
 
 void eNode::pinChanged( ePin* epin, int enodeComp ) // Add node at other side of pin
 {
+    //qDebug() << "eNode::pinChanged" << m_id << epin << enodeComp;
     //if( m_nodeList[epin] == m_nodeNum  ) return; // Be sure msg doesn't come from this node
     m_nodeList[epin] = enodeComp;
 }
@@ -50,7 +51,7 @@ void eNode::initialize()
     m_needFastUpdate = false;
     m_ePinSubList.clear();
     m_changedFast.clear();
-    m_changedSlow.clear();
+    m_reactiveList.clear();
     m_admitList.clear();
     m_currList.clear();
     m_nodeList.clear();
@@ -155,8 +156,8 @@ void  eNode::setVolt( double v )
         foreach( eElement* el, m_changedFast ) 
             Simulator::self()->addToChangedFast( el ); // el->setVChanged();
             
-        foreach( eElement* el, m_changedSlow ) 
-            Simulator::self()->addToChangedSlow( el );
+        foreach( eElement* el, m_reactiveList )
+            Simulator::self()->addToReactiveList( el );
             
         foreach( eElement* el, m_nonLinear ) 
             Simulator::self()->addToNoLinList( el );
@@ -170,6 +171,7 @@ QList<ePin*> eNode::getSubEpins() { return m_ePinSubList; }
 
 void eNode::addEpin( ePin* epin ) 
 { 
+    //qDebug() << "eNode::addEpin" << m_id << QString::fromStdString(epin->getId());
     if( !m_ePinList.contains(epin)) m_ePinList.append(epin); 
 }
 
@@ -201,14 +203,14 @@ void eNode::remFromChangedFast( eElement* el )
     if( m_changedFast.isEmpty() & m_nonLinear.isEmpty()) m_needFastUpdate = false;
 }
 
-void eNode::addToChangedSlow( eElement* el )   
+void eNode::addToReactiveList( eElement* el )
 { 
-    if( !m_changedSlow.contains(el) ) m_changedSlow.append(el); 
+    if( !m_reactiveList.contains(el) ) m_reactiveList.append(el);
 }
 
-void eNode::remFromChangedSlow( eElement* el ) 
+void eNode::remFromReactiveList( eElement* el )
 { 
-    m_changedSlow.removeOne(el); 
+    m_reactiveList.removeOne(el);
 }
 
 void eNode::addToNoLinList( eElement* el )

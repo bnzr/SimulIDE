@@ -41,6 +41,7 @@ McuComponentPin::McuComponentPin( McuComponent *mcuComponent, QString id, QStrin
     eSource::setVoltHigh(5);
     eSource::setOut(false);
 }
+
 McuComponentPin::~McuComponentPin()
 {
     //delete pin();
@@ -53,14 +54,18 @@ void McuComponentPin::terminate()
     m_attached = false;
 }
 
-void McuComponentPin::initialize()
+void McuComponentPin::resetState()
 {
     if( m_pinType == 1 )
     {
         //eSource::setImp( high_imp );// All  IO Pins should be inputs at start-up
         eSource::setOut(false);
+        eSource::stamp();
     }
-    
+}
+
+void McuComponentPin::initialize()
+{
     if( m_ePin[0]->isConnected() && m_attached )
         m_ePin[0]->getEnode()->addToChangedFast(this);
 

@@ -29,6 +29,7 @@ ePin::ePin( std::string id, int index )
     m_enode    = 0l;
     m_enodeCon = 0l;
     m_connected = false;
+    m_inverted   = false;
 }
 ePin::~ePin()
 {
@@ -60,6 +61,7 @@ void ePin::setEnode( eNode* enode )
 
 void ePin::setEnodeComp( eNode* enode )
 {
+    //std::cout << "\nePin::setEnodeComp "<< m_id << m_connected ;
     m_enodeCon = enode;
     int enodeConNum = 0;
     if( enode ) enodeConNum = enode->getNodeNumber();
@@ -68,7 +70,7 @@ void ePin::setEnodeComp( eNode* enode )
 
 void ePin::stampCurrent( double data )
 {
-    //qDebug() << "connected" << m_connected << data;
+    //qDebug() << "ePin::stampCurrent connected" << m_connected << data;
     if( m_connected ) m_enode->stampCurrent( this, data );
 }
 

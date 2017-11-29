@@ -23,6 +23,21 @@
 
 int main(int argc, char *argv[])
 {
+
+#ifdef _WIN32
+    QStringList paths = QCoreApplication::libraryPaths();
+    paths.append("plugins");
+    paths.append("plugins/platforms");
+    paths.append("plugins/imageformats");
+    paths.append("plugins/sqldrivers");
+    paths.append("plugins/bearer");
+    paths.append("plugins/generic");
+    paths.append("plugins/iconengines");
+    paths.append("plugins/qmltooling");
+    paths.append("plugins/printsupport");
+    QCoreApplication::setLibraryPaths(paths);
+#endif
+
     //QApplication::setGraphicsSystem( "raster" );//native, raster, opengl
     QApplication app(argc, argv);
     MainWindow window;
@@ -33,6 +48,7 @@ int main(int argc, char *argv[])
     window.move(x, y);
 
     window.show();
+    app.setApplicationVersion(APP_VERSION);
     return app.exec();
 }
 

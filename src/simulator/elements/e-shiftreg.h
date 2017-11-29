@@ -24,7 +24,7 @@
 
 #include "e-logic_device.h"
 
-class eShiftReg : public eLogicDevice
+class MAINMODULE_EXPORT eShiftReg : public eLogicDevice
 {
     public:
         eShiftReg( std::string id, int latchClk=0, int serOut=0 );
@@ -32,9 +32,13 @@ class eShiftReg : public eLogicDevice
 
         virtual void initEpins();
         virtual void initialize();
+        virtual void resetState();
         virtual void setVChanged();
         
         virtual ePin* getEpin( QString pinName );
+
+        bool resetInv() { return m_resetInv; }
+        void setResetInv( bool inv );
 
     protected:
         void createLatchClockPin();
@@ -46,6 +50,7 @@ class eShiftReg : public eLogicDevice
         bool m_latchClock;
         bool m_changed;
         bool m_reset;
+        bool m_resetInv;
         
         eSource* m_latchClockPin;
         eSource* m_serOutPin;

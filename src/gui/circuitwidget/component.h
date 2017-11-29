@@ -26,10 +26,11 @@
 
 #include "QPropertyEditorWidget.h"
 
+
 class Pin;
 class Label;
 
-class Component : public QObject, public QGraphicsItem
+class MAINMODULE_EXPORT Component : public QObject, public QGraphicsItem
 {
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
@@ -121,8 +122,9 @@ class Component : public QObject, public QGraphicsItem
         void rotateHalf();
         void H_flip();
         void V_flip();
-        void V_flip2();
         void slotRemove();
+        void slotCopy();
+        void slotProperties();
 
         virtual void remove();
 
@@ -146,6 +148,7 @@ class Component : public QObject, public QGraphicsItem
         
         int m_Hflip;
         int m_Vflip;
+ static int m_error;
 
         Label* m_idLabel;
         Label* m_valLabel;
@@ -156,9 +159,13 @@ class Component : public QObject, public QGraphicsItem
         QIcon   m_icon;
         QColor  m_color;
         QRectF  m_area;         // bounding rect
+        QPointF m_eventpoint;
 
         bool m_showId;
         bool m_showVal;
+        bool m_moving;
+        
+        std::vector<Pin*> m_pin;
 };
 
 typedef Component* (*createItemPtr)( QObject* parent, QString type, QString id );

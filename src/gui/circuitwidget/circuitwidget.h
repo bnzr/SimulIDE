@@ -27,7 +27,7 @@
 #include "plotterwidget.h"
 #include "terminalwidget.h"
 
-class CircuitWidget : public QWidget
+class MAINMODULE_EXPORT CircuitWidget : public QWidget
 {
     Q_OBJECT
 
@@ -35,17 +35,30 @@ class CircuitWidget : public QWidget
         CircuitWidget( QWidget *parent, QToolBar* toolbar );
         ~CircuitWidget();
 
+ static CircuitWidget* self() { return m_pSelf; }
+
         void clear();
 
-    public slots:
+        void setSerialPortWidget( QWidget* serialPortWidget );
 
+        void showSerialPortWidget( bool showIt );
+        
+        void writeSerialPortWidget( const QByteArray &data );
+
+    signals:
+        void dataAvailable( const QByteArray &data );
+        
     private:
+
+ static CircuitWidget*  m_pSelf;
+
         QVBoxLayout    m_verticalLayout;
         QHBoxLayout    m_horizontLayout;
         CircuitView    m_circView;
         TerminalWidget m_terminal;
         OscopeWidget   m_oscope;
         PlotterWidget  m_plotter;
+        QWidget*       m_serialPortWidget;
 };
 
 #endif

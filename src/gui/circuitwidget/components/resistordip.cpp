@@ -46,16 +46,16 @@ ResistorDip::ResistorDip( QObject* parent, QString type, QString id )
     for( int i=0; i<8; i++ )
     {
         QString reid = m_id;
-        reid.append(QString("resistor"+i));
+        reid.append(QString("-resistor"+QString::number(i)));
         m_resistor[i] = new eResistor( reid.toStdString() );
         
         QPoint pinpos = QPoint(-16,-32+8+i*8 );
-        Pin* pin = new Pin( 180, pinpos, reid+"pinP", 0, this);
+        Pin* pin = new Pin( 180, pinpos, reid+"-pinP", 0, this);
         m_resistor[i]->setEpin( 0, pin );
         m_pin[i] = pin;
         
         pinpos = QPoint( 16,-32+8+i*8 );
-        pin = new Pin( 0, pinpos, reid+"pinN", 0, this);
+        pin = new Pin( 0, pinpos, reid+"-pinN", 0, this);
         m_resistor[i]->setEpin( 1, pin );
         m_pin[8+i] = pin;
     }
@@ -78,13 +78,13 @@ void ResistorDip::setResist( double r )
 {
     Component::setValue( r );       // Takes care about units multiplier
     
-    for( int i=0; i<8; i++ ) m_resistor[i]->setRes( r*m_unitMult );
+    for( int i=0; i<8; i++ ) m_resistor[i]->setResSafe( m_value*m_unitMult );
 }
 
 void ResistorDip::setUnit( QString un ) 
 {
     Component::setUnit( un );
-    for( int i=0; i<8; i++ ) m_resistor[i]->setRes( m_value*m_unitMult );
+    for( int i=0; i<8; i++ ) m_resistor[i]->setResSafe( m_value*m_unitMult );
 }
 
 void ResistorDip::remove()
@@ -92,6 +92,8 @@ void ResistorDip::remove()
     for( int i=0; i<16; i++ )
         {if( m_pin[i]->isConnected() ) 
             {(static_cast<Pin*>(m_pin[i]))->connector()->remove();}}
+
+    foreach (eResistor* res, m_resistor ) delete res;
 
     Component::remove();
 }

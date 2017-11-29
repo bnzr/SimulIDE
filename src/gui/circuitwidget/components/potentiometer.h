@@ -28,12 +28,13 @@
 
 class LibraryItem;
 
-class Potentiometer : public Component, public eElement
+class MAINMODULE_EXPORT Potentiometer : public Component, public eElement
 {
     Q_OBJECT
-    Q_PROPERTY( double Resistance READ res     WRITE setRes     DESIGNABLE true USER true )
+    Q_PROPERTY( double  Resistance READ res     WRITE setRes    DESIGNABLE true USER true )
     Q_PROPERTY( QString Unit      READ unit    WRITE setUnit    DESIGNABLE true USER true )
     Q_PROPERTY( bool    Show_res  READ showVal WRITE setShowVal DESIGNABLE true USER true )
+    Q_PROPERTY( int     Value_Ohm  READ val     WRITE setVal    DESIGNABLE true USER true )
 
     public:
 
@@ -42,6 +43,9 @@ class Potentiometer : public Component, public eElement
 
         static Component* construct( QObject* parent, QString type, QString id );
         static LibraryItem* libraryItem();
+
+        void setVal( int val );
+        int val();
         
         void initialize();
         

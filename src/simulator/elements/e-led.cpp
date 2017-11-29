@@ -34,6 +34,20 @@ eLed::eLed( std::string id ) : eDiode( id )
 }
 eLed::~eLed() {}
 
+void eLed::initialize()
+{
+    //qDebug() << "eLed::initialize";
+    m_prevStep   = Simulator::self()->step();
+    m_lastCurrent = 0.0;
+    m_bright = 0;
+
+    disp_brightness  = 0;
+    avg_brightness   = 0;
+    lastUpdatePeriod = 0;
+
+    eDiode::initialize();
+}
+
 void eLed::setVChanged()
 {
     eDiode::setVChanged();
@@ -61,18 +75,18 @@ void eLed::updateBright()
     {
         avg_brightness = 0;
         lastUpdatePeriod = 0;
-        m_bright = 20;
+        m_bright = 40;
         return;
     }
     updateVI();
     
-    if ( lastUpdatePeriod != 0. )
+    if( lastUpdatePeriod != 0. )
     {
         disp_brightness = avg_brightness/lastUpdatePeriod;
         //qDebug() << disp_brightness << avg_brightness << lastUpdatePeriod;
         avg_brightness   = 0;
         lastUpdatePeriod = 0;
     }
-    m_bright = uint(disp_brightness*255)+20;
+    m_bright = uint(disp_brightness*255)+40;
     //qDebug() << m_bright;
 }

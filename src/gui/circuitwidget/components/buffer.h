@@ -28,7 +28,7 @@
 
 class LibraryItem;
 
-class Buffer : public Gate
+class MAINMODULE_EXPORT Buffer : public Gate
 {
     Q_OBJECT
     

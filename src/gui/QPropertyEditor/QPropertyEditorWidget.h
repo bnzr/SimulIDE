@@ -54,7 +54,7 @@ class Property;
 
 
 
-class QPropertyEditorWidget : public QTreeView
+class MAINMODULE_EXPORT QPropertyEditorWidget : public QTreeView
 {
 	Q_OBJECT
 public:

@@ -25,7 +25,7 @@
 #include "pin.h"
 
 
-class McuComponentPin : public QObject, public eSource
+class MAINMODULE_EXPORT McuComponentPin : public QObject, public eSource
 {
     Q_OBJECT
     public:
@@ -35,14 +35,16 @@ class McuComponentPin : public QObject, public eSource
         Pin* pin() const { return ( static_cast<Pin*>(m_ePin[0]) ); }
 
         virtual void initialize();
+        virtual void resetState();
         void terminate();
 
         void move( int dx, int dy );
-        //void moveLabel( int dx, int dy );
-
+        
         void resetOutput();
         
         int angle() { return m_angle;}
+        
+        QString ptype() { return m_type; }
 
     protected:
         McuComponent* m_mcuComponent;

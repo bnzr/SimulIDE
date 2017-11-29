@@ -33,7 +33,7 @@ LibraryItem* Probe::libraryItem()
 {
     return new LibraryItem(
         tr( "Probe" ),
-        tr( "Outputs" ),
+        tr( "Meters" ),
         "probe.png",
         "Probe",
         Probe::construct );
@@ -50,14 +50,14 @@ Probe::Probe( QObject* parent, QString type, QString id )
     // Create Input Pin
     m_ePin.resize(1);
     QString nodid = id;
-    nodid.append(QString("inpin"));
+    nodid.append(QString("-inpin"));
     QPoint nodpos = QPoint(-22,0);
     m_inputpin = new Pin( 180, nodpos, nodid, 0, this);
     m_inputpin->setLength( 20 );
     m_inputpin->setBoundingRect( QRect(-2, -2, 4, 4) );
     
     nodid.append( QString("-eSource") );
-    eSource* m_inSource = new eSource( nodid.toStdString(), m_inputpin );
+    m_inSource = new eSource( nodid.toStdString(), m_inputpin );
     m_inSource->setOut(false);
     m_inSource->setImp( 1e9 );
 
@@ -76,6 +76,7 @@ Probe::Probe( QObject* parent, QString type, QString id )
 }
 Probe::~Probe()
 {
+    delete m_inSource;
 }
 
 void Probe::updateStep()
@@ -129,10 +130,11 @@ void Probe::updateStep()
 void Probe::setVolt( double volt )
 {
     if( m_voltIn == volt ) return;
-    if( volt < 0.01 ) volt = 0;
 
     m_voltIn = volt;
-    int dispVolt = int(m_voltIn*100);
+
+    if( fabs(volt) < 0.01 ) volt = 0;
+    int dispVolt = int( volt*100 );
 
     //if( m_showVolt ) m_dispvolt->setPlainText( QString("%1 V").arg(double(dispVolt)/100));
     //else             m_dispvolt->setPlainText("");
@@ -141,7 +143,7 @@ void Probe::setVolt( double volt )
     //Component::setUnit( "V" );
     //Component::setValue( double(dispVolt)/100 );
 
-    if( m_plotterLine > -1 ) PlotterWidget::self()->setData(m_plotterLine, dispVolt );
+    if( m_plotterLine > -1 ) PlotterWidget::self()->setData(m_plotterLine, m_voltIn*100 );
 
     update();       // Repaint
 }
@@ -155,10 +157,8 @@ double Probe::getVolt()
 
 void Probe::remove()
 {
-    if( m_inputpin->isConnected() )
-    {
-        m_inputpin->connector()->remove();
-    }
+    if( m_inputpin->isConnected() ) m_inputpin->connector()->remove();
+
     slotOscopRem();
     slotPlotterRem();
     

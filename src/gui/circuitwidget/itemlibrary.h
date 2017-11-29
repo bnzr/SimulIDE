@@ -22,57 +22,50 @@
 
 #include "component.h"
 
-class QStringList;
-class ItemLibrary;
+//class QStringList;
 class LibraryItem;
 
-inline ItemLibrary* itemLibrary();
-
-/**
-While the program is running, only one instance of this class is created.
-You can get it by calling itemLibrary()
-@short Holds the list of Items
-@author David Saxton, Santiago Gonzalez
-*/
-class ItemLibrary
+class MAINMODULE_EXPORT ItemLibrary
 {
     public:
+        ItemLibrary();
         ~ItemLibrary();
+
+        static ItemLibrary* self() { return m_pSelf; }
 
         /**
          * Returns a list of items in the library
          */
-        QList<LibraryItem*> items() { return m_items; }
+        const QList<LibraryItem*> items() const;
 
 
         /**
          * @return the LibraryItem for the item with the given type (id) const.
          */
-        LibraryItem*  libraryItem( QString type ) const;
+        LibraryItem*  libraryItem( const QString type ) const;
+        /**
+         * @return the LibraryItem for the item with the given name const.
+         */
+        LibraryItem*  itemByName( const QString name ) const;
+
+        void addItem( LibraryItem* item );
         
         void loadItems();
         
-        void loadPlugins();
+        //void loadPlugins();
 
     
     protected:
-        ItemLibrary();
-        
+        static ItemLibrary* m_pSelf;
+
         QList<LibraryItem*> m_items;
-        QStringList m_plugins;
+        //QStringList m_plugins;
         
         friend ItemLibrary*  itemLibrary();
 };
 
-inline ItemLibrary* itemLibrary()
-{
-    // are we really sure we aren't calling new over and over again? 
-    static ItemLibrary* _itemLibrary = new ItemLibrary();
-    return _itemLibrary;
-}
 
-
-class LibraryItem
+class MAINMODULE_EXPORT LibraryItem
 {
     public:
         LibraryItem( const QString &name, const QString &category, const QString &iconName,

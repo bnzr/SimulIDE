@@ -24,7 +24,7 @@
 #include "e-element.h"
 #include "e-node.h"
 
-class eSource : public eElement
+class MAINMODULE_EXPORT eSource : public eElement
 {
     public:
         eSource( std::string id, ePin* epin );
@@ -52,6 +52,9 @@ class eSource : public eElement
         double getVolt();
 
         ePin* getEpin();
+        ePin* getEpin( QString pinName );
+
+        void  createPin();
 
     protected:
         

@@ -35,6 +35,7 @@ Connector::Connector( QObject* parent, QString type, QString id, Pin* startpin, 
     {
         m_startPin   =  startpin;
         m_startpinid = startpin->itemID();
+        setPos( startpin->scenePos() );
     }
 
     if( endpin )
@@ -74,6 +75,12 @@ void Connector::remNullLines()      // Remove lines with leght = 0 or aligned
             }
         }
     }
+    if( m_conLineList.length() < 2 )
+    {
+        m_lastindex = 0;
+        m_actLine   = 0;
+    }
+    refreshPointList();
 }
 
 void Connector::remConLine( ConnectorLine* line  )
@@ -170,6 +177,8 @@ void Connector::disconnectLines( int index1, int index2 )
 
 void Connector::updateConRoute( Pin* nod, QPointF thisPoint )
 {
+    if( Circuit::self()->pasting() ) return;
+
     int length = m_conLineList.length();
     ConnectorLine* line;
     ConnectorLine* preline = 0l;
@@ -218,9 +227,13 @@ void Connector::updateConRoute( Pin* nod, QPointF thisPoint )
             if( abs(line->dx()) > abs(line->dy()) ) point.setY( line->p1().y() );
             else                                    point.setX( line->p1().x() );
 
-            addConLine( point.x(), point.y(), line->p2().x(), line->p2().y(), m_lastindex + 1 );
+            ConnectorLine* newLine = addConLine( point.x(), point.y(), line->p2().x(), line->p2().y(), m_lastindex + 1 );
+
+            if( line->isSelected() ) newLine->setSelected( true );
 
             line->setP2( point );
+            //remNullLines();
+
         }
         else if( m_lastindex < m_actLine )      // Update first corner
         {
@@ -230,6 +243,16 @@ void Connector::updateConRoute( Pin* nod, QPointF thisPoint )
             else                     point.setX( line->p1().x() );
 
             line->setP2( point );
+
+            if( line->dx() == preline->dx() || line->dy() == preline->dy() ) // Lines aligned or null line
+            {
+                if( line->isSelected() || preline->isSelected())
+                {
+                    preline->sSetP1( line->p1() );
+                    remConLine( line  );
+                    if( m_actLine > 0 )  m_actLine -= 1;
+                }
+            }
         }
         else                                    // Update last corner
         {
@@ -239,9 +262,19 @@ void Connector::updateConRoute( Pin* nod, QPointF thisPoint )
             else                     point.setX( line->p2().x() );
 
             line->setP1( point );
+
+            if( line->dx() == preline->dx() || line->dy() == preline->dy() ) // Lines aligned or null line
+            {
+                if( line->isSelected() || preline->isSelected())
+                {
+                    preline->sSetP2( line->p2() );
+                    remConLine( line  );
+                    if( m_actLine > 0 )  m_actLine -= 1;
+                }
+            }
         }
     }
-    refreshPointList();
+    //refreshPointList();
 }
 
 void Connector::remLines()
@@ -252,6 +285,34 @@ void Connector::remLines()
         Circuit::self()->removeItem( line );
         delete line;
     }
+}
+
+
+void Connector::move( QPointF delta )
+{
+    //qDebug() << "Connector::move ..........................";
+    if( Circuit::self()->pasting() )
+    {
+        foreach( ConnectorLine* line, m_conLineList )
+            line->move( delta );
+
+        //return;
+    }
+    //else
+    //remNullLines();
+    //Component::move( delta );
+}
+
+void Connector::setSelected(  bool selected )
+{
+    //qDebug() <<"\nConnector::setSelected"<<selected;
+    foreach( ConnectorLine* line, m_conLineList )
+    {
+        line->setSelected( selected );
+        //qDebug() << line->isSelected();
+    }
+
+    Component::setSelected( selected );
 }
 
 void Connector::remove()
@@ -286,7 +347,7 @@ void Connector::closeCon( Pin* endpin )
 
     eNode* startPinEnode = m_startPin->getEnode();
     eNode* endPinEnode   = m_endPin->getEnode();
-    
+
     // We will get all ePins from stratPin and endPin nets an add to new eNode
     m_startPin->setConPin( 0l );
     m_endPin->setConPin( 0l );
@@ -324,7 +385,7 @@ void Connector::closeCon( Pin* endpin )
     m_endPin->setConPin( m_startPin );
 
     remNullLines();
-    refreshPointList();
+    //refreshPointList();
 
     if( pauseSim ) Simulator::self()->runContinuous();
 }
@@ -372,7 +433,7 @@ void Connector::updateLines()
     foreach( ConnectorLine*  line, m_conLineList ) line->update();
 }
 
-QStringList Connector::pointList()             { return m_pointList; }
+QStringList Connector::pointList()             { refreshPointList(); return m_pointList; }
 void Connector::setPointList( QStringList pl ) { /*m_pointList.clear(); */m_pointList = pl;}
 
 QString Connector::startPinId()               { return m_startpinid;}
@@ -380,7 +441,13 @@ void Connector::setStartPinId( QString pinid) { m_startpinid = pinid; }
 QString Connector::endPinId()                 { return m_endpinid; }
 void Connector::setEndPinId( QString pinid)   { m_endpinid = pinid; }
 
-QString Connector::enodId()                 { return m_startPin->getEnode()->itemId(); }
+QString Connector::enodId() {
+    eNode *node = m_startPin->getEnode();
+    // node sometimes is NULL leading to crash
+    if (node)
+        return node->itemId();
+    return "";
+}
 //void Connector::setEnodId( QString enodid ) { m_enodid = enodid; }
 
 Pin* Connector::startPin()             { return m_startPin;}

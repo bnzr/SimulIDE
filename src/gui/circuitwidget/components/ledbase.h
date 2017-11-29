@@ -24,7 +24,7 @@
 #include "e-source.h"
 #include "component.h"
 
-class LedBase : public Component, public eLed
+class MAINMODULE_EXPORT LedBase : public Component, public eLed
 {
     Q_OBJECT
     Q_PROPERTY( double threshold  READ threshold  WRITE setThreshold  DESIGNABLE true USER true )

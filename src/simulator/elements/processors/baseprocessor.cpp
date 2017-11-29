@@ -18,9 +18,11 @@
  ***************************************************************************/
 
 #include "baseprocessor.h"
+#include "circuitwidget.h"
 #include "mainwindow.h"
 #include "simulator.h"
 #include "utils.h"
+#include "simuapi_apppath.h"
 
 BaseProcessor* BaseProcessor::m_pSelf = 0l;
 
@@ -29,6 +31,7 @@ BaseProcessor::BaseProcessor( QObject* parent )
 {
     m_loadStatus = false;
     m_usartTerm  = false;
+    m_serialPort = false;
     m_ramTable   = 0l;
     m_symbolFile = "";
     m_device     = "";
@@ -39,14 +42,15 @@ BaseProcessor::~BaseProcessor()
 
 void BaseProcessor::terminate()
 {
-    qDebug() <<"\nBaseProcessor::terminate "<<m_device<<m_symbolFile<<"\n";
+    //qDebug() <<"\nBaseProcessor::terminate "<<m_device<<m_symbolFile<<"\n";
 
     if( m_ramTable )
     {
         MainWindow::self()->m_ramTabWidgetLayout->removeWidget( m_ramTable );
-        //delete m_ramTable;
+        delete m_ramTable;
         m_ramTable   = 0l;
     }
+    m_pSelf = 0l;
     m_loadStatus = false;
     m_symbolFile = "";
     //m_device     = "";
@@ -54,11 +58,12 @@ void BaseProcessor::terminate()
 
 void BaseProcessor::initialized()
 {
-    qDebug() << "\nBaseProcessor::initialized  Firmware: " << m_symbolFile;
-    qDebug() << "\nBaseProcessor::initialized Data File: " << m_dataFile;
+    //qDebug() << "\nBaseProcessor::initialized  Firmware: " << m_symbolFile;
+    //qDebug() << "\nBaseProcessor::initialized Data File: " << m_dataFile;
 
     setRegisters();
     m_loadStatus = true;
+    m_nextCycle = m_mcuStepsPT;
 
     if( m_ramTable == 0l )
     {
@@ -78,7 +83,11 @@ QString BaseProcessor::getDevice() { return m_device;}
 
 void BaseProcessor::setDataFile( QString datafile ) 
 { 
-    m_dataFile = QCoreApplication::applicationDirPath()+"/data/"+datafile+".data";
+    //QDir compSetDir( qApp->applicationDirPath() );
+    //compSetDir.cd( "../share/simulide/data" );
+    ////m_dataFile = QCoreApplication::applicationDirPath()+"/data/"+datafile+".data";
+    //m_dataFile = compSetDir.absolutePath() + datafile + ".data";
+    m_dataFile = SIMUAPI_AppPath::self()->availableDataFilePath(datafile + ".data");
 }
 
 /*void BaseProcessor::reset()
@@ -147,6 +156,19 @@ void BaseProcessor::updateRamValue( QString name )
     if( !type.contains( "8" ) ) m_ramTable->setItemValue( 2, type  );
 }
 
+
+int BaseProcessor::getRamValue( QString name )
+{
+    if( m_regsTable.isEmpty() ) return -1;
+
+    bool isNumber = false;
+    int address = name.toInt( &isNumber );      // Try to convert to integer
+
+    if( !isNumber ) {address = m_regsTable[name.toUpper()];  /* Is a register name*/}
+
+    return getRamValue( address );
+}
+
 void BaseProcessor::addWatchVar( QString name, int address, QString type )
 {
     if( !m_regsTable.contains(name) ) 
@@ -156,6 +178,63 @@ void BaseProcessor::addWatchVar( QString name, int address, QString type )
     }
 }
 
+void BaseProcessor::setRegisters()// get register addresses from data file
+{
+    QStringList lineList = fileToStringList( m_dataFile, "BaseProcessor::setRegisters" );
+
+    if( !m_regsTable.isEmpty() ) m_regsTable.clear();
+
+    foreach( QString line, lineList )
+    {
+        if( line.contains("EQU ") )   // This line contains a definition
+        {
+            line = line.replace("\t"," ");
+
+            QString name    = "";
+            QString addrtxt = "";
+            int address   = 0;
+            bool isNumber = false;
+
+            line.remove("EQU");
+            QStringList wordList = line.split(" "); // Split in words
+            name    = wordList.takeFirst();
+            while( addrtxt.isEmpty() ) addrtxt = wordList.takeFirst();
+
+            address = addrtxt.toInt( &isNumber, 10 );
+            
+            if( isNumber )        // If found a valid address add to map
+            {
+                address = validate( address );
+                addWatchVar( name, address, "u8" );        // type uint8 
+            }
+            //qDebug() << name << address<<"\n";
+        }
+    }
+}
+
+void BaseProcessor::uartOut( uint32_t value ) // Send value to OutPanelText
+{
+    if( m_usartTerm )
+    {
+        TerminalWidget::self()->uartOut( value );
+    }
+    if( m_serialPort )
+    {
+        QByteArray ba;
+        ba.resize(1);
+        ba[0] = value;
+        //ba[1] = 0;
+        CircuitWidget::self()->writeSerialPortWidget( ba );
+    }
+}
+
+void BaseProcessor::uartIn( uint32_t value ) // Receive one byte on Uart
+{
+    if( m_usartTerm )
+    {
+        TerminalWidget::self()->uartIn( value );
+    }
+}
 /*QStringList BaseProcessor::getDefsList( QString fileName )
 {
     return QStringList( getRegsTable( fileName ).uniqueKeys() );

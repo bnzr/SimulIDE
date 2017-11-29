@@ -26,7 +26,7 @@
 
 class ConnectorLine;
 
-class Connector : public Component
+class MAINMODULE_EXPORT Connector : public Component
 {
     Q_OBJECT
     Q_PROPERTY( QStringList pointList  READ pointList  WRITE setPointList )
@@ -36,7 +36,7 @@ class Connector : public Component
 
     public:
 
-        QRectF boundingRect() const { return QRect( 0, 0, 0, 0 ); }
+        QRectF boundingRect() const { return QRect( 0, 0, 1, 1 ); }
 
         Connector( QObject* parent, QString type, QString id, Pin* startpin, Pin* endpin = 0l );
         ~Connector();
@@ -100,6 +100,8 @@ class Connector : public Component
 
     public slots:
         virtual void remove();
+        virtual void move( QPointF delta );
+        virtual void setSelected( bool selected );
 
     private:
         void updateCon();

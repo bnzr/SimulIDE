@@ -21,7 +21,8 @@
 
 #include "e-shiftreg.h"
 
-eShiftReg::eShiftReg( std::string id, int latchClk, int serOut ) : eLogicDevice( id )
+eShiftReg::eShiftReg( std::string id, int latchClk, int serOut ) 
+         : eLogicDevice( id )
 {
     // input0: DS    serial data input
     // input1: MR    master reset (active LOW)
@@ -42,22 +43,22 @@ eShiftReg::eShiftReg( std::string id, int latchClk, int serOut ) : eLogicDevice(
 }
 eShiftReg::~eShiftReg()
 {
+    delete m_latchClockPin;
+    delete m_serOutPin;
 }
 
 void eShiftReg::initEpins()
 {
     createPins( 2, 8 );                           // 2 Inputs, 8 Outputs
     createClockPin();
+
+    m_input[1]->setInverted( true );// input1: master reset (active LOW)
 }
 
 void eShiftReg::initialize()
 {
-    m_shiftReg.reset();
-    m_latch.reset();
-    m_latchClock = false;
-    m_changed = false;
-    
-    eNode* enode = m_input[1]->getEpin()->getEnode(); // m_input[1] = Reset pin
+                                               // m_input[1] = Reset pin
+    eNode* enode = m_input[1]->getEpin()->getEnode(); 
     if( enode ) enode->addToChangedFast(this);
     
     if( m_latchClockPin )
@@ -65,21 +66,33 @@ void eShiftReg::initialize()
         enode = m_latchClockPin->getEpin()->getEnode();
         if( enode ) enode->addToChangedFast(this);
     }
-    if( m_serOutPin )                      // Set Serial Out Pin
+    eLogicDevice::initialize();
+}
+
+void eShiftReg::resetState()
+{
+    m_shiftReg.reset();
+    m_latch.reset();
+    m_latchClock = false;
+    m_changed = false;
+    
+    if( m_serOutPin )                              // Set Serial Out Pin
     {
         m_serOutPin->setOut( false );
         m_serOutPin->stampOutput();
     }
-
-    eLogicDevice::initialize();
+    eLogicDevice::resetState();
 }
 
 void eShiftReg::setVChanged()
 {
+    // Get Clk to don't miss any clock changes
+    bool clkRising = (eLogicDevice::getClockState() == Rising);
+
     double volt = m_input[1]->getEpin()->getVolt();   // Reset pin volt.
     
-    bool reset = (volt < m_inputLowV);        // Reset pin is active low
-    //if( m_reset & reset ) return;
+    bool reset = eLogicDevice::getInputState( 1 );// m_input[1] = Reset
+
     if( reset != m_reset  )           
     {
         m_reset = reset;
@@ -95,22 +108,22 @@ void eShiftReg::setVChanged()
         }
         m_changed = true;                      // Shift Register changed
     }
-    else if(( getClockState()==Rising )&( !reset ))   // Clock rising edge: shift bits
+    else if( clkRising && !reset )                  // Clock rising edge
     {
         // Shift bits 7-1
         for( int i=7; i>0; i-- )m_shiftReg[i] = m_shiftReg[i-1];
         
-        if( m_serOutPin )                      // Set Serial Out Pin
+        if( m_serOutPin )                          // Set Serial Out Pin
         {
             m_serOutPin->setOut( m_shiftReg[7] );
             m_serOutPin->stampOutput();
         }
         // Read data input pin & put in reg bit0
-        volt = m_input[0]->getEpin()->getVolt();  // Reset pin volt.
+        volt = m_input[0]->getEpin()->getVolt();      // Reset pin volt.
         
-        m_shiftReg[0] = (volt > m_inputHighV);// input0: serial data input
+        m_shiftReg[0] = (volt > m_inputHighV);     // input0: data input
         
-        m_changed = true;            // Shift Register changed
+        m_changed = true;                      // Shift Register changed
     }
     if( m_outEnablePin )
     {
@@ -183,4 +196,10 @@ ePin* eShiftReg::getEpin( QString pinName )
     if( pinName.contains("serialOut") ) return m_serOutPin->getEpin();
     
     return eLogicDevice::getEpin( pinName );
+}
+
+void eShiftReg::setResetInv( bool inv )
+{
+    m_resetInv = inv;
+    m_input[1]->setInverted( inv );
 }

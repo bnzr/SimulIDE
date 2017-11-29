@@ -25,7 +25,7 @@
 #include "e-element.h"
 #include "pin.h"
 
-class Hd44780 : public Component, public eElement
+class MAINMODULE_EXPORT Hd44780 : public Component, public eElement
 {
     Q_OBJECT
     Q_PROPERTY( int Cols   READ cols    WRITE setCols   DESIGNABLE true USER true )
@@ -44,10 +44,9 @@ class Hd44780 : public Component, public eElement
         int rows();
         void setRows( int rows );
         
-        virtual void initialize();
-        
-        virtual void setVChanged();
-        
+        void initialize();
+        void resetState();
+        void setVChanged();
         void updateStep();
         
         virtual void paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* widget );
@@ -56,10 +55,7 @@ class Hd44780 : public Component, public eElement
         void remove();
         
     private:
-        void reset();
-        
         void clearDDRAM();
-        void initLcd();
         void clearLcd();
         void writeData( int data );
         void proccessCommand( int command );
@@ -97,6 +93,8 @@ class Hd44780 : public Component, public eElement
         int m_input;
         
         int m_blinkStep;
+        
+        bool m_lastClock;
 
         //Inputs
         Pin* m_pinRS;

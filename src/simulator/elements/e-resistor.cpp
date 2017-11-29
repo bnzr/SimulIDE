@@ -18,6 +18,7 @@
  ***************************************************************************/
 
 #include "e-resistor.h"
+#include "simulator.h"
 
 eResistor::eResistor( std::string id ) : eElement( id )
 {
@@ -25,7 +26,9 @@ eResistor::eResistor( std::string id ) : eElement( id )
     m_current = 0;
     m_ePin.resize(2);
 }
-eResistor::~eResistor(){}
+eResistor::~eResistor(){
+    //qDebug() << "eResistor::~eResistor deleting" << QString::fromStdString( m_elmId );
+}
 
 void eResistor::initialize()
 {
@@ -45,9 +48,19 @@ double eResistor::res() { return m_resist; }
 
 void eResistor::setRes( double resist )
 {
-    if( resist == 0 ) resist = cero_doub;
+    if( resist<1e-9 ) resist = 1e-9;
     m_resist = resist;
     stamp();
+}
+
+void eResistor::setResSafe( double resist )
+{
+    bool pauseSim = Simulator::self()->isRunning();
+    if( pauseSim ) Simulator::self()->pauseSim();
+    
+    setRes( resist );
+    
+    if( pauseSim ) Simulator::self()->resumeSim();
 }
 
 double eResistor::current()

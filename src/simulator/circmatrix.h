@@ -28,7 +28,7 @@
 
 #include "e-node.h"
 
-class CircMatrix
+class MAINMODULE_EXPORT CircMatrix
 {
     public:
         CircMatrix();

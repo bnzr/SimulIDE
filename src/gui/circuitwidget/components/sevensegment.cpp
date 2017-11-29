@@ -48,6 +48,7 @@ SevenSegment::SevenSegment( QObject* parent, QString type, QString id )
     m_color = QColor(0,0,0);
     m_commonCathode = true;
     m_numDisplays = 0;
+    m_resistance = 1;
     m_area = QRect( -16, -24-1, 32, 48+2 );
 
     m_ePin.resize(8);
@@ -123,6 +124,17 @@ void SevenSegment::setCommonCathode( bool isCommonCathode )
     if( pauseSim ) Simulator::self()->runContinuous();
 }
 
+void SevenSegment::setResistance( double res )
+{
+    if( res == 0 ) res = 1;
+    m_resistance = res;
+    
+    for( uint i=0; i<m_segment.size(); i++ )
+    {
+        m_segment[i]->setRes( res );
+    }
+}
+
 void SevenSegment::initialize()
 {
     for( int i=0; i<8; i++ ) m_enode[i] = m_ePin[i]->getEnode(); // Get the actual eNode of pin i
@@ -157,9 +169,10 @@ void SevenSegment::deleteDisplay( int dispNumber )
 {
     Pin* pin = static_cast<Pin*>(m_commonPin[dispNumber]);
     if( pin->isConnected() ) pin->connector()->remove();
-    pin->deleteLater();
 
-    for( int i=0; i<8; i++ ) m_segment[dispNumber*8+i]->deleteLater();
+    //pin->deleteLater();
+
+    for( int i=0; i<8; i++ ) m_segment[dispNumber*8+i]->remove();
     Circuit::self()->update();
     update();
 }
@@ -183,8 +196,8 @@ void SevenSegment::createDisplay( int dispNumber )
         pinid = QString( 97+i );
         nodid.append(QString("-led_")).append( pinid );
         LedSmd* lsmd;
-        if( i<7 ) lsmd = new LedSmd( this, "LEDSMD", nodid, QRectF(0, 0, 13.5, 1.5) );
-        else      lsmd = new LedSmd( this, "LEDSMD", nodid, QRectF(0, 0, 1.5, 1.5) );
+        if( i<7 ) lsmd = new LedSmd( this, "LEDSMD", nodid, QRectF(0, 0, 13.5, 1.5) ); // Segment
+        else      lsmd = new LedSmd( this, "LEDSMD", nodid, QRectF(0, 0, 1.5, 1.5) );  // Point
         lsmd->setParentItem(this);
         lsmd->setEnabled(false);
         lsmd->setNumEpins(2);
@@ -211,10 +224,33 @@ void SevenSegment::createDisplay( int dispNumber )
 
 void SevenSegment::remove()
 {
-    for( int i=0; i<m_numDisplays; i++ ) deleteDisplay( i );
-    
     for( int i=0; i<8; i++ )
         if( m_ePin[i]->isConnected() ) (static_cast<Pin*>(m_ePin[i]))->connector()->remove();
+
+    for( int i=0; i<m_numDisplays; i++ )
+    {
+        int pin;
+        if( m_commonCathode )
+        {
+            for( int j=0; j<8; j++ )
+            {
+                pin = i*8+j;
+                m_cathodePin[pin]->setEnode( 0l );
+                m_anodePin[pin]->setEnode( 0l );
+            }
+        }
+        else
+        {
+            for( int j=0; j<8; j++ )
+            {
+                pin = i*8+j;
+                m_anodePin[pin]->setEnode( 0l );
+                m_cathodePin[pin]->setEnode( 0l );
+            }
+        }
+    }
+
+    for( int i=0; i<m_numDisplays; i++ ) deleteDisplay( i );
         
     Component::remove();
 }

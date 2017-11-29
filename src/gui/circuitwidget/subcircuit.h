@@ -23,7 +23,7 @@
 #include "package.h"
 #include "itemlibrary.h"
 
-class SubCircuit : public Package
+class MAINMODULE_EXPORT SubCircuit : public Package
 {
     Q_OBJECT
 
@@ -31,7 +31,7 @@ class SubCircuit : public Package
 
         SubCircuit( QObject* parent, QString type, QString id );
         ~SubCircuit();
-
+        
         static Component* construct( QObject* parent, QString type, QString id );
         static LibraryItem * libraryItem();
 

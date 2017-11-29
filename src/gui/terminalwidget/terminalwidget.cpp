@@ -25,13 +25,19 @@ TerminalWidget* TerminalWidget::m_pSelf = 0l;
 TerminalWidget::TerminalWidget( QWidget *parent )
     : QWidget( parent )
     ,m_verticalLayout(this)
-    ,m_horizontLayout()
+    ,m_sendLayout()
+    ,m_textLayout()
     ,m_sendText(this)
     ,m_sendValue(this)
-    ,m_outPanel(this)
+    ,m_uartInPanel(this)
+    ,m_uartOutPanel(this)
+    ,m_ascciButton(this)
+    ,m_valueButton(this)
 {
     m_pSelf = this;
     this->setVisible( false );
+
+    m_printASCII = true;
     
     setMinimumSize(QSize(200, 200));
     
@@ -48,20 +54,49 @@ TerminalWidget::TerminalWidget( QWidget *parent )
     m_sendValue.setMaxLength( 3 );
     m_sendValue.setMaximumWidth(40);
     m_sendValue.setValidator( new QIntValidator(0, 255, this) );
+
+    QLabel* printLabel = new QLabel(this);
+    printLabel->setText("    Print:");
+
+    m_ascciButton.setCheckable(true);
+    m_ascciButton.setForegroundRole( QPalette::BrightText );
+    m_ascciButton.setFixedSize( 50, 20 );
+    m_ascciButton.setText( " ASCII " );
+    m_ascciButton.setChecked( m_printASCII );
+
+    m_valueButton.setCheckable(true);
+    m_valueButton.setForegroundRole( QPalette::BrightText );
+    m_valueButton.setFixedSize( 50, 20 );
+    m_valueButton.setText( " Value " );
+    m_valueButton.setChecked( !m_printASCII );
     
-    m_horizontLayout.addWidget( sendTextLabel );
-    m_horizontLayout.addWidget( &m_sendText );
-    m_horizontLayout.addWidget( sendValueLabel );
-    m_horizontLayout.addWidget( &m_sendValue );
+    m_sendLayout.setSpacing(4);
+    m_sendLayout.setContentsMargins(2, 2, 4, 2);
+    m_sendLayout.addWidget( sendTextLabel );
+    m_sendLayout.addWidget( &m_sendText );
+    m_sendLayout.addWidget( sendValueLabel );
+    m_sendLayout.addWidget( &m_sendValue );
+    m_sendLayout.addWidget( printLabel );
+    m_sendLayout.addWidget( &m_ascciButton );
+    m_sendLayout.addWidget( &m_valueButton );
+    m_verticalLayout.addLayout( &m_sendLayout );
     
-    m_verticalLayout.addLayout( &m_horizontLayout );
-    m_verticalLayout.addWidget( &m_outPanel );
+    m_textLayout.addWidget( &m_uartOutPanel );
+    m_textLayout.addWidget( &m_uartInPanel );
+    m_verticalLayout.addLayout( &m_textLayout );
+
     
-    connect( &m_sendText, SIGNAL(returnPressed()),
-                    this, SLOT(onTextChanged()));
+    connect( &m_sendText, SIGNAL( returnPressed() ),
+                    this, SLOT( onTextChanged() ));
                     
-    connect( &m_sendValue, SIGNAL(returnPressed()),
-                    this, SLOT(onValueChanged()));
+    connect( &m_sendValue, SIGNAL( returnPressed() ),
+                     this, SLOT( onValueChanged() ));
+
+    connect( &m_ascciButton, SIGNAL( clicked()),
+                       this, SLOT( ascciButtonClicked()) );
+
+    connect( &m_valueButton, SIGNAL( clicked()),
+                       this, SLOT( valueButtonClicked()) );
 }
 TerminalWidget::~TerminalWidget() { }
 
@@ -76,7 +111,7 @@ void TerminalWidget::onTextChanged()
         BaseProcessor::self()->uartIn( array.at(i) );
 
     //m_sendText.clear();
-    m_outPanel.appendText( "Sent: \""+text+"\"\n" );
+   // m_outPanel.appendText( "Sent: \""+text+"\"\n" );
 }
 
 void TerminalWidget::onValueChanged()
@@ -85,9 +120,55 @@ void TerminalWidget::onValueChanged()
 
     BaseProcessor::self()->uartIn( text.toInt() );
 
-    m_sendText.clear();
+    //m_sendText.clear();
     
-    m_outPanel.appendText( "Sent: "+text+"\n" );
+   // m_outPanel.appendText( "Sent: "+text+"\n" );
+}
+
+void TerminalWidget::valueButtonClicked()
+{
+    m_printASCII = !m_valueButton.isChecked();
+    m_ascciButton.setChecked( m_printASCII );
+}
+
+void TerminalWidget::ascciButtonClicked()
+{
+    m_printASCII = m_ascciButton.isChecked();
+    m_valueButton.setChecked( !m_printASCII );
+}
+
+void TerminalWidget::step()
+{
+    m_uartInPanel.step();
+    m_uartOutPanel.step();
+}
+
+void TerminalWidget::uartIn( uint32_t value ) // Receive one byte on Uart
+{
+    QString text = "";
+    if( m_printASCII )
+    {
+        if( value == 0 ) return;
+        text.append( value );
+    }
+    else
+        text = QString::number( value )+" ";
+
+    m_uartInPanel.appendText( text );
+}
+
+void TerminalWidget::uartOut( uint32_t value ) // Send value to OutPanelText
+{
+    QString text = "";
+    if( m_printASCII )
+    {
+        if( value == 0 ) return;
+        text.append( value );
+    }
+    else
+        text = QString::number( value )+" ";
+
+    m_uartOutPanel.appendText( text );
 }
 
 

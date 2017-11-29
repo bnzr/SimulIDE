@@ -8,6 +8,7 @@
         <file alias="opencirc.png">../src/icons/mainwindow/open.png</file>
         <file alias="savecirc.png">../src/icons/mainwindow/save.png</file>
         <file alias="savecircas.png">../src/icons/mainwindow/saveas.png</file>
+        <file alias="help.png">../src/icons/mainwindow/help.png</file>
         
         <file alias="new.png">../src/icons/mainwindow/new.png</file>
         <file alias="open.png">../src/icons/mainwindow/open.png</file>
@@ -51,13 +52,12 @@
         <file alias="resistor.png">../src/icons/components/resistor.png</file>
         <file alias="voltage.png">../src/icons/components/voltage.png</file>
         <file alias="ic2.png">../src/icons/components/ic2.png</file>
+        <file alias="subc.png">../src/icons/components/subc.png</file>
         <file alias="ground.png">../src/icons/components/ground.png</file>
         <file alias="poweroff.png">../src/icons/mainwindow/poweroff.png</file>
         <file alias="poweron.png">../src/icons/mainwindow/poweron.png</file>
         <file alias="voltsource.png">../src/icons/components/voltsource.png</file>
         <file alias="capacitor.png">../src/icons/components/capacitor.png</file>
-        <file alias="arduinoUno.png">../src/icons/components/arduinoUno.png</file>
-        <file alias="arduinoNano.png">../src/icons/components/arduinoNano.png</file>
         <file alias="seven_segment.png">../src/icons/components/seven_segment.png</file>
         <file alias="switch.png">../src/icons/components/switch.png</file>
         <file alias="inductor.png">../src/icons/components/inductor.png</file>
@@ -65,18 +65,25 @@
         <file alias="andgate.png">../src/icons/components/andgate.png</file>
         <file alias="orgate.png">../src/icons/components/orgate.png</file>
         <file alias="xorgate.png">../src/icons/components/xorgate.png</file>
+        <file alias="flipflopjk.png">../src/icons/components/flipflopjk.png</file>
         <file alias="potentiometer.png">../src/icons/components/potentiometer.png</file>
         <file alias="push.png">../src/icons/components/push.png</file>
         <file alias="opamp.png">../src/icons/components/opamp.png</file>
         <file alias="pcd8544.png">../src/icons/components/pcd8544.png</file>
+        <file alias="ks0108.png">../src/icons/components/ks0108.png</file>
         <file alias="hd44780.png">../src/icons/components/hd44780.png</file>
         <file alias="mosfet.png">../src/icons/components/mosfet.png</file>
         <file alias="steeper.png">../src/icons/components/steeper.png</file>
         <file alias="clock.png">../src/icons/components/clock.png</file>
         <file alias="resistordip.png">../src/icons/components/resistordip.png</file>
         <file alias="ledbar.png">../src/icons/components/ledbar.png</file>
+        <file alias="text.png">../src/icons/components/text.png</file>
+        <file alias="voltimeter.png">../src/icons/components/voltimeter.png</file>
+        <file alias="amperimeter.png">../src/icons/components/amperimeter.png</file>
+        <file alias="servo.png">../src/icons/components/servo.png</file>
+        <file alias="relay-spst.png">../src/icons/components/relay-spst.png</file>
+        <file alias="blanc.png">../src/icons/components/blanc.png</file>
         <file alias="font2.png">../src/icons/font/font2.png</file>
         
     </qresource>
 </RCC>
-

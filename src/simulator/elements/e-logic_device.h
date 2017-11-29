@@ -1,7 +1,4 @@
 /***************************************************************************
- *   Copyright (C) 2003-2006 by David Saxton                               *
- *   david@bluehaze.org                                                    *
- *                                                                         *
  *   Copyright (C) 2010 by santiago González                               *
  *   santigoro@gmail.com                                                   *
  *                                                                         *
@@ -16,9 +13,8 @@
  *   GNU General Public License for more details.                          *
  *                                                                         *
  *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *   along with this program; if not, see <http://www.gnu.org/licenses/>.  *
+ *                                                                         *
  ***************************************************************************/
 
 #ifndef ELOGICDEVICE_H
@@ -29,12 +25,12 @@
 #include "e-source.h"
 #include "e-pin.h"
 
-#define Low     0
-#define Falling 1
-#define Rising  2
-#define High    3
+#define CLow    0
+#define Rising  1
+#define CHigh   2
+#define Falling 3
 
-class eLogicDevice : public eElement
+class MAINMODULE_EXPORT eLogicDevice : public eElement
 {
     public:
 
@@ -53,17 +49,26 @@ class eLogicDevice : public eElement
         double inputLowV() const          { return m_inputLowV; }
         void  setInputLowV( double volt ) { m_inputLowV = volt; }
 
-        double outHighV() const            { return m_outHighV; }
+        double outHighV() const           { return m_outHighV; }
         void  setOutHighV( double volt );
 
-        double outLowV() const             { return m_outLowV; }
+        double outLowV() const            { return m_outLowV; }
         void  setOutLowV( double volt );
 
-        double inputImp() const            { return m_inputImp; }
+        double inputImp() const           { return m_inputImp; }
         void  setInputImp( double imp );
 
         double outImp() const            { return m_outImp; }
         void  setOutImp( double imp );
+
+        bool clockInv() const            { return m_clockPin->isInverted(); }
+        void setClockInv( bool inv )     { m_clockPin->setInverted(inv);}
+
+        bool inverted() { return m_inverted; }
+        void setInverted( bool inverted );
+
+        bool invertInps() { return m_invInputs; }
+        void setInvertInps( bool invert );
         
         void setOutputEnabled( bool enabled );
 
@@ -76,18 +81,30 @@ class eLogicDevice : public eElement
         bool inputEnabled();
 
         virtual void initialize();
+        virtual void resetState();
 
+        virtual void createPins( int inputs, int outputs );
         void createClockPin();
         void createOutEnablePin();
         void createInEnablePin();
 
     protected:
-        virtual void createPins( int inputs, int outputs );
+        void createClockPin( ePin* epin );
+        void createClockeSource( ePin* epin );
+        void createOutEnablePin( ePin* epin );
+        void createOutEnableeSource( ePin* epin );
+        void createInEnablePin( ePin* epin );
+        void createInEnableeSource( ePin* epin );
+        void createInput( ePin* epin );
+        void createOutput( ePin* epin );
+        
         void createInputs( int inputs );
         void createOutputs( int outputs );
         void deleteInputs( int inputs );
         void deleteOutputs( int inputs );
         void setOut( int num, bool out );
+        
+        bool getInputState( int input );
 
         double m_inputHighV;
         double m_inputLowV;
@@ -103,6 +120,8 @@ class eLogicDevice : public eElement
         bool m_clock;
         bool m_outEnable;
         bool m_inEnable;
+        bool m_inverted;
+        bool m_invInputs;
 
         eSource* m_clockPin;
         eSource* m_outEnablePin;

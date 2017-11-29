@@ -24,7 +24,7 @@
 
 #include "renderarea.h"
 
-class PlotterWidget : public QWidget
+class MAINMODULE_EXPORT PlotterWidget : public QWidget
 {
     Q_OBJECT
 

@@ -20,12 +20,12 @@
 #ifndef RESISTOR_H
 #define RESISTOR_H
 
+#include "itemlibrary.h"
 #include "e-resistor.h"
 #include "pin.h"
 
-class LibraryItem;
 
-class Resistor : public Component, public eResistor
+class MAINMODULE_EXPORT Resistor : public Component, public eResistor
 {
     Q_OBJECT
     Q_PROPERTY( double Resistance READ resist   WRITE setResist  DESIGNABLE true USER true )
@@ -52,9 +52,6 @@ class Resistor : public Component, public eResistor
         void remove();
 
     private:
-        //void updateVI();
-
-        QGraphicsSimpleTextItem* m_labelcurr;
 };
 
 #endif

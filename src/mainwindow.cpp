@@ -18,22 +18,30 @@
  ***************************************************************************/
 
 #include "mainwindow.h"
+#include "appiface.h"
 #include "circuit.h"
 #include "utils.h"
+#include "simuapi_apppath.h"
 
-MainWindow *MainWindow::m_pSelf = 0l;
+
+MainWindow* MainWindow::m_pSelf = 0l;
 
 MainWindow::MainWindow()
+          : QMainWindow()
+          , m_settings( "SimulIDE", "SimulIDE-"+QString(APP_VERSION) )
 {
     setWindowIcon( QIcon(":/simulide.png") );
     m_pSelf   = this;
     m_circuit = 0l;
-    m_version = "SimulIDE-0.3.1";
+    m_version = "SimulIDE-"+QString(APP_VERSION);
+    
 
     createActions();
     createWidgets();
     createToolBars();
     readSettings();
+    
+    loadPlugins();
 
     QString appPath = QCoreApplication::applicationDirPath();
 
@@ -54,27 +62,30 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::readSettings()
 {
-    QSettings                settings( "PicLinux", m_version );
-    restoreGeometry(         settings.value("geometry" ).toByteArray());
-    restoreState(            settings.value("windowState" ).toByteArray());
-    //splitter3->restoreState( settings.value("splitter3/geometry" ).toByteArray());
-    m_Centralsplitter->restoreState( settings.value("Centralsplitter/geometry").toByteArray());
-    m_docList    =           settings.value( "lastDocs" ).toStringList();
-    m_lastCircDir =          settings.value( "lastCircDir" ).toString();
-    //m_curCirc =              settings.value( "currentCircuit" ).toString();
+    restoreGeometry(         m_settings.value("geometry" ).toByteArray());
+    restoreState(            m_settings.value("windowState" ).toByteArray());
+    m_Centralsplitter->restoreState( m_settings.value("Centralsplitter/geometry").toByteArray());
+    m_docList    =           m_settings.value( "lastDocs" ).toStringList();
+    m_lastCircDir =          m_settings.value( "lastCircDir" ).toString();
+    //m_curCirc =              m_settings.value( "currentCircuit" ).toString();
 }
 
 void MainWindow::writeSettings()
 {
-    // $HOME/.config/PicLinux/simulide.conf
-    QSettings settings("PicLinux", m_version);
-    settings.setValue( "geometry", saveGeometry() );
-    settings.setValue( "windowState", saveState() );
-    //settings.setValue( "splitter3/geometry", splitter3->saveState() );
-    settings.setValue( "Centralsplitter/geometry", m_Centralsplitter->saveState() );
-    settings.setValue( "lastDocs", m_docList );
-    settings.setValue( "lastCircDir", m_lastCircDir );
-    //settings.setValue( "currentCircuit", m_curCirc );
+    m_settings.setValue( "geometry", saveGeometry() );
+    m_settings.setValue( "windowState", saveState() );
+    m_settings.setValue( "Centralsplitter/geometry", m_Centralsplitter->saveState() );
+    m_settings.setValue( "lastDocs", m_docList );
+    m_settings.setValue( "lastCircDir", m_lastCircDir );
+    //m_settings.setValue( "currentCircuit", m_curCirc );
+    foreach( QTreeWidgetItem* item, components->findItems("",Qt::MatchStartsWith)  )
+    {
+        MainWindow::self()->settings()->setValue( item->text(0)+"/collapsed", !item->isExpanded() );
+        for( int j=0; j<item->childCount(); j++ )
+        {
+            MainWindow::self()->settings()->setValue( item->child(j)->text(0)+"/collapsed", !item->child(j)->isExpanded() );
+        }
+    }
 }
 
 void MainWindow::newCircuit()
@@ -135,6 +146,10 @@ bool MainWindow::saveCircAs()
     }
     return saved;
 }
+void MainWindow::openInfo()
+{
+    QDesktopServices::openUrl(QUrl("http://simulide.blogspot.com"));
+}
 
 void MainWindow::powerCirc()
 {
@@ -150,7 +165,7 @@ void MainWindow::powerCircOn()
 }
 void MainWindow::powerCircOff()
 {
-    if( Simulator::self()->isRunning() )
+    //if( Simulator::self()->isRunning() )
     {
         powerCircAct->setIcon(QIcon(":/poweroff.png"));
         powerCircAct->setIconText("Off");
@@ -214,11 +229,11 @@ void MainWindow::createWidgets()
     m_circuit->setObjectName(QString::fromUtf8("circuit"));
     m_Centralsplitter->addWidget( m_circuit );
 
-    m_editorWindow = new EditorWindow( this );
-    m_Centralsplitter->addWidget( m_editorWindow );
+    //m_editorWindow = new EditorWindow( this );
+    //m_Centralsplitter->addWidget( m_editorWindow );
     
     m_rateLabel = new QLabel( this );
-    m_rateLabel->setText( "Real Speed: 0 Hz" );
+    m_rateLabel->setText( "Real Speed: 0 %" );
 
     baseWidgetLayout->addWidget( m_Centralsplitter, 0, 0 );
 
@@ -231,9 +246,7 @@ void MainWindow::createWidgets()
     //splitter3->setSizes( sizes );
 
     this->showMaximized();
-
 }
-
 
 void MainWindow::createActions()
 {
@@ -260,6 +273,11 @@ void MainWindow::createActions()
     powerCircAct->setStatusTip(tr("Power the Circuit"));
     powerCircAct->setIconText("Off");
     connect(powerCircAct, SIGNAL(triggered()), this, SLOT(powerCirc()));
+    
+    infoAct = new QAction(QIcon(":/help.png"),tr("Online Help"), this);
+    infoAct->setStatusTip(tr("Online Help"));
+    infoAct->setIconText("Off");
+    connect(infoAct, SIGNAL(triggered()), this, SLOT(openInfo()));
 }
 
 void MainWindow::createToolBars()
@@ -273,6 +291,108 @@ void MainWindow::createToolBars()
     m_circToolBar->addAction(powerCircAct);
     m_circToolBar->addSeparator();//..........................
     m_circToolBar->addWidget( m_rateLabel );
+
+    QWidget *spacerWidget = new QWidget(this);
+    spacerWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    spacerWidget->setVisible(true);
+    m_circToolBar->addWidget(spacerWidget);
+    m_circToolBar->addAction(infoAct);
+    m_circToolBar->addSeparator();//..........................
+}
+
+#define STRING(s) #s
+#define STRING_MACRO(arg) STRING(arg)
+
+void MainWindow::loadPlugins()
+{
+    //m_plugins.clear();
+    QDir pluginsDir( qApp->applicationDirPath() );
+
+    pluginsDir.cd( "../lib/simulide/plugins" );
+
+    qDebug() << "\n    Loading Plugins at:\n"<<pluginsDir.absolutePath()<<"\n";
+
+    QString pluginName = "*plugin";
+    QString pluginNameSuff = "";
+#ifndef Q_OS_UNIX
+#ifdef      QT_DEBUG
+    pluginNameSuff += "d";
+#endif      //QT_DEBUG
+#ifdef      APP_VERSION
+    //VER_MAJ;
+    #if QT_VERSION < QT_VERSION_CHECK(5, 7, 0)
+    pluginNameSuff += "0"; // If APP_VERSION become >= 1 just patch it there
+    #else
+    pluginNameSuff += QString::number(QVersionNumber::fromString(APP_VERSION).majorVersion());
+    #endif
+#endif      //APP_VERSION
+#endif  //Q_OS_UNIX
+    pluginName += pluginNameSuff;
+    QString exeExtention = STRING_MACRO(QT_EXTENSION_SHLIB);
+#ifdef Q_OS_UNIX
+    if (exeExtention.isEmpty())
+        exeExtention = "so";
+#endif
+    if (!exeExtention.isEmpty())
+    {
+        pluginName += ".";
+        pluginName += exeExtention;
+    }
+
+    pluginsDir.setNameFilters( QStringList(pluginName) );
+
+    foreach( QString libName, pluginsDir.entryList( QDir::Files ) )
+    {
+        pluginName = libName.split(".").first().remove("lib").remove("plugin").toUpper();
+        if (!pluginNameSuff.isEmpty())
+            pluginName = pluginName.remove(pluginNameSuff.toUpper());
+        if( m_plugins.contains(pluginName) ) continue;
+
+        QPluginLoader* pluginLoader = new QPluginLoader( pluginsDir.absoluteFilePath( libName ) );
+        QObject* plugin = pluginLoader->instance();
+
+        if( plugin )
+        {
+            AppIface* item = qobject_cast<AppIface*>( plugin );
+
+            if( item )
+            {
+                item->initialize();
+                m_plugins[pluginName] = pluginLoader;
+                qDebug()<< "        Plugin Loaded Successfully:\t" << pluginName;
+            }
+            else
+            {
+                pluginLoader->unload();
+                delete pluginLoader;
+            }
+        }
+        else
+        {
+            QString errorMsg = pluginLoader->errorString();
+            qDebug()<< "        " << pluginName << "\tplugin FAILED: " << errorMsg;
+
+            if( errorMsg.contains( "libQt5SerialPort" ) )
+                errorMsg = " Qt5SerialPort is not installed in your system\n\n    Mcu SerialPort will not work\n    Just Install libQt5SerialPort package\n    To have Mcu Serial Port Working";
+
+            QMessageBox::warning( 0,"App Plugin Error:", errorMsg );
+        }
+    }
+    qDebug() << "\n";
+}
+
+void MainWindow::unLoadPugin( QString pluginName )
+{
+    if( m_plugins.contains( pluginName ) )
+    {
+        QPluginLoader* pluginLoader = m_plugins[pluginName];
+        QObject* plugin = pluginLoader->instance();
+        AppIface* item = qobject_cast<AppIface*>( plugin );
+        item->terminate();
+        pluginLoader->unload();
+        m_plugins.remove( pluginName );
+        delete pluginLoader;
+    }
 }
 
 void MainWindow::applyStile()

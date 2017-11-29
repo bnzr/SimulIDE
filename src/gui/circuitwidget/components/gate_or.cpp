@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2010 by santiago González                               *
+ *   Copyright (C) 2012 by santiago González                               *
  *   santigoro@gmail.com                                                   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -13,11 +13,9 @@
  *   GNU General Public License for more details.                          *
  *                                                                         *
  *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *   along with this program; if not, see <http://www.gnu.org/licenses/>.  *
+ *                                                                         *
  ***************************************************************************/
-
 #include "gate_or.h"
 #include "itemlibrary.h"
 
@@ -31,7 +29,7 @@ LibraryItem* OrGate::libraryItem()
 {
     return new LibraryItem(
         tr( "Or Gate" ),
-        tr( "Gates" ),
+        tr( "Logic" ),
         "orgate.png",
         "Or Gate",
         OrGate::construct );
@@ -72,8 +70,6 @@ void OrGate::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget
     p->drawPath(path);
 
     // Draw curves
-    //Component::paint( p, option, widget );
-
     
     pen.setWidth(2);
     p->setPen(pen);
@@ -85,8 +81,6 @@ void OrGate::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget
 
     // Input side arc
     p->drawArc( -24, y_orig, 9, height, -1440/*-16*90*/, 2880/*16*180*/ );
-    
-    Gate::paint( p, option, widget );            // draw inverted circle
 }
 
 #include "moc_gate_or.cpp"

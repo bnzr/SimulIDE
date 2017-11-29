@@ -26,6 +26,8 @@ LedBase::LedBase( QObject* parent, QString type, QString id )
     : Component( parent, type, id ), eLed( id.toStdString() )
 {
     m_grounded = false;
+    m_ground   = 0l;
+    m_scrEnode = 0l;
     
     m_color = QColor( Qt::black );
     
@@ -50,11 +52,9 @@ bool LedBase::grounded()
 
 void LedBase::setGrounded( bool grounded )
 {
-    
-    //m_ePin[0]->setEnodeComp( 0l );
-    //m_ePin[1]->setEnode( 0l );
-    //m_ePin[1]->setConnected(true);
-    
+    bool pauseSim = Simulator::self()->isRunning();
+    if( pauseSim ) Simulator::self()->pauseSim();
+
     if( grounded )
     {
         if( m_grounded ) return;
@@ -80,24 +80,31 @@ void LedBase::setGrounded( bool grounded )
         if( !m_grounded ) return;
         
         Pin* pin1 = (static_cast<Pin*>(m_ePin[1]));
-        if( m_ePin[1]->isConnected() ) pin1->connector()->remove();
+        //if( m_ePin[1]->isConnected() ) pin1->connector()->remove();
         pin1->setEnabled( true );
         pin1->setVisible( true );
         
         delete m_ground;
         delete m_scrEnode;
+
+        m_ground = 0l;
+        m_scrEnode = 0l;
         
         m_ePin[1]->setEnode( 0l );
     }
     m_grounded = grounded;
+
+    if( pauseSim ) Simulator::self()->runContinuous();
 }
 
 void LedBase::remove()
 {
-    if( m_ePin[0]->isConnected() ) 
+    if( m_ePin[0] && m_ePin[0]->isConnected() )
         (static_cast<Pin*>(m_ePin[0]))->connector()->remove();
-    if(( m_ePin[1]->isConnected() )&( !m_grounded )) 
+    if(( m_ePin[1] && m_ePin[1]->isConnected() )&( !m_grounded ))
         (static_cast<Pin*>(m_ePin[1]))->connector()->remove();
+
+    if( m_ground )   delete m_ground;
     
     Simulator::self()->remFromUpdateList( this ); 
     
@@ -119,10 +126,10 @@ void LedBase::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidge
         pen.setColor( QColor( Qt::white ));
     }
 
-    int overBight = 50;
-    if( m_bright > 20 )
+    int overBight = 100;
+    if( m_bright > 40 )
     {
-        m_bright += 30;                          // Set a Minimun Bright
+        m_bright += 10;                          // Set a Minimun Bright
         if( m_bright > 255 ) 
         {
             overBight += m_bright-255;

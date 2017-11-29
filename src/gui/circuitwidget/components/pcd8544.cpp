@@ -90,7 +90,10 @@ void Pcd8544::initialize()
     
     enode = m_pRst.getEnode();       // Register for Rst changes callback
     if( enode ) enode->addToChangedFast(this); 
-    
+}
+
+void Pcd8544::resetState()
+{
     clearDDRAM();
     clearLcd();
     reset() ;
@@ -106,8 +109,8 @@ void Pcd8544::setVChanged()               // Called when Scl Pin changes
     }
     if( m_pCs.getVolt()>1.6 )           // Cs Pin High: Lcd not selected
     {
-        m_cinBuf = 0;                   // Initialize serial buffer
-        m_inBit   = 0;
+        m_cinBuf = 0;                        // Initialize serial buffer
+        m_inBit  = 0;
         return;
     }
     if( m_pScl.getVolt()<1.6 )            // This is an Scl Falling Edge

@@ -24,7 +24,7 @@
 #include "e-element.h"
 
 
-class Package : public Component, public eElement
+class MAINMODULE_EXPORT Package : public Component, public eElement
 {
     Q_OBJECT
 
@@ -48,7 +48,6 @@ class Package : public Component, public eElement
         virtual void initPackage();
 
         int   m_numpins;
-        //QList<eSource*> m_pinList;
 
         QString m_dataFile;     // file containig package defs
 };

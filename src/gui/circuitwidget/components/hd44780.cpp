@@ -68,7 +68,7 @@ Hd44780::Hd44780( QObject* parent, QString type, QString id )
     setLabelPos( 70,-82, 0);
     setShowId( true );
     
-    initLcd();
+    resetState();
 }
 
 Hd44780::~Hd44780()
@@ -80,12 +80,13 @@ void Hd44780::initialize()
     eNode* enode = m_pinEn->getEnode();// Register for clk changes callback
     if( enode ) enode->addToChangedFast(this);
     
-    initLcd();
+    resetState();
 }
 
-void Hd44780::initLcd()
+void Hd44780::resetState()
 {
-    //qDebug() << "Hd44780::initLcd()" ;
+    //qDebug() << "Hd44780::resetState()" ;
+    m_lastClock = false;
     m_cursPos     = 0;
     m_shiftPos    = 0;
     m_direction   = 1;
@@ -110,9 +111,18 @@ void Hd44780::initLcd()
 }
 void Hd44780::setVChanged()             // Called when clock Pin changes 
 {
-    if( m_pinEn->getVolt()>2.5 ) return; // This is a Clock Rising Edge
-    
-    if( m_dataLength == 8 )    //Read input
+    if( m_pinEn->getVolt()>2.5 )                      // Clk Pin is High
+    {
+        m_lastClock = true;
+        return; 
+    }
+    else                                               // Clk Pin is Low
+    {
+        if( m_lastClock == false ) return;         // Not a Falling edge
+        m_lastClock = false;
+    }
+                                   // We Had  a Falling Edge: Read input
+    if( m_dataLength == 8 )                                // 8 bit mode
     {
         m_input = 0;
         
@@ -120,7 +130,7 @@ void Hd44780::setVChanged()             // Called when clock Pin changes
             if( m_dataPin[pin]->getVolt()>2.5 )
                 m_input += pow( 2, pin );
     }
-    else                                               // 4 bit mode
+    else                                                   // 4 bit mode
     {
         if( m_nibble == 0 )                          // Read high nibble
         {
@@ -171,14 +181,14 @@ void Hd44780::writeData( int data )
 void Hd44780::proccessCommand( int command )
 {
     //qDebug() << "Hd44780::proccessCommand: " << command;
-    if( command<2 )   { clearLcd();             return; } //00000001 //Clear display           //Clears display and returns cursor to the home position (address 0).//1.52 ms
-    if( command<4 )   { cursorHome();           return; } //0000001. //Cursor home             //Returns cursor to home position. Also returns display being shifted to the original position. DDRAM content remains unchanged.//1.52 ms
-    if( command<8 )   { entryMode( command );   return; } //000001.. //Entry mode set          //Sets cursor move direction (I/D); specifies to shift the display (S). These operations are performed during data read/write.//37 μs
-    if( command<16 )  { dispControl( command ); return; } //00001... //Display on/off          //Sets on/off of all display (D), cursor on/off (C), and blink of cursor position character (B).//37 μs
-    if( command<32 )  { C_D_Shift( command );   return; } //0001.... //Cursor/display shift    //Sets cursor-move or display-shift (S/C), shift direction (R/L). DDRAM content remains unchanged//37 μs
-    if( command<64 )  { functionSet( command ); return; } //001..... //Function set            //Sets interface data length (DL), number of display line (N), and character font (F)//37 μs
-    if( command<128 ) { setCGaddr( command );   return; } //01...... //Set CGRAM address       //Sets the CGRAM address. CGRAM data are sent and received after this setting//37 μs
-    if( command<192 ) { setDDaddr( command );   return; } //1....... //Set DDRAM address       //Sets the DDRAM address. DDRAM data are sent and received after this setting.//37 μs
+    if( command<2 )   { clearLcd();               return; } //00000001 //Clear display           //Clears display and returns cursor to the home position (address 0).//1.52 ms
+    if( command<4 )   { cursorHome();             return; } //0000001. //Cursor home             //Returns cursor to home position. Also returns display being shifted to the original position. DDRAM content remains unchanged.//1.52 ms
+    if( command<8 )   { entryMode( command );     return; } //000001.. //Entry mode set          //Sets cursor move direction (I/D); specifies to shift the display (S). These operations are performed during data read/write.//37 μs
+    if( command<16 )  { dispControl( command );   return; } //00001... //Display on/off          //Sets on/off of all display (D), cursor on/off (C), and blink of cursor position character (B).//37 μs
+    if( command<32 )  { C_D_Shift( command );     return; } //0001.... //Cursor/display shift    //Sets cursor-move or display-shift (S/C), shift direction (R/L). DDRAM content remains unchanged//37 μs
+    if( command<64 )  { functionSet( command );   return; } //001..... //Function set            //Sets interface data length (DL), number of display line (N), and character font (F)//37 μs
+    if( command<128 ) { setCGaddr( command-64 );  return; } //01...... //Set CGRAM address       //Sets the CGRAM address. CGRAM data are sent and received after this setting//37 μs
+    else              { setDDaddr( command-128 ); return; } //1....... //Set DDRAM address       //Sets the DDRAM address. DDRAM data are sent and received after this setting.//37 μs
 }
 
 void Hd44780::functionSet( int data ) 
@@ -267,10 +277,6 @@ void Hd44780::clearDDRAM()
     for(int i=0; i<80; i++) m_DDram[i] = 32;
 }
 
-void Hd44780::reset() 
-{
-}
-
 int Hd44780::cols()
 {
     return m_cols;
@@ -283,7 +289,7 @@ void Hd44780::setCols( int cols )
     
     m_cols = cols;
     
-    initLcd();
+    resetState();
 }
 
 int Hd44780::rows()
@@ -297,7 +303,7 @@ void Hd44780::setRows( int rows )
     
     m_rows = rows;
     
-    initLcd();
+    resetState();
 }
 
 void Hd44780::updateStep()
@@ -308,8 +314,8 @@ void Hd44780::updateStep()
 void Hd44780::remove()
 {
     if( m_pinRS->isConnected() ) m_pinRS->connector()->remove();
-    if( m_pinRW->isConnected() ) m_pinRS->connector()->remove();
-    if( m_pinEn->isConnected() ) m_pinRS->connector()->remove();
+    if( m_pinRW->isConnected() ) m_pinRW->connector()->remove();
+    if( m_pinEn->isConnected() ) m_pinEn->connector()->remove();
     
     for( int i=0; i<8; i++ )
     {

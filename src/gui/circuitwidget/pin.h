@@ -24,7 +24,7 @@
 #include "connector.h"
 #include "e-pin.h"
 
-class Pin : public QObject, public QGraphicsItem, public ePin
+class MAINMODULE_EXPORT Pin : public QObject, public QGraphicsItem, public ePin
 {
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
@@ -43,6 +43,8 @@ class Pin : public QObject, public QGraphicsItem, public ePin
         void setLength( int length );
 
         void setBoundingRect( QRect area );
+        
+        Component* component() { return m_component; }
 
         Connector* connector();
         void setConnector( Connector* c );
@@ -50,7 +52,7 @@ class Pin : public QObject, public QGraphicsItem, public ePin
         void setConPin( Pin* pin );
         Pin* conPin();
 
-        double getVolt();
+        //double getVolt();
 
         void setLabelText( QString label );
         void setLabelPos();
@@ -85,7 +87,7 @@ class Pin : public QObject, public QGraphicsItem, public ePin
         Component* m_component;
         Pin*       m_conPin;          // Pin at the other side of connector
 
-        QGraphicsSimpleTextItem* m_label;
+        QGraphicsSimpleTextItem m_label;
 };
 
 #endif

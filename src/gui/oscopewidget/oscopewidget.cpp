@@ -57,7 +57,7 @@ void OscopeWidget::setProbe( Probe* probe )
 
 void OscopeWidget::clear()
 {
-    for( int i=0; i<140; i++ ) m_data[i] = 0;
+    for( int i=0; i<140; i++ ) m_data[i] = 160;
     m_rArea->setData( m_data );
 }
 
@@ -73,6 +73,7 @@ void OscopeWidget::step()
     m_rArea->setTick( m_speed );
     m_rArea->setData( m_data );
     newReading = true;
+    m_newReadCount = 0;
     m_counter = 0;
 }
 
@@ -122,13 +123,17 @@ static int offset;
             up = true;
             lastData = data;
         }
-        else if( (data-lastData)<-0.2 )
+        else if( (data-lastData) < -0.2 )
         {
             down = true;
             lastData = data;
         }
 
-        
+        if( ++m_newReadCount == 100000 )  // No reading: Clear Screen
+        {
+           m_newReadCount = 0;
+           clear();
+        }
         return;
     }
     if( offset < m_offset )

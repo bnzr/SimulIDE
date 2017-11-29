@@ -18,9 +18,12 @@
  ***************************************************************************/
 
 #include "component.h"
+#include "mainwindow.h"
 #include "connector.h"
 #include "circuit.h"
 #include "utils.h"
+
+int Component::m_error = 0;
 
 Component::Component( QObject* parent , QString type, QString id )
     : QObject(parent), QGraphicsItem()
@@ -29,13 +32,14 @@ Component::Component( QObject* parent , QString type, QString id )
     //setCacheMode(QGraphicsItem::DeviceCoordinateCache);
     
     m_unitMult = 1;
-    m_mult     = " ";
-    m_unit     = " ";
-    m_type     = type;
-    m_color    = QColor( Qt::white );
-    m_showId   = false;
-    m_Hflip    = 1;
-    m_Vflip    = 1;
+    m_Hflip  = 1;
+    m_Vflip  = 1;
+    m_mult   = " ";
+    m_unit   = " ";
+    m_type   = type;
+    m_color  = QColor( Qt::white );
+    m_showId = false;
+    m_moving = false;
     
     m_idLabel = new Label( this );
     m_idLabel->setDefaultTextColor( Qt::darkBlue );
@@ -101,16 +105,24 @@ void Component::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
     QList<QGraphicsItem*> itemlist = Circuit::self()->selectedItems();
     if ( !itemlist.isEmpty() )
     {
+        if( !m_moving )
+        {
+            Circuit::self()->saveState();
+            m_moving = true;
+        }
+
         QPointF delta = togrid(event->scenePos()) - togrid(event->lastScenePos());
 
-        QGraphicsItem* item;
-        foreach( item , itemlist )
+        foreach( QGraphicsItem* item , itemlist )
         {
             ConnectorLine* line =  qgraphicsitem_cast<ConnectorLine* >( item );
-            if( line->objectName() == "" )  line->move( delta ); //qDebug () <<line->objectName();
 
-            Component* comp =  qgraphicsitem_cast<Component* >( item );
-            if( comp ) comp->move( delta );
+            if( line->objectName() == "" )  line->move( delta ); //qDebug () <<line->objectName();
+            else
+            {
+                Component* comp =  qgraphicsitem_cast<Component* >( item );
+                if( comp ) comp->move( delta );
+            }
         }
     }
 }
@@ -126,6 +138,7 @@ void Component::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
     event->accept();
     setCursor( Qt::OpenHandCursor );
     ungrabMouse();
+    m_moving = false;
 }
 
 void Component::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
@@ -138,8 +151,17 @@ void Component::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
 
 void Component::contextMenu( QGraphicsSceneContextMenuEvent* event, QMenu* menu )
 {
+    m_eventpoint = mapToScene( togrid(event->pos()) );
+
+    QAction* copyAction = menu->addAction(QIcon(":/copy.png"),"Copy");
+    connect( copyAction, SIGNAL( triggered()), this, SLOT(slotCopy()) );
+
     QAction* removeAction = menu->addAction( QIcon( ":/remove.png"),"Remove" );
     connect( removeAction, SIGNAL( triggered()), this, SLOT(slotRemove()) );
+    
+    QAction* propertiesAction = menu->addAction( QIcon( ":/properties.png"),"Properties" );
+    connect( propertiesAction, SIGNAL( triggered()), this, SLOT(slotProperties()) );
+    menu->addSeparator();
 
     QAction* rotateCWAction = menu->addAction( QIcon( ":/rotateCW.png"),"Rotate CW" );
     connect( rotateCWAction, SIGNAL( triggered()), this, SLOT(rotateCW()));
@@ -154,62 +176,73 @@ void Component::contextMenu( QGraphicsSceneContextMenuEvent* event, QMenu* menu 
     connect( H_flipAction, SIGNAL( triggered()), this, SLOT(H_flip()) );
     
     QAction* V_flipAction = menu->addAction(QIcon(":/vflip.png"),"Vertical Flip");
-    connect( V_flipAction, SIGNAL( triggered()), this, SLOT(V_flip2()) );
+    connect( V_flipAction, SIGNAL( triggered()), this, SLOT(V_flip()) );
 
     menu->exec(event->screenPos());
 }
 
+void Component::slotCopy()
+{
+    setSelected( true );
+    Circuit::self()->copy( m_eventpoint );
+}
+
 void Component::slotRemove()
 {
+    if( !isSelected() ) Circuit::self()->clearSelection();
     setSelected( true );
     Circuit::self()->removeItems();
 }
 
 void Component::remove()
 {
+    for( uint i=0; i<m_pin.size(); i++ )               // Remove connectors attached
+        if( m_pin[i]->isConnected() ) m_pin[i]->connector()->remove();
+        
     QPropertyEditorWidget::self()->removeObject( this );
     Circuit::self()->compList()->removeOne( this );
     Circuit::self()->removeItem( this );
-    //this->deleteLater();
+    this->deleteLater();
+}
+
+void Component::slotProperties()
+{
+    QPropertyEditorWidget::self()->setObject( this );
+    MainWindow::self()->m_sidepanel->setCurrentIndex( 2 );
 }
 
 void Component::H_flip()
 {
+    Circuit::self()->saveState();
     m_Hflip = -m_Hflip;
     setflip();
 }
 
 void Component::V_flip()
 {
-}
-
-void Component::V_flip2()
-{
+    Circuit::self()->saveState();
     m_Vflip = -m_Vflip;
     setflip();
 }
 
 void Component::rotateCW()
 {
+    Circuit::self()->saveState();
     setRotation( rotation() + 90);
-    //m_idLabel->rotateCCW();
-    //m_valLabel->rotateCCW();
     emit moved();
 }
 
 void Component::rotateCCW()
 {
+    Circuit::self()->saveState();
     setRotation( rotation() - 90);
-    //m_idLabel->rotateCW();
-    //m_valLabel->rotateCW();
     emit moved();
 }
 
 void Component::rotateHalf()
 {
+    Circuit::self()->saveState();
     setRotation( rotation() - 180);
-    //m_idLabel->rotate180();
-    //m_valLabel->rotate180();
     emit moved();
 }
 
@@ -262,7 +295,7 @@ void Component::setValLabelPos()
 
 void Component::setValue( double val) 
 { 
-    if( val == 0 ) val = 1e-12;
+    if( val < 1e-12 ) val = 1e-12;
     val = val*m_unitMult;
     
     int index = 4;   // We are in bare units "TGMK munp"
@@ -425,15 +458,17 @@ Label::Label( Component* parent )
     
     connect(document(), SIGNAL(contentsChange(int, int, int)),
             this,       SLOT(updateGeometry(int, int, int)));
+    //document()->setDefaultStyleSheet( QString("p {max-width: 500px;}") );
+    //document()->set
 }
 Label::~Label() { }
 
 void Label::updateGeometry(int, int, int)
 {
-    setTextWidth(-1);
+    document()->setTextWidth(-1);
     //setTextWidth( boundingRect().width() );
     //setItemSize(boundingRect().width(), boundingRect().height());
-    adjustSize();
+    //adjustSize();
 }
 
 void Label::focusOutEvent(QFocusEvent *event)
@@ -447,10 +482,9 @@ void Label::focusOutEvent(QFocusEvent *event)
 void Label::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event)
 {
     if( !isEnabled() ) return;
-    setTextInteractionFlags(Qt::TextEditorInteraction);
+    //setTextInteractionFlags(Qt::TextEditorInteraction);
 
     QGraphicsTextItem::mouseDoubleClickEvent(event);
-
 }
 
 void Label::mousePressEvent(QGraphicsSceneMouseEvent* event)

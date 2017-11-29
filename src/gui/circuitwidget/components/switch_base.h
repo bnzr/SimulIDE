@@ -23,7 +23,7 @@
 #include "e-resistor.h"
 #include "pin.h"
 
-class SwitchBase : public Component, public eResistor
+class MAINMODULE_EXPORT SwitchBase : public Component, public eResistor
 {
     Q_OBJECT
 
@@ -31,7 +31,7 @@ class SwitchBase : public Component, public eResistor
 
         SwitchBase( QObject* parent, QString type, QString id );
         ~SwitchBase();
-        
+
         void updateStep();
 
         //void setRes( double resist );

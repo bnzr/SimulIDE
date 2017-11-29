@@ -23,7 +23,7 @@
 #include "ledbase.h"
 #include "itemlibrary.h"
 
-class Led : public LedBase
+class MAINMODULE_EXPORT Led : public LedBase
 {
     Q_OBJECT
 

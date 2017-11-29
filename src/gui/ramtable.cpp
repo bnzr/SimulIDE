@@ -104,8 +104,16 @@ void RamTable::loadVarSet()
         int row = -1;
         foreach( QString line, lines )
         {
-            line.remove( " " );
-            if( row >= 0 ) item( row, 0 )->setText( line );
+            line.remove( " " ).remove("\t");
+            QStringList words = line.split( "=" );
+            QString name = words.first();
+            
+            if( !words.last().isEmpty() )
+            {
+                int address = words.last().toInt();
+                m_processor->addWatchVar( name, address, "uint8" );
+            }
+            if( row >= 0 ) item( row, 0 )->setText( name );
             row++;
             if( row >= m_numRegs ) break;
         }
@@ -137,7 +145,7 @@ void RamTable::saveVarSet()
         for( int row=0; row<m_numRegs; row++ )
         {
             QString name = item( row, 0 )->text();
-            out << name.toUpper() << "\n";
+            out << name << "\n";
         }
         QApplication::restoreOverrideCursor();
     }
@@ -181,7 +189,7 @@ void RamTable::setItemValue( int col, int value  )
     item( m_currentRow, col )->setData( 0, value );
 }
 
-void RamTable::addToWatch( QTableWidgetItem *it )
+void RamTable::addToWatch( QTableWidgetItem* it )
 {
     if( column(it) != 0 ) return;
     int _row = row(it);

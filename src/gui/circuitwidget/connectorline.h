@@ -26,7 +26,7 @@
 
 class Connector;
  
- class ConnectorLine : public QGraphicsObject
+ class MAINMODULE_EXPORT ConnectorLine : public QGraphicsObject
 {
     Q_OBJECT
 

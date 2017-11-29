@@ -28,7 +28,7 @@
 class LibraryItem;
 //class DialWidget;
 
-class VoltSource : public Component, public eElement
+class MAINMODULE_EXPORT VoltSource : public Component, public eElement
 {
     Q_OBJECT
     Q_PROPERTY( double  Voltage   READ volt    WRITE setVolt    DESIGNABLE true USER true )

@@ -39,13 +39,13 @@ LedBar::LedBar( QObject* parent, QString type, QString id )
     : Component( parent, type, id )
 {
     m_led.resize( 8 );
-    m_pin.resize( 16 );
+    //m_pin.resize( 16 );
     
     // Create Leds
     for( int i=0; i<8; i++ )
     {
         QString ledid = m_id;
-        ledid.append(QString("led"+i));
+        ledid.append(QString("-led"+QString::number(i)));
         m_led[i] = new LedSmd( this, "LEDSMD", ledid, QRectF(0, 0, 4, 4) );
         m_led[i]->setParentItem(this);
         m_led[i]->setPos( 0, -28+2+i*8 );
@@ -53,14 +53,14 @@ LedBar::LedBar( QObject* parent, QString type, QString id )
         m_led[i]->setAcceptedMouseButtons(0);
         
         QPoint nodpos = QPoint(-16,-32+8+i*8 );
-        Pin* pin = new Pin( 180, nodpos, ledid+"pinP", 0, this);
+        Pin* pin = new Pin( 180, nodpos, ledid+"-pinP", 0, this);
         m_led[i]->setEpin( 0, pin );
-        m_pin[i] = pin;
+        //m_pin[i] = pin;
         
         nodpos = QPoint( 16,-32+8+i*8 );
-        pin = new Pin( 0, nodpos, ledid+"pinN", 0, this);
+        pin = new Pin( 0, nodpos, ledid+"-pinN", 0, this);
         m_led[i]->setEpin( 1, pin );
-        m_pin[8+i] = pin;
+        //m_pin[8+i] = pin;
     }
     setRes( 0.6 ); 
 }

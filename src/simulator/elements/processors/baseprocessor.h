@@ -23,11 +23,11 @@
 //#include <QtGui>
 
 #include "ramtable.h"
-#include "outpaneltext.h"
+#include "terminalwidget.h"
 
 class RamTable;
 
-class BaseProcessor : public QObject
+class MAINMODULE_EXPORT BaseProcessor : public QObject
 {
     Q_OBJECT
     public:
@@ -51,30 +51,33 @@ class BaseProcessor : public QObject
         virtual void step()=0;
         virtual void stepOne()=0;
         virtual void reset()=0;
-        virtual int pc()=0;
+        virtual int  pc()=0;
 
-        virtual int getRamValue( QString name )=0;
+        virtual int getRamValue( QString name );
         virtual int getRamValue( int address )=0;
         virtual int getRegAddress( QString name );
         virtual void addWatchVar( QString name, int address, QString type );
         virtual void updateRamValue( QString name );
         
         virtual void setUsart( bool usart ) { m_usartTerm = usart; }
-        virtual void uartOut( uint32_t value )=0;
-        virtual void uartIn( uint32_t value )=0;
+        virtual void setSerPort( bool serport ) { m_serialPort = serport; }
+        virtual void uartOut( uint32_t value );
+        virtual void uartIn( uint32_t value );
         
         virtual void initialized();
-
+    
     protected:
  static BaseProcessor* m_pSelf;
  
-        virtual void setRegisters()=0;
+        virtual void setRegisters();
+        virtual int  validate( int address )=0;
 
         QString m_symbolFile;
         QString m_dataFile;
         QString m_device;
         
-        int m_mcuStepsPT;
+        int  m_mcuStepsPT;
+        unsigned long m_nextCycle;
 
         RamTable* m_ramTable;
         QHash<QString, int> m_regsTable;     // int max 32 bits
@@ -83,6 +86,7 @@ class BaseProcessor : public QObject
 
         bool m_loadStatus;
         bool m_usartTerm;
+        bool m_serialPort;
 };
 
 

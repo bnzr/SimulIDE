@@ -20,11 +20,12 @@
 #ifndef EPIN_H
 #define EPIN_H
 
+//Have to use #include <QtCore/QtGlobal> for Q_DECL_EXPORT?
 #include <string>
 
 class eNode;
 
-class ePin
+class MAINMODULE_EXPORT ePin
 {
     public:
         ePin( std::string id, int index );
@@ -42,12 +43,16 @@ class ePin
         eNode* getEnodeComp(){ return m_enodeCon; }
         void   setEnodeComp( eNode* enode ); // The enode at other side of component
 
+        bool inverted() { return m_inverted; }
+        void setInverted( bool inverted ){ m_inverted = inverted; }
+
         void stampAdmitance( double data );
         void stampCurrent( double data );
 
         void reset();
         
-        std::string getId() { return m_id; }
+        std::string getId()          { return m_id; }
+        void setId( std::string id ) { m_id = id; }
 
     protected:
         eNode* m_enode;
@@ -57,6 +62,7 @@ class ePin
         int m_index;
 
         bool m_connected;
+        bool m_inverted;
 };
 
 #endif

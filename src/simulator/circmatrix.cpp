@@ -73,7 +73,7 @@ void CircMatrix::createMatrix( QList<eNode*> &eNodeList, QList<eElement*> &eleme
     m_currChanged  = false;
     
      // Initialize eNodes
-    std::cout <<"Initializing "<< m_numEnodes << " eNodes"<< std::endl;
+    std::cout <<"\nInitializing "<< m_numEnodes << " eNodes"<< std::endl;
     for( int i=0; i<m_numEnodes; i++ )
     {
         eNode* enode = eNodeList.at(i);

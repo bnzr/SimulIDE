@@ -27,7 +27,7 @@
 
 class McuComponentPin;
 
-class McuComponent : public Package
+class MAINMODULE_EXPORT McuComponent : public Package
 {
     Q_OBJECT
     Q_PROPERTY( QString  program  READ program WRITE setProgram DESIGNABLE true USER true )
@@ -41,7 +41,9 @@ class McuComponent : public Package
  static McuComponent* self() { return m_pSelf; }
 
         QString program()   const      { return  m_symbolFile; }
-        void setProgram( QString /*pro*/ ) {/* m_symbolFile = pro;*/ }
+        void setProgram( QString pro );
+        
+        QString device() { return m_device; }
 
         int  freq();
         virtual void setFreq( int freq );
@@ -57,6 +59,8 @@ class McuComponent : public Package
         void slotReload();
         void slotOpenTerm();
         void slotCloseTerm();
+        void slotOpenSerial();
+        void slotCloseSerial();
         
     protected:
  static McuComponent* m_pSelf;
@@ -70,9 +74,9 @@ class McuComponent : public Package
 
         BaseProcessor* m_processor;
 
-        int   m_freq;           // Clock Frequency Mhz
+        int m_freq;             // Clock Frequency Mhz
         
-        bool m_serialTerm;
+        bool m_attached;
 
         QString m_device;       // Name of device
         QString m_symbolFile;   // firmware file loaded
@@ -80,8 +84,5 @@ class McuComponent : public Package
         QString m_BackGround;   // BackGround Image
         
         QList<McuComponentPin*> m_pinList;
-        
-    private:
-
 };
 #endif

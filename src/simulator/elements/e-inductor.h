@@ -24,14 +24,14 @@
 
 class LibraryItem;
 
-class eInductor : public eResistor
+class MAINMODULE_EXPORT eInductor : public eResistor
 {
     public:
         eInductor( std::string id );
         ~eInductor();
 
         void initialize();
-        void setVChanged();
+        virtual void setVChanged();
 
         double ind();
         void   setInd( double h );

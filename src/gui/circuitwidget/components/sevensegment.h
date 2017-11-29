@@ -26,11 +26,12 @@
 
 class LibraryItem;
 
-class SevenSegment : public Component, public eElement
+class MAINMODULE_EXPORT SevenSegment : public Component, public eElement
 {
     Q_OBJECT
     Q_PROPERTY( int  NumDisplays   READ numDisplays     WRITE setNumDisplays   DESIGNABLE true USER true )
     Q_PROPERTY( bool CommonCathode READ isCommonCathode WRITE setCommonCathode DESIGNABLE true USER true )
+    Q_PROPERTY( double Resistance  READ resistance      WRITE setResistance    DESIGNABLE true USER true )
     public:
 
         //QRectF boundingRect() const { return m_area; }
@@ -47,6 +48,9 @@ class SevenSegment : public Component, public eElement
         bool isCommonCathode();
         void setCommonCathode( bool isCommonCathode );
 
+        double resistance() { return m_resistance; }
+        void   setResistance( double res );
+
 
         void initialize();
         //void stamp();
@@ -62,6 +66,7 @@ class SevenSegment : public Component, public eElement
 
         bool m_commonCathode;
         int  m_numDisplays;
+        double m_resistance;
 
         std::vector<ePin*>  m_commonPin;
         std::vector<ePin*>  m_cathodePin;

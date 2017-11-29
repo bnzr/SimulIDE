@@ -24,7 +24,7 @@
 
 #include "outpaneltext.h"
 
-class TerminalWidget : public QWidget
+class MAINMODULE_EXPORT TerminalWidget : public QWidget
 {
     Q_OBJECT
 
@@ -33,19 +33,32 @@ class TerminalWidget : public QWidget
         ~TerminalWidget();
         
  static TerminalWidget* self() { return m_pSelf; }
+
+        void uartIn( uint32_t value );
+        void uartOut( uint32_t value );
+
+        void step();
  
-    public slots:
+    private slots:
         void onTextChanged();
         void onValueChanged();
+        void valueButtonClicked();
+        void ascciButtonClicked();
 
     private:
  static TerminalWidget* m_pSelf;
  
         QVBoxLayout   m_verticalLayout;
-        QHBoxLayout   m_horizontLayout;
+        QHBoxLayout   m_sendLayout;
+        QHBoxLayout   m_textLayout;
         QLineEdit     m_sendText;
         QLineEdit     m_sendValue;
-        OutPanelText  m_outPanel;
+        OutPanelText  m_uartInPanel;
+        OutPanelText  m_uartOutPanel;
+        QPushButton   m_ascciButton;
+        QPushButton   m_valueButton;
+
+        bool m_printASCII;
 };
 
 #endif

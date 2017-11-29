@@ -37,8 +37,8 @@ eCapacitor::~eCapacitor()
 
 void eCapacitor::initialize()
 {
-    if( m_ePin[0]->isConnected() ) m_ePin[0]->getEnode()->addToChangedSlow(this);
-    if( m_ePin[1]->isConnected() ) m_ePin[1]->getEnode()->addToChangedSlow(this);
+    if( m_ePin[0]->isConnected() ) m_ePin[0]->getEnode()->addToReactiveList(this);
+    if( m_ePin[1]->isConnected() ) m_ePin[1]->getEnode()->addToReactiveList(this);
     
     m_tStep = (double)Simulator::self()->reaClock()/1e6;
     
@@ -50,7 +50,7 @@ void eCapacitor::setVChanged()
 {
     double volt = m_ePin[0]->getVolt() - m_ePin[1]->getVolt();
     
-    if( volt == 0 ) return;
+    //if( volt == 0 ) return;
     //if( abs(m_volt-volt) < 1e-9 ) return;
     //m_volt = volt;
 
@@ -69,7 +69,7 @@ double eCapacitor::cap()
 void  eCapacitor::setCap( double c ) 
 { 
     m_cap = c; 
-    eResistor::setRes( m_tStep/m_cap ); 
+    eResistor::setResSafe( m_tStep/m_cap ); 
     
     //qDebug() << "eCapacitor::setCap  m_tStep" << m_tStep << c <<" m_cap "<<m_cap<<" m_resist "<<m_resist;
 }

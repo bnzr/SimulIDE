@@ -58,7 +58,7 @@ VoltSource::VoltSource( QObject* parent, QString type, QString id )
     m_button->setText( QString("-- V") );
 
     QString nodid = id;
-    nodid.append(QString("outnod"));
+    nodid.append(QString("-outPin"));
     QPoint nodpos = QPoint(16,0);
     outpin = new Pin( 0, nodpos, nodid, 0, this );
 
@@ -70,8 +70,6 @@ VoltSource::VoltSource( QObject* parent, QString type, QString id )
     voltChanged( 0 );
     setValLabelPos(-26, 10 , 0 ); // x, y, rot 
     setShowVal( true );
-    
-    setTransformOriginPoint( boundingRect().center() );
     
     Simulator::self()->addToUpdateList( this );
 

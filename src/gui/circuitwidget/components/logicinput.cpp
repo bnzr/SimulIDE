@@ -109,6 +109,7 @@ void LogicInput::setUnit( QString un )
 void LogicInput::remove()
 {
     if( m_outpin->isConnected() ) m_outpin->connector()->remove();
+    delete m_out;
     
     Simulator::self()->remFromUpdateList( this );
     

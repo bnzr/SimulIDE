@@ -25,7 +25,7 @@
 
 class LibraryItem;
 
-class Push : public SwitchBase
+class MAINMODULE_EXPORT Push : public SwitchBase
 {
     Q_OBJECT
     

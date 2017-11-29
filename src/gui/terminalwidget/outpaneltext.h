@@ -26,14 +26,14 @@
 
 class OutHighlighter;
 
-class OutPanelText : public QPlainTextEdit
+class MAINMODULE_EXPORT OutPanelText : public QPlainTextEdit
 {
     Q_OBJECT
     public:
         OutPanelText(QWidget *parent = 0);
         ~OutPanelText();
         
- static OutPanelText* self() { return m_pSelf; }
+ //static OutPanelText* self() { return m_pSelf; }
 
         void appendText(  const QString &text );
         void writeText( const QString &text );
@@ -41,7 +41,7 @@ class OutPanelText : public QPlainTextEdit
         void step();
 
     private:
- static OutPanelText* m_pSelf;
+ //static OutPanelText* m_pSelf;
  
         QString m_text;
  

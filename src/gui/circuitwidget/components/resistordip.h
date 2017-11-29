@@ -25,7 +25,7 @@
 
 class LibraryItem;
 
-class ResistorDip : public Component
+class MAINMODULE_EXPORT ResistorDip : public Component
 {
     Q_OBJECT
     Q_PROPERTY( double Resistance READ resist   WRITE setResist  DESIGNABLE true USER true )

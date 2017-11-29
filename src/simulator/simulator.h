@@ -32,34 +32,47 @@
 //#include "gpsimprocessor.h"
 #endif
 
-
-
-class Simulator : public QObject
+class MAINMODULE_EXPORT Simulator : public QObject
 {
     Q_OBJECT
     public:
         Simulator( QObject* parent=0 );
         ~Simulator();
 
+    enum CircuitRunStage {
+            RunStage_none = 0,
+            RunStage_reactive,
+            RunStage_clock,
+            RunStage_fast,
+            RunStage_nonLinear
+        };
+
  static Simulator* self() { return m_pSelf; }
 
+        CircuitRunStage stage() const { return m_stage; }
+
         void runContinuous();
+        void stopTimer();
         void pauseSim();
         void resumeSim();
         void stopSim();
         void runExtraStep();
         //void reset();
-        //int simuRate();
+        int simuRate() { return m_simuRate; }
         int simuRateChanged( int rate );
 
         int  reaClock();
         void setReaClock( int value );
+        int  noLinClock();
+        void setNoLinClock( int value );
         void setMcuClock( int value );
         
         //int  stepsPT();
         bool isRunning();
         
         unsigned long long step();
+
+        QList<eNode*> geteNodes() { return m_eNodeList; }
 
         void addToEnodeList( eNode* nod );
         void remFromEnodeList( eNode* nod, bool del );
@@ -79,8 +92,8 @@ class Simulator : public QObject
         void addToChangedFast( eElement* el );
         void remFromChangedFast( eElement* el );
         
-        void addToChangedSlow( eElement* el );
-        void remFromChangedSlow( eElement* el );
+        void addToReactiveList( eElement* el );
+        void remFromReactiveList( eElement* el );
         
         void addToSimuClockList( eElement* el );
         void remFromSimuClockList( eElement* el );
@@ -103,6 +116,8 @@ class Simulator : public QObject
         
         inline void solveMatrix();
         
+        CircuitRunStage m_stage;
+
         QFuture<void> m_CircuitFuture;
 
         CircMatrix m_matrix;
@@ -115,13 +130,14 @@ class Simulator : public QObject
         
         //QList<eElement*> m_reactiveList;
         QList<eElement*> m_changedFast;
-        QList<eElement*> m_changedSlow;
+        QList<eElement*> m_reactiveList;
         QList<eElement*> m_nonLinear;
         QList<eElement*> m_simuClock;
         QList<BaseProcessor*> m_mcuList;
 
         //bool m_changed;
         bool m_isrunning;
+        bool m_paused;
         int  m_timerId;
 
         int m_numEnodes;
@@ -129,11 +145,12 @@ class Simulator : public QObject
         //int m_reaClock;
         //int m_reaStepsPT;
         int m_stepsPrea;
+        int m_stepsNolin;
         int m_timerTick;
         int m_mcuStepsPT;
         
         int m_circuitRate;
-        int m_slowCounter;
+        int m_noLinCounter;
         int m_reacCounter;
 
         unsigned long long m_step;
@@ -142,7 +159,7 @@ class Simulator : public QObject
         qint64        m_lastRefTime;
         QElapsedTimer m_RefTimer;
         
-        QThread      m_mcuThread;
+        //QThread      m_mcuThread;
         
         //AvrProcessor m_avr;
         //avr_t*       m_avrCpu;

@@ -25,7 +25,7 @@
 #include "renderoscope.h"
 #include "probe.h"
 
-class OscopeWidget : public QWidget
+class MAINMODULE_EXPORT OscopeWidget : public QWidget
 {
     Q_OBJECT
 
@@ -61,6 +61,7 @@ class OscopeWidget : public QWidget
         
         int m_data[140];
         int m_counter;
+        int m_newReadCount;
         int m_ticksPs;
         int m_tick;
         int m_speed;

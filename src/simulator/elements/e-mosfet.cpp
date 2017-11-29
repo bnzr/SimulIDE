@@ -17,34 +17,37 @@
  *                                                                         *
  ***************************************************************************/
 
+#include <math.h>   // fabs(x,y)
+
 #include "e-mosfet.h"
+#include "simulator.h"
 #include <QDebug>
-#include <math.h>   // fabs(x,y
+
 
 eMosfet::eMosfet( std::string id )
     : eResistor( id )
 {
-    m_resist = high_imp;
-    m_RDSon  = 1;
-    m_Gth    = 3;
+    m_Pchannel = false;
     
-    m_DScurrent = cero_doub;
-    m_lastDScurrent = cero_doub;
-    m_lastGateV = cero_doub;
-    m_dewltaCurr = 0;
-    m_converged = true;
-    
+    m_resist    = high_imp;
+    m_RDSon     = 1;
+    m_threshold = 3;
+
     m_ePin.resize(3);
 }
 eMosfet::~eMosfet(){}
 
 void eMosfet::initialize()
 {
-    m_DScurrent = cero_doub;
-    m_lastDScurrent = cero_doub;
-    m_lastGateV = cero_doub;
-    m_dewltaCurr = 0;
     m_converged = true;
+    m_resist    = high_imp;
+    m_lastAdmit = cero_doub;
+    m_DScurrent = 0;
+    m_convTh    = 1e-5;
+    m_lastGateV = 0;
+    
+    m_kRDSon = m_RDSon*(10-m_threshold);
+    m_Gth = m_threshold-m_threshold/4;
     
     if( (m_ePin[0]->isConnected()) 
       & (m_ePin[1]->isConnected())
@@ -59,107 +62,111 @@ void eMosfet::initialize()
 
 void eMosfet::setVChanged()
 {
-    double Vgs = m_ePin[2]->getVolt()-m_ePin[1]->getVolt();
-    double Vds = m_ePin[0]->getVolt()-m_ePin[1]->getVolt();
-    double GateV = Vgs - m_Gth;
-    
-    qDebug() <<" ";
-    qDebug() << QString::fromStdString(m_elmId)<<"STAGE "<<m_converged;
-    
-    if( Vds < 0 )
-    {
-        //if( DScurrent < 1e-6 )  DScurrent = 0;
-        m_DScurrent = 0;
-        m_ePin[0]->stampCurrent( 0 );
-        m_ePin[1]->stampCurrent( 0 );
+    double Vgs;
+    double Vds;
+    double Vd = m_ePin[0]->getVolt();
+    double Vs = m_ePin[1]->getVolt();
+    double Vg = m_ePin[2]->getVolt();
 
-        return;
-    }
-    if( GateV < 0 )   GateV = cero_doub;
-    if( Vds > GateV ) Vds   = GateV;
-    
-    double DScurrent = (GateV*Vds - (Vds*Vds)/2)/(m_RDSon*7);
-    
-    qDebug() << "this current calc = "<< DScurrent;
-    qDebug() << "last current real = "<< m_DScurrent;
-    
-    if( fabs(DScurrent-m_DScurrent)<1e-5 )
+    if( m_Pchannel )
     {
-        qDebug() <<"CONVERGED:           ";
-        m_converged = true;
-        return;
-    }
-    double lastDscurrent = DScurrent;
-    
-    if( m_converged )                  // First step after a convergence
-    {
-        m_totalInc = (DScurrent - m_DScurrent);
-        m_dewltaCurr = m_totalInc/1e6;
-        DScurrent = m_DScurrent + m_dewltaCurr;
-        m_converged = false;
+        Vgs = Vs-Vg;
+        Vds = Vs-Vd;
     }
     else
     {
-        double dewltaCurr = m_lastDScurrent - DScurrent;
-        double deltaRatio = dewltaCurr/m_dewltaCurr;
-        
-        //qDebug() << "last current calc = "<< m_lastDScurrent;
-        //qDebug() << "this delta current= "<< dewltaCurr;
-        //qDebug() << "last delta current= "<< m_dewltaCurr;
-        //qDebug() << "last    m_totalInc= "<< m_totalInc;
-        //qDebug() << "deltaRatio        = "<< deltaRatio;
-        
-        DScurrent = m_DScurrent + 1*(DScurrent - m_DScurrent)/(deltaRatio+1);
-        
-        //qDebug() << "new  current real = "<<DScurrent;
-        m_converged = true;
-        
-        //if( fabs(DScurrent-m_DScurrent)<1e-5 ) return;
+        Vgs = Vg-Vs;
+        Vds = Vd-Vs;
     }
-    if( DScurrent < 0 ) DScurrent = 0;
+
+    double GateV  = Vgs - m_Gth;
+    //double dGateV = fabs(m_lastGateV-GateV);
+    double Admit  = GateV/m_kRDSon;
+
+    /*qDebug() <<" ";
+    qDebug() << QString::fromStdString(m_elmId)<<"STAGE "<<m_converged;
+    qDebug() <<"m_lastGateV"<<m_lastGateV<<"  GateV"<<GateV ;
+    qDebug() <<"m_lastAdmit"<<m_lastAdmit<<"  Admit"<<Admit;*/
+
+    if( fabs(Admit-m_lastAdmit)<m_convTh )
+    {
+        qDebug() <<" ";
+        qDebug() << QString::fromStdString(m_elmId)<<"STAGE "<<m_converged;
+        qDebug() <<"CONVERGED:           ";
+        if( m_converged ) return;
+        Admit = m_lastAdmit;
+        m_converged = true;
+    }
+    else if( m_converged )
+    {
+        m_cAdmit = Admit;
+        //m_dAdmit = -1e-7;
+        m_dAdmit = (Admit-m_lastAdmit)/10;
+        //if( Admit>m_lastAdmit )m_dAdmit = 1e-7;
+
+        Admit = m_lastAdmit + m_dAdmit;
+        //qDebug() <<"Admit 0"<<Admit;
+
+        m_converged = false;
+    }
+    else if( m_lastGateV != GateV )
+    {
+        if( fabs(Vs - m_lastVs)>1e-6 )
+        {
+            qDebug() <<" ";
+            qDebug() << QString::fromStdString(m_elmId)<<"STAGE "<<m_converged;
+            qDebug() <<"Vs m_lastVs"<<Vs <<m_lastVs;
+            double nextVs = Vg-m_Gth;
+            double kVs = nextVs/Vs;
+            double kdVs = 1;
+            if( fabs(Vs-m_lastVs)>1 ) kdVs = 1/(fabs(Vs-m_lastVs));
+            Admit = m_lastAdmit*kVs*kdVs;
+            qDebug() <<"m_lastAdmit"<<m_lastAdmit<<"Admit"<<Admit;
+            m_converged = false;
+        }
+        else
+        {
+            double dCAdmit = m_cAdmit - Admit;
+            Admit= m_lastAdmit+(Admit-m_lastAdmit)/((1+dCAdmit/m_dAdmit));
+            //qDebug() <<"Admit 1"<<Admit;
+            m_converged = true;
+        }
+    }
+    
+    if( Admit > high_imp  ) Admit = high_imp;
+    if( Admit < cero_doub ) Admit = cero_doub;
+    //qDebug() <<"Final Admit "<<Admit;
+    if( Admit != m_lastAdmit )
+    {
+        m_resist = 1/Admit;
+        eResistor::stamp();
+        //qDebug() <<".....................stamp";
+    }
+    else m_converged = true;
+    
+    double DScurrent = 0;
+    if( (GateV>0)&(Vds > GateV) )
+    {
+        double Vdg = Vds-GateV;
+        DScurrent = Vdg/m_resist;
+        DScurrent -= DScurrent / (1 + Vdg );
+        if( DScurrent < 0 )  DScurrent = 0;
+    }
     if( DScurrent != m_DScurrent)
     {
-        //if( DScurrent < 1e-6 )  DScurrent = 0;
         m_DScurrent = DScurrent;
-        m_ePin[0]->stampCurrent(-DScurrent );
-        m_ePin[1]->stampCurrent( DScurrent );
+        m_ePin[0]->stampCurrent( DScurrent );
+        m_ePin[1]->stampCurrent(-DScurrent );
     }
-m_lastDScurrent = lastDscurrent;
-    
-    /*
-    int state;
-    
-    if( GSVolt < 3 )                                          // Oppened
-    {
-        state    = 0;
-        m_deltaV = 0;
-        m_resist = high_imp;
-    }
-    else                                                       // Closed
-    {
-        state    = 1;                                           // ohmic
-        m_resist = m_RDSon;
-        
-        double DSVolt = m_ePin[0]->getVolt()-m_ePin[1]->getVolt();
-        double deltaV = DSVolt-( GSVolt - m_vTh );
-        
-        if( deltaV < 0 ) deltaV = 0;
-        if( deltaV != m_deltaV )                               
-        {
-            double current = 0;
-            if( deltaV > 0) current = deltaV/m_resist;         // Active
+    //qDebug() << "m_resist"<<m_resist<< "     DScurrent"<<DScurrent;
+    m_lastVs    = Vs;
+    m_lastGateV = GateV;
+    m_lastAdmit = Admit;
+}
 
-            m_ePin[0]->stampCurrent( current );
-            m_ePin[1]->stampCurrent(-current );
-        }
-        m_deltaV = deltaV;
-        //qDebug() << DSVolt << GSVolt;
-    }
-    if( state != m_state ) 
-    {
-        eResistor::stamp();
-        m_state = state;
-    }
-    //qDebug() << m_state;
-    //qDebug() << ".............";*/
+void eMosfet::setRDSon( double rdson )
+{
+    if( rdson < cero_doub ) rdson = cero_doub;
+    if( rdson > 10 ) rdson = 10;
+    m_RDSon = rdson;
 }

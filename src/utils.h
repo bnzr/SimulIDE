@@ -28,7 +28,25 @@
 #include <QPointF>
 #include <cmath>
 
-inline QString strippedName(const QString &fullFileName)
+
+inline void MessageBoxNB( const QString &title, const QString &message )
+{
+    QMessageBox* msgBox = new QMessageBox( 0l );
+    msgBox->setAttribute( Qt::WA_DeleteOnClose ); //makes sure the msgbox is deleted automatically when closed
+    msgBox->setStandardButtons( QMessageBox::Ok );
+    msgBox->setWindowTitle( title );
+    msgBox->setText( message );
+    msgBox->setModal( false ); 
+    msgBox->open();
+}
+
+inline QString addQuotes( const QString &string )
+{
+    return "\""+string+"\"";
+}
+
+
+inline QString strippedName( const QString &fullFileName )
 {
     return QFileInfo(fullFileName).fileName();
 }
@@ -107,7 +125,7 @@ inline int roundDown( float x, int roundness ) { return roundDown( int(x), round
 
 inline QPoint roundDown( const QPoint & p, int roundness )
 {
-	return QPoint( roundDown( p.x(), roundness ), roundDown( p.y(), roundness ) );
+    return QPoint( roundDown( p.x(), roundness ), roundDown( p.y(), roundness ) );
 }
 
 inline int snapToGrid( int x  ) { return roundDown( x, 8 )*8 + 4; }

@@ -22,14 +22,15 @@
 
 #include "e-element.h"
 
-class eResistor : public eElement
+class MAINMODULE_EXPORT eResistor : public eElement
 {
     public:
         eResistor( std::string id );
         ~eResistor();
 
         virtual double res();
-        virtual void  setRes( double resist );
+        virtual void setRes( double resist );
+        virtual void setResSafe( double resist );
 
         double current();
 

@@ -26,7 +26,7 @@
 
 class LibraryItem;
 
-class Mosfet : public Component, public eMosfet
+class MAINMODULE_EXPORT Mosfet : public Component, public eMosfet
 {
     Q_OBJECT
     Q_PROPERTY( double RDSon     READ RDSon      WRITE setRDSon     DESIGNABLE true USER true )

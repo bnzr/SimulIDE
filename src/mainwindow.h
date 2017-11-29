@@ -24,11 +24,11 @@
 #include <QDomDocument>
 
 #include "QPropertyEditorWidget.h"
-#include "editorwindow.h"
+//#include "editorwindow.h"
 #include "componentselector.h"
 #include "circuitwidget.h"
 
-class MainWindow : public QMainWindow
+class MAINMODULE_EXPORT MainWindow : public QMainWindow
 {
     Q_OBJECT
 
@@ -36,19 +36,25 @@ class MainWindow : public QMainWindow
         MainWindow();
         ~MainWindow();
 
-        static MainWindow* self() { return m_pSelf; }
+ static MainWindow* self() { return m_pSelf; }
         
         void setRate( int rate );
 
+        QSettings* settings() { return &m_settings; }
+
+        void loadPlugins();
+        void unLoadPugin( QString pluginName );
+        
+        void readSettings();
+
         QTabWidget*   m_sidepanel;
         QSplitter*    m_Centralsplitter;
-        //QSplitter*   splitter3;
         QWidget*      m_ramTabWidget;
         QGridLayout*  m_ramTabWidgetLayout;
         QToolBar*     m_circToolBar;
         
         QPropertyEditorWidget* m_itemprop;
-        EditorWindow* m_editorWindow;
+        //EditorWindow* m_editorWindow;
 
     public slots:
         void powerCircOn();
@@ -65,6 +71,7 @@ class MainWindow : public QMainWindow
     private slots:
         void about();
         void powerCirc();
+        void openInfo();
 
     private:
 
@@ -76,10 +83,11 @@ class MainWindow : public QMainWindow
         void createActions();
         void createMenus();
         void createToolBars();
-        void readSettings();
         void writeSettings();
 
         void applyStile();
+        
+        QSettings m_settings;
         
         QString m_version;
         QString m_styleSheet;
@@ -87,13 +95,17 @@ class MainWindow : public QMainWindow
         QString     m_curCirc;
         QString     m_lastCircDir;
         QStringList m_docList;
+        //QStringList m_plugins;
+        QHash<QString, QPluginLoader*>  m_plugins;
 
         CircuitWidget* m_circuit;
         QLabel*        m_rateLabel; 
 
-        ComponentSelector*     components;
+        ComponentSelector* components;
 
         QLineEdit m_findLabel;
+
+
 
         QAction* exitAct;
         QAction* aboutAct;
@@ -110,6 +122,7 @@ class MainWindow : public QMainWindow
         QAction* saveCircAct;
         QAction* saveCircAsAct;
         QAction* powerCircAct;
+        QAction* infoAct;
 };
 
 #endif

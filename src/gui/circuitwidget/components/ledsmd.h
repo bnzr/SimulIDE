@@ -24,7 +24,7 @@
 
 class LibraryItem;
 
-class LedSmd : public LedBase
+class MAINMODULE_EXPORT LedSmd : public LedBase
 {
     Q_OBJECT
 

@@ -44,9 +44,26 @@ Clock::Clock( QObject* parent, QString type, QString id )
     m_stepsPC = 0;
     m_step = 0;
     setFreq( 1000 );
+
+    Simulator::self()->addToUpdateList( this );
 }
 Clock::~Clock(){}
 
+void Clock::updateStep()
+{
+    if( m_changed )
+    {
+        if( m_isRunning )
+            Simulator::self()->addToSimuClockList( this );
+        else
+        {
+            m_out->setOut( false );
+            m_out->stampOutput();
+            Simulator::self()->remFromSimuClockList( this );
+        }
+        m_changed = false;
+    }
+}
 
 void Clock::setFreq( int freq )
 {
@@ -63,14 +80,7 @@ void Clock::onbuttonclicked()
     m_isRunning = !m_isRunning;
     m_step = 0;
 
-    if( m_isRunning )
-        Simulator::self()->addToSimuClockList( this );
-    else
-    {
-        m_out->setOut( false );
-        m_out->stampOutput();
-        Simulator::self()->remFromSimuClockList( this );
-    }
+    m_changed = true;
     //qDebug() << m_stepsPC << m_isRunning ;
 }
 
@@ -84,6 +94,14 @@ void Clock::setVChanged()
         m_out->stampOutput();
         m_step = 0;
     }
+}
+
+void Clock::remove()
+{
+
+    Simulator::self()->remFromSimuClockList( this );
+
+    LogicInput::remove();
 }
 
 void Clock::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget )

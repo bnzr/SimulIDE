@@ -22,7 +22,7 @@
 
 #include "e-resistor.h"
 
-class eDiode : public eResistor
+class MAINMODULE_EXPORT eDiode : public eResistor
 {
     public:
         eDiode(  std::string id );
@@ -34,7 +34,7 @@ class eDiode : public eResistor
         virtual double zenerV(){ return m_zenerV; }
         virtual void  setZenerV( double zenerV );
 
-        void initialize();
+        virtual void initialize();
 
         virtual void setVChanged();
 
@@ -49,6 +49,8 @@ class eDiode : public eResistor
         double m_threshold;
         double m_imped;
         double m_zenerV;
+
+        bool m_converged;
 };
 #endif
 

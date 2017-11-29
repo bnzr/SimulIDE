@@ -39,6 +39,8 @@ class CircuitView : public QGraphicsView
 
     public slots:
         void saveImage();
+        void slotPaste();
+        void importCirc();
         
     protected:
         void contextMenuEvent(QContextMenuEvent* event);
@@ -55,9 +57,11 @@ class CircuitView : public QGraphicsView
         void resizeEvent(QResizeEvent *event);
         void scaleView(qreal scaleFactor);
 
-        qreal      m_scalefactor;
-        Component *m_enterItem;
-        Circuit   *m_circuit;
+        qreal       m_scalefactor;
+        Component*  m_enterItem;
+        Circuit*     m_circuit;
+
+        QPointF m_eventpoint;
         //QString    m_file;
 };
 

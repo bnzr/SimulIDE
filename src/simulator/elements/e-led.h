@@ -22,7 +22,7 @@
 
 #include "e-diode.h"
 
-class eLed : public eDiode
+class MAINMODULE_EXPORT eLed : public eDiode
 {
     public:
         eLed( std::string id );
@@ -32,6 +32,8 @@ class eLed : public eDiode
         virtual void  setMaxCurrent( double current ) { m_maxCurrent = current; }
 
         void setVChanged();
+
+        void initialize();
 
     protected:
         void updateBright();

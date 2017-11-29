@@ -24,7 +24,7 @@
 #include "component.h"
 #include "ledsmd.h"
 
-class LedBar : public Component
+class MAINMODULE_EXPORT LedBar : public Component
 {
     Q_OBJECT
     Q_PROPERTY( double threshold  READ threshold  WRITE setThreshold  DESIGNABLE true USER true )
@@ -60,7 +60,6 @@ class LedBar : public Component
 
     private:
         std::vector<LedSmd*> m_led;
-        std::vector<Pin*> m_pin;
 };
 
 #endif

@@ -21,12 +21,12 @@
 
 #include "outpaneltext.h"
 
-OutPanelText* OutPanelText::m_pSelf = 0l;
+//OutPanelText* OutPanelText::m_pSelf = 0l;
 
 OutPanelText::OutPanelText( QWidget *parent ) 
             : QPlainTextEdit( parent )
 {
-    m_pSelf = this;
+    //m_pSelf = this;
     
     m_text = "";
     

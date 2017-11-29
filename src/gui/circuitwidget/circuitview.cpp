@@ -13,11 +13,11 @@
  *   GNU General Public License for more details.                          *
  *                                                                         *
  *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ *   along with this program; if not, see <http://www.gnu.org/licenses/>.  *
+ *                                                                         *
  ***************************************************************************/
 
+#include "mainwindow.h"
 #include "circuitview.h"
 #include "circuit.h"
 #include "component.h"
@@ -77,21 +77,22 @@ void CircuitView::scaleView(qreal scaleFactor)
 
 void CircuitView::dragEnterEvent(QDragEnterEvent *event)
 {
+    Circuit::self()->saveState();
+
     event->accept();
     bool pauseSim = Simulator::self()->isRunning();
     if( pauseSim ) Simulator::self()->pauseSim();
 
     QString type = event->mimeData()->html();
-    QString id = event->mimeData()->text();
-    id.append( "-" );
-    id.append( m_circuit->newSceneId() );
+    QString id = event->mimeData()->text()+"-"+m_circuit->newSceneId(); //event->mimeData()->text();
+
     m_enterItem = m_circuit->createItem( type, id );
     if( m_enterItem )
     {
+        //qDebug()<<"CircuitView::dragEnterEvent"<<m_enterItem->itemID()<< type<< id;
         m_enterItem->setPos( mapToScene( event->pos() ) );
         m_circuit->addItem( m_enterItem );
     }
-
     if( pauseSim ) Simulator::self()->resumeSim();
 }
 
@@ -131,7 +132,7 @@ void CircuitView::keyPressEvent( QKeyEvent *event )
 
 void CircuitView::keyReleaseEvent( QKeyEvent *event )
 {
-    if( event->key() == Qt::Key_Shift )
+    //if( event->key() == Qt::Key_Shift )
         setDragMode( QGraphicsView::RubberBandDrag );
         
     QGraphicsView::keyReleaseEvent( event );
@@ -141,14 +142,24 @@ void CircuitView::contextMenuEvent(QContextMenuEvent* event)
 {
     QGraphicsView::contextMenuEvent( event );
 
-    if( !event->isAccepted() )
+    if( !event->isAccepted() && !m_circuit->is_constarted() )
     {
-        QMenu menu;
-        
-        QAction* saveImgAct = menu.addAction( QIcon(":/saveimage.png"), tr("Save Circuit as Image") );
-        connect( saveImgAct, SIGNAL(triggered()), this, SLOT(saveImage()));
+        QPointF eventPos = mapToScene( event->globalPos() ) ;
+        m_eventpoint = mapToScene( event->pos()  );
 
-        /*QAction* openCircAct = menu.addAction(QIcon(":/opencirc.png"), tr("Open Circuit") );
+        QMenu menu;
+
+        QAction* pasteAction = menu.addAction(QIcon(":/paste.png"),"Paste");
+        connect( pasteAction, SIGNAL( triggered()), this, SLOT(slotPaste()) );
+
+        QAction* undoAction = menu.addAction(QIcon(":/undo.png"),"Undo");
+        connect( undoAction, SIGNAL( triggered()), Circuit::self(), SLOT(undo()) );
+
+        QAction* redoAction = menu.addAction(QIcon(":/redo.png"),"Redo");
+        connect( redoAction, SIGNAL( triggered()), Circuit::self(), SLOT(redo()) );
+        menu.addSeparator();
+
+        QAction* openCircAct = menu.addAction(QIcon(":/opencirc.png"), tr("Open Circuit") );
         connect(openCircAct, SIGNAL(triggered()), MainWindow::self(), SLOT(openCirc()));
 
         QAction* newCircAct = menu.addAction( QIcon(":/newcirc.png"), tr("New Circuit") );
@@ -158,12 +169,30 @@ void CircuitView::contextMenuEvent(QContextMenuEvent* event)
         connect(saveCircAct, SIGNAL(triggered()), MainWindow::self(), SLOT(saveCirc()));
 
         QAction* saveCircAsAct = menu.addAction(QIcon(":/savecircas.png"),tr("Save Circuit As...") );
-        connect(saveCircAsAct, SIGNAL(triggered()), MainWindow::self(), SLOT(saveCircAs()));*/
-        
-        QPointF eventPos = mapToScene( event->globalPos() );
+        connect(saveCircAsAct, SIGNAL(triggered()), MainWindow::self(), SLOT(saveCircAs()));
+        menu.addSeparator();
+
+        QAction* importCircAct = menu.addAction(QIcon(":/opencirc.png"), tr("Import Circuit") );
+        connect(importCircAct, SIGNAL(triggered()), this, SLOT(importCirc()));
+
+        QAction* saveImgAct = menu.addAction( QIcon(":/saveimage.png"), tr("Save Circuit as Image") );
+        connect( saveImgAct, SIGNAL(triggered()), this, SLOT(saveImage()));
+
+        QAction* createSubCircAct = menu.addAction(QIcon(":/load.png"), tr("Create SubCircuit") );
+        connect(createSubCircAct, SIGNAL(triggered()), Circuit::self(), SLOT( createSubcircuit() ));
 
         menu.exec( mapFromScene( eventPos ) );
     }
+}
+
+void CircuitView::importCirc()
+{
+    Circuit::self()->importCirc( m_eventpoint );
+}
+
+void CircuitView::slotPaste()
+{
+    Circuit::self()->paste( m_eventpoint );
 }
 
 void CircuitView::saveImage()

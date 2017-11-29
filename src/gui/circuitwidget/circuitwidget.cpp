@@ -20,6 +20,8 @@
 
 #include "circuitwidget.h"
 
+CircuitWidget*  CircuitWidget::m_pSelf = 0l;
+
 CircuitWidget::CircuitWidget( QWidget *parent, QToolBar* toolbar  )
     : QWidget( parent )
     ,m_verticalLayout(this)
@@ -28,7 +30,12 @@ CircuitWidget::CircuitWidget( QWidget *parent, QToolBar* toolbar  )
     ,m_terminal(this)
     ,m_oscope(this)
     ,m_plotter(this)
+    ,m_serialPortWidget(this)
 {
+    m_pSelf = this;
+
+    m_serialPortWidget = 0l;
+
     m_verticalLayout.setObjectName(tr("verticalLayout"));
     m_verticalLayout.setContentsMargins(0, 0, 0, 0);
     m_verticalLayout.setSpacing(0);
@@ -46,6 +53,23 @@ CircuitWidget::~CircuitWidget() { }
 void CircuitWidget::clear()
 {
     m_circView.clear();
+}
+
+void CircuitWidget::setSerialPortWidget( QWidget* serialPortWidget )
+{
+    m_serialPortWidget = serialPortWidget;
+    m_horizontLayout.addWidget( m_serialPortWidget );
+}
+
+void CircuitWidget::showSerialPortWidget( bool showIt )
+{
+    if( !m_serialPortWidget ) return;
+    m_serialPortWidget->setVisible( showIt );
+}
+
+void CircuitWidget::writeSerialPortWidget( const QByteArray &data )
+{
+    emit dataAvailable( data );
 }
 
 #include "moc_circuitwidget.cpp"

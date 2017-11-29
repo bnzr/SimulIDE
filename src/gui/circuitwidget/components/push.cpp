@@ -39,10 +39,10 @@ Push::Push( QObject* parent, QString type, QString id )
     : SwitchBase( parent, type, id )
 {
     connect( m_button, SIGNAL( pressed() ),
-             this,     SLOT  ( onbuttonPressed() ));
+                 this, SLOT  ( onbuttonPressed() ));
 
     connect( m_button, SIGNAL( released() ),
-             this,     SLOT  ( onbuttonReleased() ));
+                 this, SLOT  ( onbuttonReleased() ));
 }
 Push::~Push()
 {
@@ -56,7 +56,7 @@ void Push::onbuttonPressed()
 }
 void Push::onbuttonReleased()
 {
-    m_resist = 1e50;                                        // Open Push
+    m_resist = 1e38;                                        // Open Push
     m_button->setChecked(false);
     m_changed = true;
     update();

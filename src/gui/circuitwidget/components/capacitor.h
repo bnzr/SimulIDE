@@ -26,7 +26,7 @@
 
 class LibraryItem;
 
-class Capacitor : public Component, public eCapacitor
+class MAINMODULE_EXPORT Capacitor : public Component, public eCapacitor
 {
     Q_OBJECT
     Q_PROPERTY( double Capacitance   READ capac    WRITE setCapac   DESIGNABLE true USER true )
@@ -49,7 +49,6 @@ class Capacitor : public Component, public eCapacitor
         virtual void paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget );
 
     public slots:
-        void remove();
 
     private:
 };
