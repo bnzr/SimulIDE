@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -38,9 +38,17 @@ class MAINMODULE_EXPORT Pin : public QObject, public QGraphicsItem, public ePin
         enum { Type = UserType + 3 };
         int type() const { return Type; }
 
-        QString itemID();
+        QString pinId();
+        void setPinId( QString id );
+        
+        bool unused() {return m_unused; }
+        void setUnused( bool unused );
 
         void setLength( int length );
+        
+        void setColor( QColor color ) { m_color = color; }
+        void setPinAngle( int angle );
+        int pinAngle() { return m_angle; }
 
         void setBoundingRect( QRect area );
         
@@ -52,11 +60,12 @@ class MAINMODULE_EXPORT Pin : public QObject, public QGraphicsItem, public ePin
         void setConPin( Pin* pin );
         Pin* conPin();
 
-        //double getVolt();
-
+        QString getLabelText();
         void setLabelText( QString label );
         void setLabelPos();
         void setLabelColor( QColor color );
+        
+        void setVisible( bool visible );
 
         void moveBy( int dx, int dy );
 
@@ -64,6 +73,9 @@ class MAINMODULE_EXPORT Pin : public QObject, public QGraphicsItem, public ePin
         
         void findNodePins();
         void findConnectedPins();
+        
+        void setIsBus( bool bus );
+        bool isBus();
 
         virtual void paint( QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget );
 
@@ -77,11 +89,13 @@ class MAINMODULE_EXPORT Pin : public QObject, public QGraphicsItem, public ePin
         int m_angle;
         int m_length;
 
-        //bool m_changed;
         bool m_blocked;
+        bool m_isBus;
+        bool m_unused;
 
-        QString m_id;
-
+        //QString m_id;
+        
+        QColor m_color;
         QRect      m_area;
         Connector* my_connector;
         Component* m_component;

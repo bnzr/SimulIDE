@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -50,10 +50,12 @@ class MAINMODULE_EXPORT McuComponentPin : public QObject, public eSource
         McuComponent* m_mcuComponent;
         
         bool m_attached;
-
-        double m_Rth;
-        double m_Vth;
+        bool m_isInput;
+        bool m_openColl;
         
+        char m_port;
+        int  m_pinN;
+
         int m_pinType;
         int m_angle;
 

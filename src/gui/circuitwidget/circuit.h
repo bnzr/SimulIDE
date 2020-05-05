@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -31,29 +31,60 @@
 class MAINMODULE_EXPORT Circuit : public QGraphicsScene
 {
     Q_OBJECT
+    
+    Q_PROPERTY( int Speed     READ circSpeed WRITE setCircSpeed DESIGNABLE true USER true )
     Q_PROPERTY( int ReactStep READ reactStep WRITE setReactStep DESIGNABLE true USER true )
     Q_PROPERTY( int NoLinStep READ noLinStep WRITE setNoLinStep DESIGNABLE true USER true )
-    Q_PROPERTY( int Speed     READ circSpeed WRITE setCircSpeed DESIGNABLE true USER true )
+    Q_PROPERTY( int NoLinAcc  READ noLinAcc  WRITE setNoLinAcc  DESIGNABLE true USER true )
+    
+    Q_PROPERTY( bool Draw_Grid        READ drawGrid   WRITE setDrawGrid   DESIGNABLE true USER true )
+    Q_PROPERTY( bool Show_ScrollBars  READ showScroll WRITE setShowScroll DESIGNABLE true USER true )
+    Q_PROPERTY( bool Animate          READ animate    WRITE setAnimate    DESIGNABLE true USER true )
+    Q_PROPERTY( double Font_Scale     READ fontScale  WRITE setFontScale  DESIGNABLE true USER true )
+    Q_PROPERTY( int  Auto_Backup_Secs READ autoBck    WRITE setAutoBck    DESIGNABLE true USER true )
 
     public:
-        Circuit(qreal x, qreal y, qreal width, qreal height, QGraphicsView*  parent);
+        Circuit( qreal x, qreal y, qreal width, qreal height, QGraphicsView*  parent );
         ~Circuit();
 
- static Circuit*  self() { return m_pSelf; }
+ static Circuit* self() { return m_pSelf; }
         
-        int   reactStep();
-        void  setReactStep( int steps );
+        int  reactStep();
+        void setReactStep( int steps );
 
-        int   noLinStep();
-        void  setNoLinStep( int steps );
+        int  noLinStep();
+        void setNoLinStep( int steps );
         
         int  circSpeed();
         void setCircSpeed( int rate );
         
-        void remove();
-        void saveState();
+        int  noLinAcc();
+        void setNoLinAcc( int ac );
+        
+        bool drawGrid();
+        void setDrawGrid( bool draw );
+        
+        bool showScroll();
+        void setShowScroll( bool show );
+        
+        bool animate();
+        void setAnimate( bool an );
+        
+        double fontScale();
+        void   setFontScale( double scale );
 
-        void drawBackground(QPainter* painter, const QRectF &rect);
+        int autoBck();
+        void setAutoBck( int secs );
+        
+        void removeItems();
+        void removeComp( Component* comp );
+        void remove();
+        bool deleting();
+        void compRemoved( bool removed );
+        void saveState();
+        void setChanged();
+
+        void drawBackground( QPainter* painter, const QRectF &rect );
 
         Pin* findPin( int x, int y, QString id );
 
@@ -66,23 +97,23 @@ class MAINMODULE_EXPORT Circuit : public QGraphicsScene
 
         void newconnector( Pin*  startpin );
         void closeconnector( Pin* endpin );
+        void updateConnectors();
         Connector* getNewConnector() { return new_connector; }
 
-        QList<Component*>* compList() { return &m_compList; }
-        QList<Component*>* conList()  { return &m_conList; }
+        QList<Component*>* compList();
+        QList<Component*>* conList();
 
-        /** a conector is been created*/
-        void constarted( bool started) { m_con_started = started; }
-        bool is_constarted() { return m_con_started ; }
+        void constarted( bool started);
+        bool is_constarted();
 
-        void removeItems();
+        bool  pasting();
+        QPointF deltaMove();
+        
+        void addPin( Pin* pin, QString pinId );
+        void updatePin( ePin* epin, std::string newId );
+        void removePin( QString pinId );
 
-        bool  pasting() { return m_pasting; }
-        QPointF deltaMove(){ return m_deltaMove; }
-
-        QGraphicsView* widget(){ return m_widget; }
-
-        const QString getFileName() const { return m_fileName; }
+        const QString getFileName() const { return m_filePath; }
 
     public slots:
         void createSubcircuit();
@@ -90,48 +121,66 @@ class MAINMODULE_EXPORT Circuit : public QGraphicsScene
         void paste( QPointF eventpoint );
         void undo();
         void redo();
-        void importCirc(  QPointF eventpoint  );
+        void importCirc( QPointF eventpoint );
+        void bom();
+        void saveChanges();
 
     protected:
-        void mousePressEvent(QGraphicsSceneMouseEvent* event);
-        void mouseReleaseEvent(QGraphicsSceneMouseEvent* event);
-        void mouseMoveEvent(QGraphicsSceneMouseEvent* event);
-        void contextMenuEvent(QGraphicsSceneContextMenuEvent* event);
+        void mousePressEvent( QGraphicsSceneMouseEvent* event );
+        void mouseReleaseEvent( QGraphicsSceneMouseEvent* event );
+        void mouseMoveEvent( QGraphicsSceneMouseEvent* event );
+        void contextMenuEvent( QGraphicsSceneContextMenuEvent* event );
         void keyPressEvent ( QKeyEvent * event );
 
     private:
+        void loadDomDoc( QDomDocument* doc );
         void loadProperties( QDomElement element, Component* Item );
-        void listToDom( QDomDocument* doc, QList<Component*>* complist );
-        void loadDomDoc(QDomDocument* doc );
+        void loadObjectProperties( QDomElement element, QObject* Item );
         void circuitToDom();
+        void listToDom( QDomDocument* doc, QList<Component*>* complist );
+        void objectToDom( QDomDocument* doc, QObject* object );
+        bool saveDom( QString &fileName, QDomDocument* doc );
 
         QString getCompId( QString name );
 
  static Circuit*  m_pSelf;
-
+ 
         QDomDocument m_domDoc;
         QDomDocument m_copyDoc;
-        QString      m_fileName;
+
+        QString m_filePath;
+        QString m_backupPath;
 
         QRect          m_scenerect;
-        QGraphicsView* m_widget;
+        QGraphicsView* m_graphicView;
         Connector*     new_connector;
 
-        int  m_seqNumber;
+        int m_seqNumber;
+        int m_error;
+        
         bool m_con_started;
         bool m_pasting;
+        bool m_hideGrid;
+        bool m_showScroll;
+        bool m_compRemoved;
+        bool m_animate;
+        bool m_changed;
+        bool m_deleting;
 
         QPointF m_eventpoint;
         QPointF m_deltaMove;
 
         QList<Component*> m_compList;   // Component list
         QList<Component*> m_conList;    // Connector list
+        
+        QHash<QString, Pin*> m_pinMap;    // Pin list
 
         QList<QDomDocument*> m_undoStack;
         QList<QDomDocument*> m_redoStack;
 
         Simulator simulator;
+
+        QTimer m_bckpTimer;
 };
 
 #endif
-

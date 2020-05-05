@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -20,11 +20,10 @@
 #ifndef CONNECTOR_H
 #define CONNECTOR_H
 
-#include "connectorline.h"
 #include "component.h"
-#include "e-node.h"
 
 class ConnectorLine;
+class eNode;
 
 class MAINMODULE_EXPORT Connector : public Component
 {
@@ -83,7 +82,7 @@ class MAINMODULE_EXPORT Connector : public Component
         * Finish the creation of this connector,
         * adding the end-pin
         */
-        void closeCon( Pin* endpin );
+        void closeCon( Pin* endpin, bool connect=false );
 
         /**
         * Split this connector in two, the line at index will be the first of new connector,
@@ -94,6 +93,11 @@ class MAINMODULE_EXPORT Connector : public Component
         void splitCon( int index, Pin* pin1, Pin* pin2 );
 
         void updateLines();
+        
+        void setIsBus( bool bus );
+        bool isBus();
+        
+        bool m_freeLine;
 
     signals:
         void selected(bool yes);
@@ -111,18 +115,18 @@ class MAINMODULE_EXPORT Connector : public Component
         * this is: end point of line1 to start point of line2.
         */
         void connectLines( int index1, int index2 );
-
         void disconnectLines( int index1, int index2 );
 
         int m_actLine;
         int m_lastindex;
-
+        
+        bool m_isBus;
+        
         QString m_startpinid;
         QString m_endpinid;
-        //QString m_enodid;
+
         Pin*    m_startPin;
         Pin*    m_endPin;
-        //eNode*  m_eNode;
 
         QStringList  m_pointList;
 

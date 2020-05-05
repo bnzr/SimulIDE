@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -25,9 +25,11 @@
 Node::Node( QObject* parent, QString type, QString id )
     : Component( parent, type, id )
 {
-    setZValue(1e6);
+    setZValue(2);
     
     m_color = QColor( Qt::black );
+    
+    m_isBus = false;
     
     QString nodid;
     QPoint nodpos;
@@ -46,15 +48,21 @@ Node::~Node(){}
 
 void Node::inStateChanged( int rem ) // Called by pin when connector is removed
 {
-    if( rem==1 ) remove();
-    else
+    if( rem == 1 ) remove();
+    else if( rem == 0 )
     {
         for( int i=0; i< 3; i++)
             if( m_pin[i]->isConnected() ) m_pin[i]->findConnectedPins();
+
+    }
+    else if( rem == 2 ) // Propagate Is Bus
+    {
+        for( int i=0; i< 3; i++) m_pin[i]->setIsBus( true );
+        m_isBus = true;
     }
 }
 
-void Node::remove()
+void Node::remove() // Only remove if there are less than 3 connectors
 {
     int con[2] = { 0, 0 };
     int conectors = 0;
@@ -69,19 +77,20 @@ void Node::remove()
             conectors++;
         }
     }
-    //qDebug() << conectors << " connectors";
+    //if( m_id == "Node-1" ) qDebug()<< m_id << conectors << " connectors";
 
-    if( conectors == 2 ) 
+    if( conectors < 3 ) 
     { 
-        joinConns( con[0], con[1] ); 
+        if( conectors == 2 ) joinConns( con[0], con[1] );  // 2 Conn
+        else                                               // 1 Conn
+        {
+            //qDebug()<< m_id << conectors << " connectors"<< m_pin[con[0]]->isConnected();
+            if( m_pin[con[0]]->isConnected() ) m_pin[con[0]]->connector()->remove();
+        }
+        
         Circuit::self()->compList()->removeOne( this );
         Circuit::self()->removeItem( this );
     }
-    /*else
-    {
-        for( int i=0; i< 3; i++) // Remove all
-        { if ( m_pin[i]->isConnected() ) m_pin[i]->connector()->remove(); }
-    }*/
 }
 
 void Node::joinConns( int c0, int c1 )
@@ -152,12 +161,11 @@ void Node::joinConns( int c0, int c1 )
     //qDebug() << "Node::joinConns removing con1" << con1->objectName();
     con1->remove();
 
-    con->closeCon( pin1->conPin() );
+    con->closeCon( pin1->conPin(), true );
     con->remNullLines();
     
-    
-    
     Circuit::self()->addItem( con );
+    if( this->isSelected() ) con->setSelected( true );
 }
 
 void Node::paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* widget )
@@ -169,8 +177,16 @@ void Node::paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* 
     //p->drawRect( boundingRect() );
 
     Component::paint( p, option, widget );
-
-    p->drawEllipse( QRect( -2, -2, 4, 4 ) );
+    
+    int a =-2;
+    int b = 4;
+    if( m_isBus )
+    {
+        a =-3;
+        b = 6;
+    }
+    
+    p->drawEllipse( QRect( a, a, b, b ) );
 }
 
 #include "moc_node.cpp"

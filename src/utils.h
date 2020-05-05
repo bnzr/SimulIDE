@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -56,12 +56,11 @@ inline QString fileToString( const QString &fileName, const QString &caller )
     QFile file(fileName);
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
-        QMessageBox::warning(0l, caller, "Cannot read file "+fileName+":\n"+file.errorString()
-                             /*.arg(fileName).arg(file.errorString())*/);
+        MessageBoxNB( "ERROR", "Cannot read file "+fileName+":\n"+file.errorString() );
         return "";
     }
-
     QTextStream in(&file);
+    in.setCodec("UTF-8");
     QString text = in.readAll();
     file.close();
 
@@ -75,12 +74,11 @@ inline QStringList fileToStringList( const QString &fileName, const QString &cal
     QFile file(fileName);
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
-        QMessageBox::warning(0l, caller, "Cannot read file "+fileName+":\n"+file.errorString()
-                             /*.arg(fileName).arg(file.errorString())*/);
+        MessageBoxNB( "ERROR", "Cannot read file "+fileName+":\n"+file.errorString() );
         return text;
     }
-
     QTextStream in(&file);
+    in.setCodec("UTF-8");
     while( !in.atEnd() ) text.append( in.readLine() );
     file.close();
 
@@ -128,7 +126,9 @@ inline QPoint roundDown( const QPoint & p, int roundness )
     return QPoint( roundDown( p.x(), roundness ), roundDown( p.y(), roundness ) );
 }
 
-inline int snapToGrid( int x  ) { return roundDown( x, 8 )*8 + 4; }
+inline int snapToGrid( int x ) { return roundDown( x, 8 )*8 + 4; }
+
+inline int snapToCompGrid( int x ) { return roundDown( x+4, 8 )*8; }
 
 inline QPointF togrid( QPointF point )
 {
@@ -157,6 +157,17 @@ inline int getAlignment( QPointF p1, QPointF p2 )
     if( p1.y() == p2.y() ) align += 1;           // Aligned in X axis
 
     return align;
+}
+
+#include "pin.h"
+inline bool lessPinX( Pin* pinA, Pin* pinB )
+{
+    return pinA->x() < pinB->x();
+}
+
+inline bool lessPinY( Pin* pinA, Pin* pinB )
+{
+    return pinA->y() < pinB->y();
 }
 #endif
 

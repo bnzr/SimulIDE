@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -23,27 +23,45 @@
 #include <QtWidgets>
 
 #include "circuitview.h"
-#include "oscopewidget.h"
 #include "plotterwidget.h"
 #include "terminalwidget.h"
+#include "serialportwidget.h"
 
 class MAINMODULE_EXPORT CircuitWidget : public QWidget
 {
     Q_OBJECT
 
     public:
-        CircuitWidget( QWidget *parent, QToolBar* toolbar );
+        CircuitWidget( QWidget *parent );
         ~CircuitWidget();
 
  static CircuitWidget* self() { return m_pSelf; }
 
         void clear();
-
-        void setSerialPortWidget( QWidget* serialPortWidget );
+        
+        void createActions();
+        
+        void createToolBars();
+        
+        void setRate( int rate );
 
         void showSerialPortWidget( bool showIt );
         
         void writeSerialPortWidget( const QByteArray &data );
+        
+        void powerCircOn();
+        void powerCircOff();
+        void powerCircDebug( bool run );
+        
+    public slots:
+        bool newCircuit();
+        void openCirc();
+        void loadCirc( QString path );
+        void saveCirc();
+        bool saveCircAs();
+        void powerCirc();
+        void openInfo();
+        void about();
 
     signals:
         void dataAvailable( const QByteArray &data );
@@ -55,10 +73,27 @@ class MAINMODULE_EXPORT CircuitWidget : public QWidget
         QVBoxLayout    m_verticalLayout;
         QHBoxLayout    m_horizontLayout;
         CircuitView    m_circView;
-        TerminalWidget m_terminal;
-        OscopeWidget   m_oscope;
-        PlotterWidget  m_plotter;
-        QWidget*       m_serialPortWidget;
+        
+        TerminalWidget    m_terminal;
+        PlotterWidget     m_plotter;
+        SerialPortWidget  m_serial;
+        
+        QToolBar m_circToolBar;
+        QLabel*  m_rateLabel;
+        
+        QAction* newCircAct;
+        QAction* openCircAct;
+        QAction* saveCircAct;
+        QAction* saveCircAsAct;
+        QAction* powerCircAct;
+        QAction* infoAct;
+        QAction* aboutAct;
+        QAction* aboutQtAct;
+        
+        QMenu m_infoMenu;
+        
+        QString m_curCirc;
+        QString m_lastCircDir;
 };
 
 #endif

@@ -1,5 +1,24 @@
 <!DOCTYPE SimulIDE>
 
+<!-- *************************************************************************** -->
+<!-- *   Copyright (C) 2017 by santiago González                               * -->
+<!-- *   santigoro@gmail.com                                                   * -->
+<!-- *                                                                         * -->
+<!-- *   This program is free software; you can redistribute it and/or modify  * -->
+<!-- *   it under the terms of the GNU General Public License as published by  * -->
+<!-- *   the Free Software Foundation; either version 3 of the License, or     * -->
+<!-- *   (at your option) any later version.                                   * -->
+<!-- *                                                                         * -->
+<!-- *   This program is distributed in the hope that it will be useful,       * -->
+<!-- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        * -->
+<!-- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         * -->
+<!-- *   GNU General Public License for more details.                          * -->
+<!-- *                                                                         * -->
+<!-- *   You should have received a copy of the GNU General Public License     * -->
+<!-- *   along with this program; if not, see <http://www.gnu.org/licenses/>.  * -->
+<!-- *                                                                         * -->
+<!-- *************************************************************************** -->
+
 <subcircuit enodes="98">
 
     <item itemtype="eBuffer"
@@ -11,7 +30,7 @@
         outImped = "40"
         inverted = "true"
         connections="
-        input0-packagePin3
+        input0-Package_D0
         output0-eNode0" >
     </item>
 
@@ -391,7 +410,7 @@
         inverted = "false"
         connections="
         output0-eNode8
-        input0-packagePin1" >
+        input0-Package_!MR" >
     </item>
 
     <item itemtype="eBuffer"
@@ -432,7 +451,7 @@
         inverted = "true"
         connections="
         output0-eNode13
-        input0-packagePin4" >
+        input0-Package_D1" >
     </item>
 
     <item itemtype="eBuffer"
@@ -576,7 +595,7 @@
         inverted = "true"
         connections="
         output0-eNode24
-        input0-packagePin7" >
+        input0-Package_D2" >
     </item>
 
     <item itemtype="eBuffer"
@@ -720,7 +739,7 @@
         inverted = "true"
         connections="
         output0-eNode35
-        input0-packagePin8" >
+        input0-Package_D3" >
     </item>
 
     <item itemtype="eBuffer"
@@ -864,7 +883,7 @@
         inverted = "true"
         connections="
         output0-eNode46
-        input0-packagePin13" >
+        input0-Package_D4" >
     </item>
 
     <item itemtype="eBuffer"
@@ -1008,7 +1027,7 @@
         inverted = "true"
         connections="
         output0-eNode57
-        input0-packagePin14" >
+        input0-Package_D5" >
     </item>
 
     <item itemtype="eBuffer"
@@ -1152,7 +1171,7 @@
         inverted = "true"
         connections="
         output0-eNode68
-        input0-packagePin17" >
+        input0-Package_D6" >
     </item>
 
     <item itemtype="eBuffer"
@@ -1296,7 +1315,7 @@
         inverted = "true"
         connections="
         output0-eNode79
-        input0-packagePin18" >
+        input0-Package_D7" >
     </item>
 
     <item itemtype="eBuffer"
@@ -1425,7 +1444,7 @@
         inverted = "false"
         connections="
         output0-eNode89
-        input0-packagePin11" >
+        input0-Package_CP" >
     </item>
 
     <item itemtype="eBuffer"
@@ -1438,7 +1457,7 @@
         inverted = "false"
         connections="
         input0-eNode90
-        output0-packagePin2" >
+        output0-Package_Q0" >
     </item>
 
     <item itemtype="eBuffer"
@@ -1451,7 +1470,7 @@
         inverted = "false"
         connections="
         input0-eNode91
-        output0-packagePin5" >
+        output0-Package_Q1" >
     </item>
 
     <item itemtype="eBuffer"
@@ -1464,7 +1483,7 @@
         inverted = "false"
         connections="
         input0-eNode92
-        output0-packagePin6" >
+        output0-Package_Q2" >
     </item>
 
     <item itemtype="eBuffer"
@@ -1476,7 +1495,7 @@
         outImped = "40"
         inverted = "false"
         connections="
-        output0-packagePin9
+        output0-Package_Q3
         input0-eNode93" >
     </item>
 
@@ -1489,7 +1508,7 @@
         outImped = "40"
         inverted = "false"
         connections="
-        output0-packagePin12
+        output0-Package_Q4
         input0-eNode94" >
     </item>
 
@@ -1502,7 +1521,7 @@
         outImped = "40"
         inverted = "false"
         connections="
-        output0-packagePin15
+        output0-Package_Q5
         input0-eNode95" >
     </item>
 
@@ -1515,7 +1534,7 @@
         outImped = "40"
         inverted = "false"
         connections="
-        output0-packagePin16
+        output0-Package_Q6
         input0-eNode96" >
     </item>
 
@@ -1528,7 +1547,7 @@
         outImped = "40"
         inverted = "false"
         connections="
-        output0-packagePin19
+        output0-Package_Q7
         input0-eNode97" >
     </item>
 

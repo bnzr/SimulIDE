@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -20,14 +20,12 @@
 #include <QtGui>
 
 #include "outpaneltext.h"
+#include "mainwindow.h"
 
-//OutPanelText* OutPanelText::m_pSelf = 0l;
 
 OutPanelText::OutPanelText( QWidget *parent ) 
             : QPlainTextEdit( parent )
 {
-    //m_pSelf = this;
-    
     m_text = "";
     
     //setStyleSheet("background-color: #150925");
@@ -41,10 +39,10 @@ OutPanelText::OutPanelText( QWidget *parent )
     QFont font;
     font.setFamily("Monospace");
     font.setFixedPitch(true);
-    font.setPointSize( 10 );
+    font.setPixelSize( 12*MainWindow::self()->fontScale() );
     setFont(font);
 }
-OutPanelText::~OutPanelText(){ /*m_highlighter->deleteLater();*/ }
+OutPanelText::~OutPanelText(){}
 
 
 void OutPanelText::appendText( const QString &text )
@@ -60,7 +58,6 @@ void OutPanelText::writeText( const QString &text )
     step();
     repaint();
 }
-
 
 void OutPanelText::step()
 {
@@ -127,7 +124,7 @@ OutHighlighter::OutHighlighter( QTextDocument *parent )
     errorFormat.setForeground( QColor(100, 50, 0) );
     errorFormat.setBackground( QColor(255, 255, 100) );
     errorFormat.setFontWeight( QFont::Bold );
-    rule.pattern = QRegExp("ERROR");
+    rule.pattern = QRegExp(" ERROR");
     rule.format = errorFormat;
     highlightingRules.append(rule);
 }

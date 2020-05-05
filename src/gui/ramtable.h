@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -24,6 +24,7 @@
 #include "baseprocessor.h"
 
 class BaseProcessor;
+class BaseDebugger;
 
 class RamTable : public QTableWidget
 {
@@ -33,23 +34,31 @@ class RamTable : public QTableWidget
         ~RamTable();
         
         void setItemValue( int col, QString value );
-        void setItemValue( int col, int value );
+        void setItemValue( int col, int32_t value );
         void setItemValue( int col, float value );
-
-        //void setProcessor( BaseProcessor *processor );
+        
+        void setDebugger( BaseDebugger*  deb );
+        void remDebugger( BaseDebugger*  deb );
 
     public slots:
         void updateValues();
+        void clearSelected();
+        void clearTable();
         void loadVarSet();
         void saveVarSet();
+        void loadVariables();
 
     private slots:
         void addToWatch(QTableWidgetItem*);
+        void slotContextMenu(const QPoint&);
 
     private:
         BaseProcessor* m_processor;
+        BaseDebugger*  m_debugger;
 
         QHash<int, QString> watchList;
+        
+        bool m_loadingVars;
 
         int m_numRegs;
         int m_currentRow;

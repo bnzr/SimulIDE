@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -19,10 +19,12 @@
 
 #include <sstream>
 #include <QDebug>
+
 #include "e-logic_device.h"
+#include "circuit.h"
 
 eLogicDevice::eLogicDevice( std::string id )
-    : eElement( id )
+            : eElement( id )
 {
     m_numInputs  = 0;
     m_numOutputs = 0;
@@ -60,8 +62,6 @@ void eLogicDevice::initialize()
     // Register for callBack when eNode volt change on clock or OE pins
     if( m_clockPin )
     {
-        m_clock = false;
-        
         eNode* enode = m_clockPin->getEpin()->getEnode();
         if( enode ) enode->addToChangedFast(this);
     }
@@ -79,6 +79,8 @@ void eLogicDevice::initialize()
 
 void eLogicDevice::resetState()
 {
+    if( m_clockPin ) m_clock = false;
+    
     for( int i=0; i<m_numOutputs; i++ )
         eLogicDevice::setOut( i, false );
 }
@@ -95,12 +97,25 @@ bool eLogicDevice::outputEnabled()
     return m_outEnable;
 }
 
+void eLogicDevice::updateOutEnabled()
+{
+    if( m_outEnablePin )
+    {
+        bool outEn = true;
+        bool outEnPrev = m_outEnable;
+        outEn = outputEnabled();              // Refresh m_outEnable
+
+        if( outEnPrev != outEn ) setOutputEnabled( outEn );
+    }
+}
+
 void eLogicDevice::setOutputEnabled( bool enabled )
 {
     double imp = 1e28;
     if( enabled ) imp = m_outImp;
-    
+
     for( int i=0; i<m_numOutputs; i++ ) m_output[i]->setImp( imp );
+
 }
 
 bool eLogicDevice::inputEnabled()
@@ -324,60 +339,100 @@ void eLogicDevice::setOut( int num, bool out )
 
 void eLogicDevice::setOutHighV( double volt )
 {
+    bool pauseSim = Simulator::self()->isRunning();
+    if( pauseSim ) Simulator::self()->pauseSim();
+
     m_outHighV = volt;
 
     for( int i=0; i<m_numOutputs; i++ )
         m_output[i]->setVoltHigh( volt );
+
+    if( pauseSim ) Simulator::self()->runContinuous();
 }
 
 void eLogicDevice::setOutLowV( double volt )
 {
+    bool pauseSim = Simulator::self()->isRunning();
+    if( pauseSim ) Simulator::self()->pauseSim();
+
     m_outLowV = volt;
 
     for( int i=0; i<m_numOutputs; i++ )
         m_output[i]->setVoltLow( volt );
+
+    if( pauseSim ) Simulator::self()->runContinuous();
 }
 
 void eLogicDevice::setInputImp( double imp )
 {
+    bool pauseSim = Simulator::self()->isRunning();
+    if( pauseSim ) Simulator::self()->pauseSim();
+
     m_inputImp = imp;
 
     for( int i=0; i<m_numInputs; i++ )
     {
         m_input[i]->setImp( imp );
-        //m_input[i]->stampOutput();
     }
+    if( pauseSim ) Simulator::self()->runContinuous();
 }
 
 void eLogicDevice::setOutImp( double imp )
 {
+    bool pauseSim = Simulator::self()->isRunning();
+    if( pauseSim ) Simulator::self()->pauseSim();
+
     if( m_outImp == imp ) return;
-    
+
     m_outImp = imp;
 
     for( int i=0; i<m_numOutputs; i++ )
     {
         m_output[i]->setImp( imp );
-        //m_output[i]->stampOutput();
     }
+    if( pauseSim ) Simulator::self()->runContinuous();
 }
 
 void eLogicDevice::setInverted( bool inverted )
 {
+    bool pauseSim = Simulator::self()->isRunning();
+    if( pauseSim ) Simulator::self()->pauseSim();
+
     m_inverted = inverted;
+    
     for( int i=0; i<m_numOutputs; i++ )
     {
         m_output[i]->setInverted( inverted );
     }
+    Circuit::self()->update();
+
+    if( pauseSim ) Simulator::self()->runContinuous();
 }
 
 void eLogicDevice::setInvertInps( bool invert )
 {
+    bool pauseSim = Simulator::self()->isRunning();
+    if( pauseSim ) Simulator::self()->pauseSim();
+
     m_invInputs = invert;
     for( int i=0; i<m_numInputs; i++ )
     {
         m_input[i]->setInverted( invert );
     }
+    Circuit::self()->update();
+
+    if( pauseSim ) Simulator::self()->runContinuous();
+}
+
+void eLogicDevice::setClockInv( bool inv )     
+{
+    bool pauseSim = Simulator::self()->isRunning();
+    if( pauseSim ) Simulator::self()->pauseSim();
+
+    m_clockPin->setInverted(inv);
+    Circuit::self()->update();
+
+    if( pauseSim ) Simulator::self()->runContinuous();
 }
 
 int eLogicDevice::getClockState()
@@ -416,6 +471,12 @@ bool eLogicDevice::getInputState( int input )
     
     return state;
 }
+
+bool eLogicDevice::getOutputState( int output )
+{
+    return m_output[output]->out();
+}
+
 /*ePin* eLogicDevice::getEpin( int pin )  // First InPuts, then OutPuts
 {
     //qDebug() << "eLogicDevice::getEpin " << pin;
@@ -453,3 +514,4 @@ ePin* eLogicDevice::getEpin( QString pinName )
     
     return eElement::getEpin( pinName );
 }
+

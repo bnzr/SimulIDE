@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -20,13 +20,13 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtGui>
-#include <QDomDocument>
+#include <QtWidgets>
 
-#include "QPropertyEditorWidget.h"
-//#include "editorwindow.h"
-#include "componentselector.h"
-#include "circuitwidget.h"
+class PropertiesWidget;
+class ComponentSelector;
+class CircuitWidget;
+class EditorWindow;
+class FileWidget;
 
 class MAINMODULE_EXPORT MainWindow : public QMainWindow
 {
@@ -37,92 +37,67 @@ class MAINMODULE_EXPORT MainWindow : public QMainWindow
         ~MainWindow();
 
  static MainWindow* self() { return m_pSelf; }
-        
-        void setRate( int rate );
 
-        QSettings* settings() { return &m_settings; }
+        QSettings* settings();
 
         void loadPlugins();
         void unLoadPugin( QString pluginName );
         
         void readSettings();
-
-        QTabWidget*   m_sidepanel;
-        QSplitter*    m_Centralsplitter;
-        QWidget*      m_ramTabWidget;
-        QGridLayout*  m_ramTabWidgetLayout;
-        QToolBar*     m_circToolBar;
         
-        QPropertyEditorWidget* m_itemprop;
-        //EditorWindow* m_editorWindow;
+        void setTitle( QString title );
+        
+        double fontScale() { return m_fontScale; }
+        void setFontScale( double scale ) { m_fontScale = scale; }
 
-    public slots:
-        void powerCircOn();
-        void powerCircOff();
+        int autoBck();
+        void setAutoBck( int secs );
 
-        void openCirc();
-        void newCircuit();
-        void saveCirc();
-        bool saveCircAs();
+        QString* circHelp() ;
+        void loadCircHelp();
+        
+        QTabWidget*  m_sidepanel;
+        QWidget*     m_ramTabWidget;
+        QGridLayout* m_ramTabWidgetLayout;
 
     protected:
         void closeEvent(QCloseEvent* event);
 
     private slots:
         void about();
-        void powerCirc();
-        void openInfo();
 
     private:
 
  static MainWindow* m_pSelf;
+ 
+        void loadPluginsAt( QDir pluginsDir );
 
         bool m_blocked;
 
         void createWidgets();
-        void createActions();
         void createMenus();
         void createToolBars();
         void writeSettings();
-
         void applyStile();
+        
+        float m_fontScale;
+        int m_autoBck;
         
         QSettings m_settings;
         
         QString m_version;
         QString m_styleSheet;
+        QString m_circHelp;
 
-        QString     m_curCirc;
-        QString     m_lastCircDir;
-        QStringList m_docList;
-        //QStringList m_plugins;
         QHash<QString, QPluginLoader*>  m_plugins;
-
-        CircuitWidget* m_circuit;
-        QLabel*        m_rateLabel; 
-
-        ComponentSelector* components;
-
-        QLineEdit m_findLabel;
-
-
-
-        QAction* exitAct;
-        QAction* aboutAct;
-        QAction* aboutQtAct;
-
-        QAction* stepAct;
-        QAction* runAct;
-        QAction* pauseAct;
-        QAction* resetAct;
-        QAction* stopAct;
-
-        QAction* newCircAct;
-        QAction* openCircAct;
-        QAction* saveCircAct;
-        QAction* saveCircAsAct;
-        QAction* powerCircAct;
-        QAction* infoAct;
+        
+        CircuitWidget*      m_circuit;
+        ComponentSelector*  m_components;
+        PropertiesWidget*   m_itemprop;
+        EditorWindow*       m_editor;
+        
+        QSplitter*  m_Centralsplitter;
+        FileWidget* m_fileSystemTree;
 };
 
 #endif

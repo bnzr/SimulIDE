@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -22,16 +22,21 @@
 
 #include <QtWidgets>
 
-#include "package.h"
-#include "baseprocessor.h"
+#include "chip.h"
+#include "memdata.h"
 
+
+class BaseProcessor;
 class McuComponentPin;
 
-class MAINMODULE_EXPORT McuComponent : public Package
+class MAINMODULE_EXPORT McuComponent : public Chip, public MemData
 {
     Q_OBJECT
-    Q_PROPERTY( QString  program  READ program WRITE setProgram DESIGNABLE true USER true )
-    Q_PROPERTY( int      Mhz      READ freq    WRITE setFreq    DESIGNABLE true USER true )
+    Q_PROPERTY( QVector<int> eeprom  READ eeprom  WRITE setEeprom )
+    Q_PROPERTY( QString  Program     READ program WRITE setProgram DESIGNABLE true  USER true )
+    Q_PROPERTY( double   Mhz         READ freq    WRITE setFreq    DESIGNABLE true  USER true )
+    Q_PROPERTY( bool     Ser_Port    READ serPort WRITE setSerPort )
+    Q_PROPERTY( bool     Ser_Monitor READ serMon  WRITE setSerMon )
 
     public:
 
@@ -45,8 +50,22 @@ class MAINMODULE_EXPORT McuComponent : public Package
         
         QString device() { return m_device; }
 
-        int  freq();
-        virtual void setFreq( int freq );
+        double freq();
+        virtual void setFreq( double freq );
+        virtual void initChip();
+        
+        bool serPort();
+        void setSerPort( bool set );
+        
+        bool serMon();
+        void setSerMon( bool set );
+
+        void setEeprom(QVector<int> eep );
+        QVector<int> eeprom();
+        
+        virtual void setLogicSymbol( bool ls );
+        
+        QList<McuComponentPin*> getPinList() { return m_pinList; }
 
         virtual void paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* widget );
   
@@ -61,27 +80,31 @@ class MAINMODULE_EXPORT McuComponent : public Package
         void slotCloseTerm();
         void slotOpenSerial();
         void slotCloseSerial();
+        void loadData();
+        void saveData();
+        
+        void contextMenu( QGraphicsSceneContextMenuEvent* event, QMenu* menu );
         
     protected:
  static McuComponent* m_pSelf;
  static bool m_canCreate;
-  
-        void contextMenuEvent(QGraphicsSceneContextMenuEvent* event);
+        
+        virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent* event);
 
         virtual void addPin( QString id, QString type, QString label, int pos, int xpos, int ypos, int angle )=0;
         virtual void attachPins()=0;
-        virtual void initPackage();
 
         BaseProcessor* m_processor;
 
-        int m_freq;             // Clock Frequency Mhz
+        double m_freq;           // Clock Frequency Mhz
         
         bool m_attached;
+        bool m_serPort;
+        bool m_serMon;
 
         QString m_device;       // Name of device
         QString m_symbolFile;   // firmware file loaded
         QString m_lastFirmDir;  // Last firmware folder used
-        QString m_BackGround;   // BackGround Image
         
         QList<McuComponentPin*> m_pinList;
 };
