@@ -1,9 +1,9 @@
 # SimulIDE stuff
-build_XX/build
-build_XX/release
-build_XX/.qmake.stash
-build_XX/Makefile
-build_XX/qrc_application.cpp
+build_macos/build
+build_macos/release
+build_macos/.qmake.stash
+build_macos/Makefile
+build_macos/qrc_application.cpp
 
 # C++ Stuff
 # Prerequisites

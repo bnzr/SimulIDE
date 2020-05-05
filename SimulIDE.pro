@@ -145,7 +145,9 @@ INCLUDEPATH += ../src \
     ../src/gpsim \
     ../src/gpsim/devices \
     ../src/gpsim/modules \
-    ../src/gpsim/registers
+    ../src/gpsim/registers \
+    /usr/local/Cellar/libelf/0.8.13_1/include \
+    /usr/local/Cellar/libelf/0.8.13_1/include/libelf 
 
 TRANSLATIONS +=  \
     ../resources/translations/simulide.ts \
@@ -180,8 +182,9 @@ win32 {
     RC_ICONS += ../src/icons/simulide.ico
 }
 unix {
-    QMAKE_LIBS += -lelf
+    #QMAKE_LIBS += -lelf
     QMAKE_LFLAGS += -no-pie
+    LIBS += /usr/local/lib/libelf.a
 }
 
 CONFIG += qt 
