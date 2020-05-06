@@ -1,7 +1,7 @@
 # SimulIDE 0.3.10
 
 
-For the details on Mac OS X port, you have a look [here](https://www.ensta-bretagne.fr/zerr/dokuwiki/doku.php?id=electro:simulide-macos). The port has been made on a VirtualBox virtual machine, see [here](https://www.ensta-bretagne.fr/zerr/dokuwiki/doku.php?id=vm:main#v1) for details.
+For the details on Mac OS X port, you can have a look [here](https://www.ensta-bretagne.fr/zerr/dokuwiki/doku.php?id=electro:simulide-macos). The port has been made on a VirtualBox virtual machine, see [here](https://www.ensta-bretagne.fr/zerr/dokuwiki/doku.php?id=vm:main#v1) for details.
 
 
 
