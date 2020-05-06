@@ -3,7 +3,7 @@
 
 For the details on Mac OS X port, you can have a look [here](https://www.ensta-bretagne.fr/zerr/dokuwiki/doku.php?id=electro:simulide-macos). The port has been made on a VirtualBox virtual machine, see [here](https://www.ensta-bretagne.fr/zerr/dokuwiki/doku.php?id=vm:main#v1) for details.
 
-
+A Mac OS Application **simulide.app** and an installation movie can be found [here](https://enstabretagne-my.sharepoint.com/:f:/g/personal/benoit_zerr_ensta-bretagne_org/EgIvjcrIfuRDhou5fP7C6hYBrnvVczdJrAVCOm59wc-3Vw?e=dxZyMb).
 
 Electronic Circuit Simulator
 
