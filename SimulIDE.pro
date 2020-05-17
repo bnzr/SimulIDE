@@ -184,7 +184,14 @@ win32 {
 unix {
     #QMAKE_LIBS += -lelf
     QMAKE_LFLAGS += -no-pie
+}
+macx {
+    INCLUDEPATH += \
+        /usr/local/Cellar/libelf/0.8.13_1/include \
+        /usr/local/Cellar/libelf/0.8.13_1/include/libelf
+   
     LIBS += /usr/local/lib/libelf.a
+    QMAKE_LFLAGS += -no-pie
 }
 
 CONFIG += qt 
@@ -211,11 +218,7 @@ OBJECTS_DIR *= $$_OBJECTS_DIR
 MOC_DIR     *= $$_OBJECTS_DIR
 INCLUDEPATH += $$OBJECTS_DIR
 
-DESTDIR = $$TARGET_PREFIX/bin
-
 TARGET = simulide
-
-mkpath( $$TARGET_PREFIX/bin )
 
 
 runLrelease.commands = lrelease ../resources/translations/*.ts; 
@@ -230,6 +233,34 @@ $(COPY_DIR) ../resources/data              $$TARGET_PREFIX/share/simulide ; \
 $(COPY_DIR) ../resources/examples          $$TARGET_PREFIX/share/simulide ; \
 $(COPY_DIR) ../resources/icons             $$TARGET_PREFIX/share ; \
 $(MOVE)     ../resources/translations/*.qm $$TARGET_PREFIX/share/simulide/translations ;
+runLrelease.commands = lrelease ../resources/translations/*.ts;
+QMAKE_EXTRA_TARGETS += runLrelease
+POST_TARGETDEPS     += runLrelease
+
+win32 | linux {
+    DESTDIR = $$TARGET_PREFIX/bin
+    mkpath( $$TARGET_PREFIX/bin )
+    copy2dest.commands = \
+        $(MKDIR)    $$TARGET_PREFIX/share/simulide/data ; \
+        $(MKDIR)    $$TARGET_PREFIX/share/simulide/examples ; \
+        $(MKDIR)    $$TARGET_PREFIX/share/simulide/translations ; \
+        $(COPY_DIR) ../resources/data              $$TARGET_PREFIX/share/simulide ; \
+        $(COPY_DIR) ../resources/examples          $$TARGET_PREFIX/share/simulide ; \
+        $(COPY_DIR) ../resources/icons             $$TARGET_PREFIX/share ; \
+        $(MOVE)     ../resources/translations/*.qm $$TARGET_PREFIX/share/simulide/translations ;
+}
+macx {
+    DESTDIR = $$TARGET_PREFIX
+    mkpath( $$TARGET_PREFIX/simulide.app )
+    copy2dest.commands = \
+        $(MKDIR)    $$TARGET_PREFIX/simulide.app/Contents/share/simulide/data ; \
+        $(MKDIR)    $$TARGET_PREFIX/simulide.app/Contents/share/simulide/examples ; \
+        $(MKDIR)    $$TARGET_PREFIX/simulide.app/Contents/share/simulide/translations ; \
+        $(COPY_DIR) ../resources/data              $$TARGET_PREFIX/simulide.app/Contents/share/simulide ; \
+        $(COPY_DIR) ../resources/examples          $$TARGET_PREFIX/simulide.app/Contents/share/simulide ; \
+        $(COPY_DIR) ../resources/icons             $$TARGET_PREFIX/simulide.app/Contents/share ; \
+        $(MOVE)     ../resources/translations/*.qm $$TARGET_PREFIX/simulide.app/Contents/share/simulide/translations ;
+}
 
 QMAKE_EXTRA_TARGETS += copy2dest
 POST_TARGETDEPS     += copy2dest
