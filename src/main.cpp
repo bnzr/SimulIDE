@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -18,6 +18,7 @@
  ***************************************************************************/
 
 #include <QApplication>
+#include <QTranslator>
 
 #include "mainwindow.h"
 
@@ -36,19 +37,37 @@ int main(int argc, char *argv[])
     paths.append("plugins/qmltooling");
     paths.append("plugins/printsupport");
     QCoreApplication::setLibraryPaths(paths);
+    
+    if (AttachConsole(ATTACH_PARENT_PROCESS)) 
+    {
+        freopen("CONOUT$", "w", stdout);
+        freopen("CONOUT$", "w", stderr);
+    }
 #endif
 
     //QApplication::setGraphicsSystem( "raster" );//native, raster, opengl
-    QApplication app(argc, argv);
+    QApplication app( argc, argv );
+
+    QString locale   = QLocale::system().name().split("_").first();
+    QString langFile = "../share/simulide/translations/simulide_"+locale+".qm";
+    
+    QFile file( langFile );
+    if( !file.exists() ) langFile = "../share/simulide/translations/simulide_en.qm";
+    
+    QTranslator translator;
+    translator.load( langFile );
+    app.installTranslator( &translator );
+
     MainWindow window;
     
-    QRect screenGeometry = QApplication::desktop()->screenGeometry();
-    int x = (screenGeometry.width()-window.width()) / 2;
-    int y = (screenGeometry.height()-window.height()) / 2;
-    window.move(x, y);
+    /*QRect screenGeometry = QApplication::desktop()->screenGeometry();
+    int x = ( screenGeometry.width()-window.width() ) / 2;
+    int y = ( screenGeometry.height()-window.height() ) / 2;
+    window.move( x, y );*/
+    window.scroll( 0, 50 );
 
     window.show();
-    app.setApplicationVersion(APP_VERSION);
+    app.setApplicationVersion( APP_VERSION );
     return app.exec();
 }
 

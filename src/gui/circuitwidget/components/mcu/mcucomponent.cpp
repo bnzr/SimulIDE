@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -24,28 +24,42 @@
 #include "mainwindow.h"
 #include "mcucomponent.h"
 #include "mcucomponentpin.h"
+#include "baseprocessor.h"
 #include "terminalwidget.h"
+#include "componentselector.h"
+#include "circuitwidget.h"
+#include "circuit.h"
 #include "connector.h"
 #include "simulator.h"
-#include "simuapi_apppath.h"
+#include "utils.h"
+
+
+static const char* McuComponent_properties[] = {
+    QT_TRANSLATE_NOOP("App::Property","Program")
+};
 
 McuComponent* McuComponent::m_pSelf = 0l;
 bool McuComponent::m_canCreate = true;
 
 McuComponent::McuComponent( QObject* parent, QString type, QString id )
-    : Package( parent, type, id )
-{    
+            : Chip( parent, type, id )
+            , MemData()
+{
+    Q_UNUSED( McuComponent_properties );
+    
     qDebug() << "        Initializing"<<m_id<<"...";
     
-    m_canCreate  = false;
-    //m_serialTerm = false;
-    m_attached   = false;
+    m_canCreate = false;
+    m_serPort   = false;
+    m_serMon    = false;
+    m_attached  = false;
+    
     m_processor  = 0l;
     m_symbolFile = "";
     m_device     = "";
     m_error      = 0;
     
-    // Id Label Pos set in Package::initPackage
+    // Id Label Pos set in Chip::initChip
     m_color = QColor( 50, 50, 70 );
 
     QSettings* settings = MainWindow::self()->settings();
@@ -56,36 +70,32 @@ McuComponent::McuComponent( QObject* parent, QString type, QString id )
 }
 McuComponent::~McuComponent() {}
 
-void McuComponent::initPackage()
+void McuComponent::initChip()
 {
     QString compName = m_id.split("-").first(); // for example: "atmega328-1" to: "atmega328"
 
-    QString dfPath = SIMUAPI_AppPath::self()->availableDataFilePath(m_dataFile);
-    qDebug() << "McuComponent::initPackage datafile: " << compName << " <= " << dfPath;
-    QFile file(dfPath);
-    if( !file.open(QFile::ReadOnly | QFile::Text) )
+    QString dataFile = ComponentSelector::self()->getXmlFile( compName );
+    
+    QFile file( dataFile );
+    
+    if(( dataFile == "" ) || ( !file.exists() ))
     {
-        QMessageBox* msgBox = new QMessageBox( MainWindow::self() );
-        msgBox->setAttribute( Qt::WA_DeleteOnClose ); //makes sure the msgbox is deleted automatically when closed
-        msgBox->setStandardButtons( QMessageBox::Ok );
-        msgBox->setWindowTitle( tr("Error") );
-        msgBox->setText( tr("Cannot read file %1:\n%2.").arg(m_dataFile).arg(file.errorString()) );
-        msgBox->setModal( false ); 
-        msgBox->open();
+        m_error = 1;
         return;
     }
-
+    if( !file.open(QFile::ReadOnly | QFile::Text) )
+    {
+        MessageBoxNB( "Error", tr("Cannot read file %1:\n%2.").arg(dataFile).arg(file.errorString()) );
+        m_error = 1;
+        return;
+    }
     QDomDocument domDoc;
+    
     if( !domDoc.setContent(&file) )
     {
-        QMessageBox* msgBox = new QMessageBox( MainWindow::self() );
-        msgBox->setAttribute( Qt::WA_DeleteOnClose ); //makes sure the msgbox is deleted automatically when closed
-        msgBox->setStandardButtons( QMessageBox::Ok );
-        msgBox->setWindowTitle( tr("Error") );
-        msgBox->setText( tr("Cannot set file %1\nto DomDocument") .arg(m_dataFile) );
-        msgBox->setModal( false ); 
-        msgBox->open();
+        MessageBoxNB( "Error", tr("Cannot set file %1\nto DomDocument").arg(dataFile) );
         file.close();
+        m_error = 1;
         return;
     }
     file.close();
@@ -105,18 +115,17 @@ void McuComponent::initPackage()
             if( element.attribute("name")==compName )
             {
                 // Get package file
-                package = element.attribute( "package" );
-                m_dataFile = m_dataFile.replace( m_dataFile.split("/").last(), package.append(".package") );
+                QDir dataDir(  dataFile );
+                dataDir.cdUp();             // Indeed it doesn't cd, just take out file name
+                m_pkgeFile = dataDir.filePath( element.attribute( "package" ) )+".package";
                 
                 // Get device
                 m_device = element.attribute( "device" );
-                //qDebug()<<"McuComponent::initPackage" << "m_device" <<m_device;
-                
                 m_processor->setDevice( m_device );
-                //else qDebug() << compName << "ERROR!! McuComponent::initPackage m_processor: " << m_processor;
                 
                 // Get data file
-                QString dataFile = element.attribute( "data" );
+                QString dataFile = dataDir.filePath( element.attribute( "data" ) )+".data";
+
                 m_processor->setDataFile( dataFile );
                 if( element.hasAttribute( "icon" ) ) m_BackGround = ":/" + element.attribute( "icon" );
 
@@ -126,24 +135,24 @@ void McuComponent::initPackage()
         }
         rNode = rNode.nextSibling();
     }
-    if( m_device != "" ) Package::initPackage();
+    if( m_device != "" ) Chip::initChip();
     else 
     {
         m_error = 1;
-        qDebug() << compName << "ERROR!! McuComponent::initPackage Package not Found: " << package;
+        qDebug() << compName << "ERROR!! McuComponent::initChip Chip not Found: " << package;
     }
 }
 
-int McuComponent::freq()
+double McuComponent::freq()
 { 
     return m_freq; 
 }
-void McuComponent::setFreq( int freq )
+void McuComponent::setFreq( double freq )
 { 
-    if     ( freq < 0  ) freq = 0;
+    if     ( freq < 0  )  freq = 0;
     else if( freq > 100 ) freq = 100;
     
-    Simulator::self()->setMcuClock( freq );
+    BaseProcessor::self()->setSteps( freq );
     m_freq = freq; 
 }
 
@@ -185,13 +194,31 @@ void McuComponent::remove()
 
 void McuComponent::contextMenuEvent( QGraphicsSceneContextMenuEvent* event )
 {
-    event->accept();
-    QMenu* menu = new QMenu();
+    if( !acceptedMouseButtons() ) event->ignore();
+    else
+    {
+        event->accept();
+        QMenu* menu = new QMenu();
+        contextMenu( event, menu );
+        menu->deleteLater();
+    }
+}
+
+void McuComponent::contextMenu( QGraphicsSceneContextMenuEvent* event, QMenu* menu )
+{
     QAction* loadAction = menu->addAction( QIcon(":/load.png"),tr("Load firmware") );
     connect( loadAction, SIGNAL(triggered()), this, SLOT(slotLoad()) );
 
     QAction* reloadAction = menu->addAction( QIcon(":/reload.png"),tr("Reload firmware") );
     connect( reloadAction, SIGNAL(triggered()), this, SLOT(slotReload()) );
+
+    QAction* loadDAction = menu->addAction( QIcon(":/load.png"),tr("Load EEPROM data") );
+    connect( loadDAction, SIGNAL(triggered()), this, SLOT(loadData()) );
+
+    QAction* saveDAction = menu->addAction(QIcon(":/save.png"), tr("Save EEPROM data") );
+    connect( saveDAction, SIGNAL(triggered()), this, SLOT(saveData()) );
+
+    menu->addSeparator();
     
     QAction* openTerminal = menu->addAction( QIcon(":/terminal.png"),tr("Open Serial Monitor.") );
     connect( openTerminal, SIGNAL(triggered()), this, SLOT(slotOpenTerm()) );
@@ -208,51 +235,45 @@ void McuComponent::contextMenuEvent( QGraphicsSceneContextMenuEvent* event )
     menu->addSeparator();
 
     Component::contextMenu( event, menu );
-    menu->deleteLater();
 }
-
 
 void McuComponent::slotOpenSerial()
 {
-    //if( m_serialTerm ) return;
     CircuitWidget::self()->showSerialPortWidget( true );
     m_processor->setSerPort( true );
-    //m_serialTerm = true;
+    m_serPort = true;
 }
 
 void McuComponent::slotCloseSerial()
 {
     CircuitWidget::self()->showSerialPortWidget( false );
-    //SerialPortWidget::self()->close();
     m_processor->setSerPort( false );
-    //m_serialTerm = false;
+    m_serPort = false;
 }
 
 void McuComponent::slotOpenTerm()
 {
-    //if( m_serialTerm ) return;
     TerminalWidget::self()->setVisible( true );
     m_processor->setUsart( true );
-    //m_serialTerm = true;
+    m_serMon = true;
 }
 
 void McuComponent::slotCloseTerm()
 {
     TerminalWidget::self()->setVisible( false );
     m_processor->setUsart( false );
-    //m_serialTerm = false;
+    m_serMon = false;
 }
 
 void McuComponent::slotLoad()
 {
     const QString dir = m_lastFirmDir;
     QString fileName = QFileDialog::getOpenFileName( 0l, tr("Load Firmware"), dir,
-                       tr("Hex Files (*.hex);;ELF Files (*.elf);;all files (*.*)"));
-    if (fileName.isEmpty())
-        return; // User cancels loading
-
-    QDir circuitDir = QFileInfo(Circuit::self()->getFileName()).absoluteDir();
-    load( circuitDir.relativeFilePath(fileName) );
+                       tr("Hex Files (*.hex);;ELF Files (*.elf);;All files (*.*)"));
+                       
+    if( fileName.isEmpty() ) return; // User cancels loading
+    
+    load( fileName );
 }
 
 void McuComponent::slotReload()
@@ -263,13 +284,6 @@ void McuComponent::slotReload()
 
 void McuComponent::load( QString fileName )
 {
-    /*bool haveTerm = m_serialTerm;
-    if( m_serialTerm )
-    {
-        slotCloseTerm();
-        slotCloseSerial();
-    }*/
-
     QDir circuitDir = QFileInfo(Circuit::self()->getFileName()).absoluteDir();
     QString fileNameAbs = circuitDir.absoluteFilePath(fileName);
     QString cleanPathAbs = circuitDir.cleanPath(fileNameAbs);
@@ -282,16 +296,15 @@ void McuComponent::load( QString fileName )
         if( !m_attached ) attachPins();
         reset();
         
-        m_symbolFile = fileName;
+        m_symbolFile = circuitDir.relativeFilePath( fileName );
         m_lastFirmDir = cleanPathAbs;
 
         QSettings* settings = MainWindow::self()->settings();
         settings->setValue( "lastFirmDir", m_symbolFile );
     }
-    else QMessageBox::warning( 0, tr("Error:"), tr("Could not load ")+ fileName );
+    //else QMessageBox::warning( 0, tr("Error:"), tr("Could not load: \n")+ fileName );
     
     if( pauseSim ) Simulator::self()->runContinuous();
-    //if( haveTerm ) slotOpenTerm();
 }
 
 void McuComponent::setProgram( QString pro )
@@ -309,9 +322,65 @@ void McuComponent::setProgram( QString pro )
     }
 }
 
+bool McuComponent::serPort()
+{
+    return m_serPort;
+}
+
+void McuComponent::setSerPort( bool set )
+{
+    if( set ) slotOpenSerial();
+    else      slotCloseSerial();
+}
+
+bool McuComponent::serMon()
+{
+    return m_serMon;
+}
+
+void McuComponent::setSerMon( bool set )
+{
+    if( set ) slotOpenTerm();
+    else      slotCloseTerm();
+}
+
+void McuComponent::setEeprom( QVector<int> eep )
+{
+    m_processor->setEeprom( eep );
+}
+
+QVector<int> McuComponent::eeprom()
+{
+    QVector<int> eep = m_processor->eeprom();
+    return eep;
+}
+
+void McuComponent::loadData()
+{
+    QVector<int> data;
+
+    bool resize = false;
+    if( !m_processor->getLoadStatus() ) resize = true; // No eeprom initialized yet
+
+    MemData::loadData( &data, resize );
+    m_processor->setEeprom( data );
+}
+
+void McuComponent::saveData()
+{
+    QVector<int> data = m_processor->eeprom();
+    MemData::saveData( data );
+}
+
+void McuComponent::setLogicSymbol( bool ls )
+{
+    return;
+
+}
+
 void McuComponent::paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* widget )
 {
-    Package::paint( p, option, widget );
+    Chip::paint( p, option, widget );
 }
 
 #include "moc_mcucomponent.cpp"

@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -18,45 +18,67 @@
  ***************************************************************************/
  
 #include "itemlibrary.h"
+#include "simuapi_apppath.h"
 #include "appiface.h"
 
 //BEGIN Item includes
 #include "amperimeter.h"
 #include "adc.h"
+#include "arduino.h"
+#include "audio_out.h"
+#include "avrcomponent.h"
+#include "bcdto7s.h"
 #include "bcdtodec.h"
 #include "bincounter.h"
+#include "bjt.h"
 #include "buffer.h"
+#include "bus.h"
 #include "capacitor.h"
 #include "clock.h"
+#include "currsource.h"
 #include "dac.h"
 #include "dectobcd.h"
 #include "demux.h"
 #include "diode.h"
+#include "elcapacitor.h"
+#include "ellipse.h"
+#include "flipflopd.h"
 #include "flipflopjk.h"
+#include "frequencimeter.h"
 #include "fulladder.h"
+#include "function.h"
 #include "gate_and.h"
 #include "gate_or.h"
 #include "gate_xor.h"
 #include "ground.h"
 #include "hd44780.h"
-#include "i2c.h"
-#include "ic74.h"
-#include "inbus.h"
+#include "i2cram.h"
+#include "i2ctoparallel.h"
+//#include "inbus.h"
 #include "inductor.h"
+#include "keypad.h"
 #include "ks0108.h"
 #include "latchd.h"
 #include "led.h"
 #include "ledbar.h"
+#include "ledmatrix.h"
+#include "line.h"
+#include "lm555.h"
 #include "logicinput.h"
+#include "memory.h"
 #include "mosfet.h"
 #include "mux.h"
+#include "mux_analog.h"
 #include "op_amp.h"
-#include "outbus.h"
+#include "oscope.h"
+//#include "outbus.h"
+#include "piccomponent.h"
 #include "pcd8544.h"
 #include "probe.h"
 #include "potentiometer.h"
 #include "push.h"
 #include "rail.h"
+#include "rectangle.h"
 #include "relay-spst.h"
 #include "resistor.h"
 #include "resistordip.h"
@@ -64,15 +86,18 @@
 #include "sevensegment.h"
 #include "sevensegment_bcd.h"
 #include "shiftreg.h"
+#include "sr04.h"
 #include "stepper.h"
 #include "subcircuit.h"
+#include "subpackage.h"
 #include "switch.h"
+#include "switchdip.h"
 #include "textcomponent.h"
 #include "voltimeter.h"
+#include "volt_reg.h"
 #include "voltsource.h"
+#include "wavegen.h"
 //END Item includes
-
-#include "simuapi_apppath.h"
 
 ItemLibrary* ItemLibrary::m_pSelf = 0l;
 
@@ -83,7 +108,10 @@ ItemLibrary::ItemLibrary()
     loadItems();
     //loadPlugins();
 }
-ItemLibrary::~ItemLibrary(){}
+ItemLibrary::~ItemLibrary()
+{
+    foreach( LibraryItem* item, m_items ) delete item;
+}
 
 void ItemLibrary::loadItems()
 {
@@ -92,42 +120,66 @@ void ItemLibrary::loadItems()
     addItem( Probe::libraryItem() );
     addItem( Voltimeter::libraryItem() );
     addItem( Amperimeter::libraryItem() );
+    addItem( Frequencimeter::libraryItem() );
+    addItem( Oscope::libraryItem() );
     // Sources
     addItem( LogicInput::libraryItem() );
     addItem( Clock::libraryItem() );
+    addItem( WaveGen::libraryItem() );
     addItem( VoltSource::libraryItem() );
+    addItem( CurrSource::libraryItem() );
     addItem( Rail::libraryItem() );
     addItem( Ground::libraryItem() );
     // Switches
-    addItem( Switch::libraryItem() );
     addItem( Push::libraryItem() );
+    addItem( Switch::libraryItem() );
+    //addItem( ToggleSwitch::libraryItem() );
+    addItem( SwitchDip::libraryItem() );
     addItem( RelaySPST::libraryItem() );
     // Passive
     addItem( Potentiometer::libraryItem() );
     addItem( Resistor::libraryItem() );
     addItem( ResistorDip::libraryItem() );
     addItem( Capacitor::libraryItem() );
+    addItem( elCapacitor::libraryItem() );
     addItem( Inductor::libraryItem() );
-    addItem( Diode::libraryItem() );
     // Active
+    addItem( Diode::libraryItem() );
+    addItem( VoltReg::libraryItem() );
     addItem( OpAmp::libraryItem() );
     addItem( Mosfet::libraryItem() );
+    addItem( BJT::libraryItem() );
+    addItem( MuxAnalog::libraryItem() );
     // Outputs
     addItem( Led::libraryItem() );
     addItem( LedBar::libraryItem() );
+    addItem( LedMatrix::libraryItem() );
     addItem( SevenSegment::libraryItem() );
+    addItem( KeyPad::libraryItem() );
     addItem( Hd44780::libraryItem() );
     addItem( Pcd8544::libraryItem() );
     addItem( Ks0108::libraryItem() );
     addItem( Stepper::libraryItem() );
     addItem( Servo::libraryItem() );
+    addItem( AudioOut::libraryItem() );
+    // Micro
+    addItem( PICComponent::libraryItem() );
+    addItem( AVRComponent::libraryItem() );
+    addItem( Arduino::libraryItem() );
+    addItem( new LibraryItem( tr("Sensors"),tr("Micro"), "1to2.png","", 0l ) );
+    addItem( SR04::libraryItem() );
     // Logic
-    //addItem( I2C::libraryItem() );
-    addItem( SevenSegmentBCD::libraryItem() );
+    addItem( new LibraryItem( tr("Gates"),tr("Logic"), "gates.png","", 0l ) );
+    addItem( new LibraryItem( tr("Arithmetic"),tr("Logic"), "2to2.png","", 0l ) );
+    addItem( new LibraryItem( tr("Memory"),tr("Logic"), "subc.png","", 0l ) );
+    addItem( new LibraryItem( tr("Converters"),tr("Logic"), "1to2.png","", 0l ) );
+    addItem( new LibraryItem( tr("Other Logic"),tr("Logic"), "2to3.png","", 0l ) );
     addItem( Buffer::libraryItem() );
     addItem( AndGate::libraryItem() );
     addItem( OrGate::libraryItem() );
     addItem( XorGate::libraryItem() );
+    addItem( Function::libraryItem() );
+    addItem( FlipFlopD::libraryItem() );
     addItem( FlipFlopJK::libraryItem() );
     addItem( BinCounter::libraryItem() );
     addItem( FullAdder::libraryItem() );
@@ -137,21 +189,29 @@ void ItemLibrary::loadItems()
     addItem( Demux::libraryItem() );
     addItem( BcdToDec::libraryItem() );
     addItem( DecToBcd::libraryItem() );
+    addItem( BcdTo7S::libraryItem() );
     addItem( ADC::libraryItem() );
     addItem( DAC::libraryItem() );
-    addItem( OutBus::libraryItem() );
-    addItem( InBus::libraryItem() );
+    addItem( Bus::libraryItem() );
+    addItem( SevenSegmentBCD::libraryItem() );
+    addItem( Memory::libraryItem() );
+    addItem( I2CRam::libraryItem() );
+    addItem( I2CToParallel::libraryItem() );
+    addItem( Lm555::libraryItem() );
     // Subcircuits
-    //addItem( Ic74::libraryItem() );
     addItem( SubCircuit::libraryItem() );
     // Other
     addItem( TextComponent::libraryItem() );
+    addItem( Rectangle::libraryItem() );
+    addItem( Ellipse::libraryItem() );
+    addItem( Line::libraryItem() );
+    
+    addItem( SubPackage::libraryItem() );
 }
 
 void ItemLibrary::addItem( LibraryItem* item )
 {
-    if (!item)
-        return;
+    if (!item) return;
     m_items.append(item);
 }
 
@@ -236,7 +296,41 @@ LibraryItem::LibraryItem( const QString &name,
     m_category  = category;
     m_iconfile  = iconName;
     m_type      = type;
+    m_help      = "Sorry... no Help Available";
     createItem  = _createItem;
+
 }
+
 LibraryItem::~LibraryItem() { }
+
+QString* LibraryItem::help() 
+{
+    if( m_help == "Sorry... no Help Available" )
+    {
+        QString locale   = "_"+QLocale::system().name().split("_").first();
+        QString type = m_type;
+        type= type.replace( " ", "" );
+        QString dfPath = SIMUAPI_AppPath::self()->availableDataFilePath( "help/"+locale+"/"+type.toLower()+locale+".txt" );
+        
+        if( dfPath == "" ) 
+            dfPath = SIMUAPI_AppPath::self()->availableDataFilePath( "help/"+type.toLower()+".txt" );
+
+        if( dfPath != "" )
+        {
+            QFile file( dfPath );
+            
+            if( file.open(QFile::ReadOnly | QFile::Text) ) // Get Text from Help File
+            {
+                QTextStream s1( &file );
+                s1.setCodec("UTF-8");
+            
+                m_help = "";
+                m_help.append(s1.readAll());
+
+                file.close();
+            }
+        }
+    }
+    return &m_help; 
+}
 

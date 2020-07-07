@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -22,39 +22,72 @@
 
 #include <QtWidgets>
 
-#include "renderarea.h"
+class RenderArea;
 
 class MAINMODULE_EXPORT PlotterWidget : public QWidget
 {
     Q_OBJECT
+    
+    Q_PROPERTY( QString  itemtype  READ itemType )
+    Q_PROPERTY( double MaxVolt READ maxVolt  WRITE setMaxVolt )
+    Q_PROPERTY( double MinVolt READ minVolt  WRITE setMinVolt )
+    Q_PROPERTY( int    Scale   READ xScale    WRITE xScaleChanged )
+    Q_PROPERTY( int    Tracks  READ tracks   WRITE setTracks )
 
     public:
         PlotterWidget( QWidget *parent );
         ~PlotterWidget();
 
  static PlotterWidget* self() { return m_pSelf; }
+ 
+        QString itemType(){ return "Plotter"; }
 
-        int  addChannel();
+        //int  getChannel();
+        bool addChannel( int channel );
         void remChannel( int channel );
 
         QColor getColor( int channel );
 
+        void clear();
         void step();
         void setData( int channel, int data );
         void setTicksPs( int tps );
-        //void setButtonText( QString text );
         void setPlotterTick( int tickUs );
+        
+        double maxVolt();
+        void setMaxVolt( double volt );
+        
+        double minVolt();
+        void setMinVolt( double volt );
+        
+        int xScale() { return m_xScale; }
+        
+        int tracks();
+        
+        void updateStep();
+        
 
+    public slots:
+        void maxChanged( double value );
+        void minChanged( double value );
+        void xScaleChanged( int scale );
+        void setTracks( int tracks );
+        
     private:
  static PlotterWidget* m_pSelf;
 
         void setupWidget();
+        void setRenderData( int channel, int data );
+        void setScale();
 
         QHBoxLayout* m_horizontalLayout;
         QVBoxLayout* m_verticalLayout;
         QLineEdit*   m_chanLabel[4];
+        QDoubleSpinBox* m_maxValue;
+        QDoubleSpinBox* m_minValue;
+        QSpinBox*       m_XScale;
+        QSpinBox*       m_tracks;
 
-        //RenderArea  m_value;
         RenderArea*  m_rArea;
 
         QColor m_color[4];
@@ -64,6 +97,12 @@ class MAINMODULE_EXPORT PlotterWidget : public QWidget
         int  m_numchan;
         int  m_counter;
         int  m_ticksPs;
+        int  m_xScale;
+        int  m_numTracks;
+        
+        int m_maxVolt;
+        int m_minVolt;
+        int m_offset;
 };
 
 #endif

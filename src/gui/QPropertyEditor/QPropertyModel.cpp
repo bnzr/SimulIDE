@@ -20,6 +20,11 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 // *************************************************************************************************
+/***************************************************************************
+ *   Modified 2012 by santiago González                                    *
+ *   santigoro@gmail.com                                                   *
+ *                                                                         *
+ ***************************************************************************/
 
 #include "QPropertyModel.h"
 
@@ -97,7 +102,7 @@ QVariant QPropertyModel::data ( const QModelIndex & index, int role /*= Qt::Disp
     case Qt::DecorationRole:
     case Qt::DisplayRole:
     case Qt::EditRole:
-        if( index.column() == 0 ) return item->objectName().replace('_', ' ');
+        if( index.column() == 0 ) { return item->propName(); }
         if( index.column() == 1 ) return item->value(role);
     case Qt::BackgroundRole:
         if( item->isRoot() ) return QApplication::palette("QTreeView").brush(QPalette::Normal, QPalette::Button).color();
@@ -109,6 +114,7 @@ QVariant QPropertyModel::data ( const QModelIndex & index, int role /*= Qt::Disp
 // edit methods
 bool QPropertyModel::setData( const QModelIndex & index, const QVariant & value, int role /*= Qt::EditRole*/ )
 {
+    //qDebug() <<"QPropertyModel::setData"<<value;
     if (index.isValid() && role == Qt::EditRole)
     {
         Property *item = static_cast<Property*>(index.internalPointer());
@@ -166,14 +172,14 @@ void QPropertyModel::addItem( QObject *propertyObject )
         for (int i=0; i<count; ++i)
         {
             QMetaProperty property = metaObject->property(i);
-            if( property.isUser() ) // Hide Qt specific properties
+
+            if( property.isUser() && ( property.name() != QString("plainText") )) // Hide Qt specific properties
             {                
                 PropertyPair pair(metaObject, property);
                 int index = propertyMap.indexOf(pair);
-                if (index != -1)
-                    propertyMap[index] = pair;
-                else
-                    propertyMap.push_back(pair);                
+                
+                if( index != -1 )  propertyMap[index] = pair;
+                else              propertyMap.push_back(pair);                
             }
         }        
         classList.push_front(metaObject);
@@ -198,19 +204,13 @@ void QPropertyModel::addItem( QObject *propertyObject )
     
     // finally insert properties for classes containing them
     int i=rowCount();
-    Property* propertyItem = 0;
+    
+    // Create Property Item for class node
+    Property* propertyItem = new Property(propertyObject->objectName (), 0, m_rootItem); 
     beginInsertRows( QModelIndex(), i, i + finalClassList.count() );
+
     foreach(const QMetaObject* metaObject, finalClassList)
     {
-        // Set default name of the hierarchy property to the class name
-        QString name = metaObject->className();
-        
-        // Check if there is a special name for the class
-        int index = metaObject->indexOfClassInfo(qPrintable(name));
-        if (index != -1) name = metaObject->classInfo(index).value();
-        
-        // Create Property Item for class node
-        propertyItem = new Property(name, 0, m_rootItem);        
         foreach(PropertyPair pair, propertyMap)
         {
             // Check if the property is associated with the current class from the finalClassList

@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -18,275 +18,444 @@
  ***************************************************************************/
 
 #include "oscopewidget.h"
+#include "simulator.h"
+#include "oscope.h"
 
-OscopeWidget* OscopeWidget::m_pSelf = 0l;
+#include <math.h>   // fabs(x,y)
 
 OscopeWidget::OscopeWidget(  QWidget *parent  )
-    : QWidget( parent )
+            : QWidget( parent )
+            , eElement( "oscope" )
 {
-    m_pSelf = this;
-
     this->setVisible( false );
 
     setMaximumSize(QSize(300, 200));
     setMinimumSize(QSize(300, 200));
 
-    setupWidget();
-
-    m_prevSpeed = 10;
-    m_speed     = 10;
-    m_prevOffset = 0;
-    m_offset     = 0;
+    m_prevHscale = 10;
+    m_Hscale     = 10;
+    m_prevHpos = 0;
+    m_Hpos     = 0;
     
-    m_ampli = 2.5;
-
-    newReading = true;
-    m_ticksPs = 20;
-    m_counter = 0;
-    m_tick    = 0;
-    m_probe   = 0l;
+    m_prevVscale = 1;
+    m_Vscale     = 1;
+    m_prevVpos = 0;
+    m_Vpos     = 0;
     
+    m_ampli = 0;
+    m_filter = 0.3;
 
+    m_newRead = true;
+    m_auto = true;
+    
+    m_oscope  = 0l;
+    //clear();
 }
-OscopeWidget::~OscopeWidget(){ }
+OscopeWidget::~OscopeWidget()
+{ 
+}
 
-void OscopeWidget::setProbe( Probe* probe )
+void OscopeWidget::resetState()
 {
-    m_probe = probe;
+    clear();
+}
+
+void OscopeWidget::setOscope( Oscope* oscope )
+{
+    m_oscope = oscope;
+    
+    if( oscope  ) Simulator::self()->addToSimuClockList( this );
+    else          Simulator::self()->remFromSimuClockList( this );
 }
 
 void OscopeWidget::clear()
 {
-    for( int i=0; i<140; i++ ) m_data[i] = 160;
-    m_rArea->setData( m_data );
-}
-
-void OscopeWidget::step()
-{
-    if( m_counter < 140 ) 
-    {
-        //m_rArea->drawBackground();
-        //m_rArea->update();
-        return;
-    }
+    for( int i=0; i<140; i++ ) m_data[i] = 2.5*28;
+    m_display->setData( m_data );
     
-    m_rArea->setTick( m_speed );
-    m_rArea->setData( m_data );
-    newReading = true;
-    m_newReadCount = 0;
+    m_newRead = true;
+    m_rising   = false;
+    m_falling  = false;
+    
+    m_step = 0;
+    m_totalP = 0;
+    m_numCycles = 0;
+    m_numMax = 0;
+    m_lastData =0;
     m_counter = 0;
+    m_ampli = 0;
+    m_tick = 0;
+    m_max =-1e12;
+    m_min = 1e12;
+    Hpos = 0;
+    m_freq = 500;
+    
+    m_freqLabel->setText( "Frq: 000 Hz" );
+    m_ampLabel->setText( "Amp: 0.00 V" );
 }
 
-void OscopeWidget::setData()
+void OscopeWidget::read()
 {
-    if( !m_probe ) return;
-    if( m_counter == 140 ) return;
-
-static double lastData;
-static double max;
-//static double mid;
-static double min;
-static bool   up;
-static bool   down;
-static int offset;
-
-    //qDebug() << "OscopeWidget::setData" << m_speed << m_tick << m_counter << lastData << newReading;
-    if( newReading ) // Starting a new reading set
+    if( m_step > 1e6 ) clear();
+    if( m_numMax < 2 ) return;
+    m_numMax--;
+    
+    double freq = 1e6/(double)(m_totalP/m_numMax);
+    //qDebug() <<"Frequencimeter::simuClockStep"<<m_totalP<<m_numMax<<m_totalP/m_numMax;
+    if( m_freq != freq )
     {
-        double data = m_probe->getVolt();
+        m_freq = freq;
+        if     ( freq >= 10000 ) m_freqLabel->setText( "Frq: "+QString::number( freq, 'f', 0 )+" Hz" );
+        else if( freq >= 1000 )  m_freqLabel->setText( "Frq: "+QString::number( freq, 'f', 1 )+" Hz" );
+        else                     m_freqLabel->setText( "Frq: "+QString::number( freq, 'f', 2 )+" Hz" );
+    }
+    m_totalP = 0;
+    m_numMax = 0;
+    m_step   = 0;
+    
+        m_reading = true;
         
-        if( data > max ) max = data;
-        if( data < min ) min = data;
-        //qDebug() << "OscopeWidget::setData"<< lastData << data << max << min << up << down;
-
-        if( (data-lastData)>0.2 )
+    double tick = 20*m_Hscale;
+    double val = tick/1e6;
+    QString unit = " S";
+    
+    if( val < 1 )
+    {
+        unit = " mS";
+        val = tick/1e3;
+        if( val < 1 )
         {
-            if( up & down )
+            unit = " uS";
+            val = tick;
+        }
+    }
+    m_tickLabel->setText( "Div:  "+QString::number( val,'f', 2)+unit );
+    m_ampLabel->setText(  "Amp: " +QString::number( m_ampli,'f', 2)+" V" );
+}
+
+void OscopeWidget::simuClockStep()
+{
+    m_step++;
+
+    double data = m_oscope->getVolt();
+    double delta = data-m_lastData;
+    
+    if( data > m_max ) m_max = data;
+    if( data < m_min ) m_min = data;
+    
+    if( delta > m_filter )                                     // Rising 
+    {
+        if( m_reading && m_newRead && ( m_numCycles > 1 ))// Wait for a full wave
+        {
+            double mid = m_min + m_ampli/2;
+
+            if( data >= mid )                             // Rising edge
             {
-                //mid = (max-min)/2;
-                if( (data>=m_ampli) /*& ((data-m_ampli)<0.2)*/ )// Rising edge
+                m_numCycles = 0;
+                int per = 1e6/m_freq;
+                if( per > 1 )
                 {
-                    //qDebug() << "..."  << data << max << m_ampli << min;
+                    if( m_auto ) 
+                    {
+                        m_Vpos = mid;
+                        m_Hpos = 0;
+                        m_Vscale = 5/m_ampli;
+                        if     ( m_Vscale > 1000 )  m_Vscale = 1000;
+                        else if( m_Vscale < 0.001 ) m_Vscale = 0.001;
+                        
+                        m_Hscale = abs(per/70)+1;
+                        if( m_Hscale > 10000 ) m_Hscale = 10000;
+                    }
+                    Hpos = 0;
                     m_tick = 0;
                     m_counter = 0;
-                    up   = false;
-                    down = false;
-                    offset = 0;
-                    max = 0;
-                    min = 0;
-                    //mid = 0;
-                    newReading = false;
+                    m_newRead = false;
                 }
-                lastData = data;
-                return;
             }
-            up = true;
-            lastData = data;
         }
-        else if( (data-lastData) < -0.2 )
+        if( m_falling && !m_rising )                        // Min Found
         {
-            down = true;
-            lastData = data;
+            m_ampli = m_max-m_min;
+            m_display->setMaxMin( m_max, m_min );
+            m_falling = false;
+            m_max = -1e12;
         }
-
-        if( ++m_newReadCount == 100000 )  // No reading: Clear Screen
-        {
-           m_newReadCount = 0;
-           clear();
-        }
-        return;
+        m_rising = true;
+        m_lastData = data;
     }
-    if( offset < m_offset )
+    else if( delta < -m_filter )                              // Falling
     {
-        offset++;
-    }
-    else 
-    {
-        if( ++m_tick == m_speed )
+        if( m_rising && !m_falling )                        // Max Found
         {
-            double data = m_probe->getVolt();
-      
-            //data += mid; // Center data
-            m_data[m_counter] = 160-data*28;
-            m_counter++;
-                
-                //qDebug() << "m_tick == m_speed" << m_counter << data;
+            if( m_numMax > 0 ) m_totalP += m_step-m_lastMax;
 
-            m_tick = 0;
+            m_lastMax = m_step;
+            m_numMax++;
+            m_numCycles++;
+            m_ampli = m_max-m_min;
+            m_display->setMaxMin( m_max, m_min );
+            m_rising = false;
+            m_min = 1e12;
+        }
+        m_falling = true;
+        m_lastData = data;
+    }
+    if( m_counter == 140 )                   // DataSet Ready to display
+    {
+        m_display->setData( m_data );
+        m_newRead = true;
+        m_reading = false;
+        m_numCycles = 0;
+        m_counter = 0;
+        return; 
+    }
+    if( m_newRead == false )                          // Data Set saving
+    {
+        if( m_counter == 140 ) return;          // Done, Wait for update
+
+        if( Hpos < m_Hpos ) Hpos++;                 // Wait for H offset
+        else                                                // Save data 
+        {
+            if(( m_counter == 0 )||( ++m_tick == m_Hscale ))
+            {
+                m_data[m_counter] = ((data-m_Vpos)*m_Vscale+2.5)*28;
+
+                m_counter++;
+                m_tick = 0;
+            }
         }
     }
 }
 
-void OscopeWidget::setTicksPs( int tps )
+void OscopeWidget::HscaleChanged( int Hscale )
 {
-    m_ticksPs = tps;
-}
-
-void OscopeWidget::setOscopeTick( int tickUs )
-{
-    m_rArea->setTick( tickUs );
-}
-
-void OscopeWidget::speedChanged( int speed )
-{
-    if( speed > m_prevSpeed ) 
+    if( m_auto ) return;
+    
+    if( Hscale < m_prevHscale ) 
     {
-        m_speed++;
-        if( m_speed > 2000 ) m_speed = 2000;
+        m_Hscale++;
+        if( m_Hscale > 10000 ) m_Hscale = 10000;
     }
     else
     {
-        m_speed--;
-        if( m_speed < 1 ) m_speed = 1;
+        m_Hscale--;
+        if( m_Hscale < 1 ) m_Hscale = 1;
     }
-    
-    m_prevSpeed = speed;
-
-    m_tick = 0;
-    m_counter = 0;
+    m_prevHscale = Hscale;
 }
-/*void OscopeWidget::ampliChanged( int ampli )
+void OscopeWidget::VscaleChanged( int Vscale )
 {
-    m_ampli = ampli/10;
-}*/
-
-void OscopeWidget::centeChanged( int offset )
-{
-    if( offset < m_prevOffset ) 
+    if( m_auto ) return;
+    
+    double vscale = (double)Vscale;
+    if( vscale > m_prevVscale ) 
     {
-        m_offset += m_speed;
-        if( m_offset > 200*m_speed ) m_offset = 200*m_speed;
+        m_Vscale *= 1.01;
+        if( m_Vscale > 1000 ) m_Vscale = 1000;
     }
     else
     {
-        m_offset -= m_speed;
-        if( m_offset < 0 ) m_offset = 0;
+        m_Vscale /= 1.01;
+        if( m_Vscale < 0.001 ) m_Vscale = 0.001;
     }
-    
-    m_prevOffset = offset;
+    m_prevVscale = vscale;
 }
 
-void OscopeWidget::setupWidget()
+void OscopeWidget::HposChanged( int hPos )
+{
+    if( m_auto ) return;
+    
+    if( hPos < m_prevHpos ) 
+    {
+        m_Hpos += m_Hscale;
+        if( m_Hpos > 200*m_Hscale ) m_Hpos = 200*m_Hscale;
+    }
+    else
+    {
+        m_Hpos -= m_Hscale;
+        if( m_Hpos < 0 ) m_Hpos = 0;
+    }
+    m_prevHpos = hPos;
+}
+
+void OscopeWidget::VposChanged( int Vpos )
+{
+    if( m_auto ) return;
+    
+    double vpos = (double)Vpos;
+    
+    if( vpos < m_prevVpos ) 
+    {
+        m_Vpos += 0.02*m_Vscale;
+    }
+    else
+    {
+        m_Vpos -= 0.02*m_Vscale;
+    }
+    m_prevVpos = vpos;
+}
+
+void OscopeWidget::autoChanged( int au )
+{
+    m_auto = au;
+}
+
+void OscopeWidget::setupWidget(  int size  )
 {
     m_horizontalLayout = new QHBoxLayout( this );
     m_horizontalLayout->setObjectName( "horizontalLayout" );
-    //m_horizontalLayout.setContentsMargins(0, 0, 0, 0);
+    m_horizontalLayout->setContentsMargins(2, 2, 2, 2);
     //m_horizontalLayout.setSpacing(0);
     
     m_verticalLayout = new QVBoxLayout();
     m_verticalLayout->setObjectName( "verticalLayout" );
+    m_verticalLayout->setContentsMargins(0, 0, 0, 0);
+    m_verticalLayout->setSpacing(0);
     
-    QFrame* line = new QFrame(this);
-    line->setFrameShape(QFrame::HLine);
-    line->setFrameShadow(QFrame::Sunken);
-    m_verticalLayout->addWidget(line);
+    m_freqLabel = new QLabel( "Freq: 0 Hz", this );
     
-    m_speedDial = new QDial(this);
-    m_speedDial->setObjectName( "speedDial" );
-    m_speedDial->setNotchesVisible(true);
-    m_speedDial->setWrapping(true);
-    m_speedDial->setMinimum(1);
-    m_speedDial->setMaximum(20);
-    //m_speedDial->setValue(10);
-    m_speedDial->setSingleStep(1);
-    m_verticalLayout->addWidget( m_speedDial );
-    
-    QLabel *speedLabel = new QLabel( "Tick", this );
-    speedLabel->setAlignment( Qt::AlignBottom | Qt::AlignHCenter );
-    QFont font = speedLabel->font();
-    font.setPointSize(9);
+    QFont font = m_freqLabel->font();
+    font.setPixelSize(10);
     font.setBold(true);
-    speedLabel->setFont(font);
-    m_verticalLayout->addWidget( speedLabel );
     
-    line = new QFrame(this);
+    m_freqLabel->setFont(font);
+    m_freqLabel->setFixedSize( 85, 14 );
+    m_verticalLayout->addWidget(m_freqLabel);
+    
+    m_ampLabel  = new QLabel( "Amp: 0.00 V", this );
+    m_ampLabel->setFont(font);
+    m_ampLabel->setFixedSize( 85, 14 );
+    m_verticalLayout->addWidget(m_ampLabel);
+    
+    m_tickLabel  = new QLabel( "Div:  0 S", this );
+    m_tickLabel->setFont(font);
+    m_tickLabel->setFixedSize( 85, 14 );
+    m_verticalLayout->addWidget(m_tickLabel);
+    
+    QHBoxLayout* row2Layout = new QHBoxLayout();
+    row2Layout->setObjectName( "row2Layout" );
+    row2Layout->setContentsMargins(0, 0, 0, 0);
+    row2Layout->setSpacing(0);
+    
+    m_autoCheck = new QCheckBox( "Auto", this );
+    //m_autoCheck->setLayoutDirection(Qt::RightToLeft);
+    m_autoCheck->setChecked( true );
+    m_autoCheck->setFixedSize( 38, 16 );
+    font.setPixelSize(9);
+    m_autoCheck->setFont( font );
+    row2Layout->addWidget( m_autoCheck );
+    
+    QLabel* HLabel = new QLabel( "H", this );
+    HLabel->setAlignment( Qt::AlignBottom | Qt::AlignHCenter );
+    HLabel->setFixedSize( 14, 16 );
+    font.setPixelSize(10);
+    HLabel->setFont( font );
+    row2Layout->addWidget( HLabel );
+    
+    QLabel* VLabel = new QLabel( "V", this );
+    VLabel->setAlignment( Qt::AlignBottom | Qt::AlignHCenter );
+    VLabel->setFixedSize( 30, 16 );
+    VLabel->setFont( font );
+    row2Layout->addWidget( VLabel );
+    
+    m_verticalLayout->addLayout( row2Layout );
+    
+    /*QFrame* line = new QFrame(this);
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
-    m_verticalLayout->addWidget(line);
+    m_verticalLayout->addWidget(line);*/
     
-    /*m_ampliDial = new QDial(this);
-    m_ampliDial->setObjectName(QString::fromUtf8("ampliDial"));
-    m_ampliDial->setNotchesVisible(true);
-    m_ampliDial->setMinimum(1);
-    m_ampliDial->setMaximum(100);
-    m_ampliDial->setValue(25);
-    m_ampliDial->setSingleStep(1);
-    m_verticalLayout->addWidget( m_ampliDial );*/
+    QHBoxLayout* row0Layout = new QHBoxLayout();
+    row0Layout->setObjectName( "row0Layout" );
+    row0Layout->setContentsMargins(0, 0, 0, 0);
+    row0Layout->setSpacing(0);
     
-    m_centeDial = new QDial(this);
-    m_centeDial->setObjectName( "centeDial" );
-    m_centeDial->setNotchesVisible(true);
-    m_centeDial->setWrapping(true);
-    m_centeDial->setMinimum(1);
-    m_centeDial->setMaximum(20);
-    m_centeDial->setSingleStep(1);
-    m_verticalLayout->addWidget( m_centeDial );
+    QLabel* scaleLabel = new QLabel( "Scale", this );
+    scaleLabel->setAlignment( Qt::AlignLeft | Qt::AlignVCenter );
+    scaleLabel->setFixedSize( 32, 29 );
+    scaleLabel->setFont( font );
+    row0Layout->addWidget( scaleLabel );
     
-    QLabel *centeLabel = new QLabel( "H-Center", this );
-    centeLabel->setAlignment( Qt::AlignBottom | Qt::AlignHCenter );
-    centeLabel->setFont(font);
-    m_verticalLayout->addWidget( centeLabel );
+    m_HscaleDial = new QDial(this);
+    m_HscaleDial->setObjectName( "HscaleDial" );
+    m_HscaleDial->setFixedSize( 32, 29 );
+    m_HscaleDial->setNotchesVisible( true );
+    m_HscaleDial->setWrapping(true);
+    m_HscaleDial->setMinimum( 1 );
+    m_HscaleDial->setMaximum( 20 );
+    //m_HscaleDial->setValue( 10 );
+    m_HscaleDial->setSingleStep( 1 );
+    row0Layout->addWidget(m_HscaleDial );
     
-    line = new QFrame(this);
-    line->setFrameShape(QFrame::HLine);
-    line->setFrameShadow(QFrame::Sunken);
-    m_verticalLayout->addWidget(line);
+    m_VscaleDial = new QDial(this);
+    m_VscaleDial->setObjectName( "VscaleDial" );
+    m_VscaleDial->setFixedSize( 32, 29 );
+    m_VscaleDial->setNotchesVisible( true );
+    m_VscaleDial->setWrapping( true );
+    m_VscaleDial->setMinimum( 1 );
+    m_VscaleDial->setMaximum( 20 );
+    //m_VscaleDial->setValue( 25 );
+    m_VscaleDial->setSingleStep( 1 );
+    row0Layout->addWidget( m_VscaleDial );    
+    
+    m_verticalLayout->addLayout( row0Layout );
+    
+    QHBoxLayout* row1Layout = new QHBoxLayout();
+    row1Layout->setObjectName( "row1Layout" );
+    row1Layout->setContentsMargins(0, 0, 0, 0);
+    row1Layout->setSpacing(0);
+    
+    QLabel* posLabel = new QLabel( "Pos", this );
+    posLabel->setAlignment( Qt::AlignLeft | Qt::AlignVCenter );
+    posLabel->setFixedSize( 32, 29 );
+    posLabel->setFont(font);
+    row1Layout->addWidget( posLabel );
+    
+    m_HposDial = new QDial(this);
+    m_HposDial->setObjectName( "HposDial" );
+    m_HposDial->setFixedSize( 32, 29 );
+    m_HposDial->setNotchesVisible( true );
+    m_HposDial->setWrapping( true );
+    m_HposDial->setMinimum( 1 );
+    m_HposDial->setMaximum( 20 );
+    m_HposDial->setSingleStep( 1 );
+    row1Layout->addWidget( m_HposDial );
+    
+    m_VposDial = new QDial(this);
+    m_VposDial->setObjectName( "VposDial" );
+    m_VposDial->setFixedSize( 32, 29 );
+    m_VposDial->setNotchesVisible( true );
+    m_VposDial->setWrapping( true );
+    m_VposDial->setMinimum( 1 );
+    m_VposDial->setMaximum( 20 );
+    m_VposDial->setSingleStep( 1 );
+    row1Layout->addWidget( m_VposDial );
+    
+    m_verticalLayout->addLayout( row1Layout );
 
     m_horizontalLayout->addLayout( m_verticalLayout );
 
-    m_rArea = new RenderOscope( 180, 180, this );
-    m_rArea->setObjectName(tr("oscope"));
-
-    m_horizontalLayout->addWidget(m_rArea);
+    m_display = new RenderOscope( size, size, this );
+    m_display->setObjectName( "oscope" );
     
-    connect( m_speedDial, SIGNAL( valueChanged(int) ),
-             this,        SLOT  ( speedChanged(int)) );
+    m_horizontalLayout->addWidget( m_display );
+    m_horizontalLayout->setAlignment( m_display, Qt::AlignRight );
+    
+    
+    connect(m_HscaleDial, SIGNAL( valueChanged(int) ),
+             this,        SLOT  ( HscaleChanged(int)) );
              
-    /*connect( m_ampliDial, SIGNAL( valueChanged(int) ),
-             this,        SLOT  ( ampliChanged(int)) );*/
+    connect( m_VscaleDial, SIGNAL( valueChanged(int) ),
+             this,         SLOT  ( VscaleChanged(int)) );
              
-    connect( m_centeDial, SIGNAL( valueChanged(int) ),
-             this,        SLOT  ( centeChanged(int)) );
+    connect( m_HposDial, SIGNAL( valueChanged(int) ),
+             this,       SLOT  ( HposChanged(int)) );
+             
+    connect( m_VposDial, SIGNAL( valueChanged(int) ),
+             this,       SLOT  ( VposChanged(int)) );
+             
+    connect( m_autoCheck, SIGNAL( stateChanged(int) ),
+             this,        SLOT  ( autoChanged(int)) );
 }
 
 #include "moc_oscopewidget.cpp"

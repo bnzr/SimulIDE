@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -21,10 +21,30 @@
 #include "circuit.h"
 #include "logiccomponent.h"
 
+static const char* LogicComponent_properties[] = {
+    QT_TRANSLATE_NOOP("App::Property","Input High V"),
+    QT_TRANSLATE_NOOP("App::Property","Input Low V"),
+    QT_TRANSLATE_NOOP("App::Property","Input Imped"),
+    QT_TRANSLATE_NOOP("App::Property","Out High V"),
+    QT_TRANSLATE_NOOP("App::Property","Out Low V"),
+    QT_TRANSLATE_NOOP("App::Property","Out Imped"),
+    QT_TRANSLATE_NOOP("App::Property","Inverted"),
+    QT_TRANSLATE_NOOP("App::Property","Tristate"),
+    QT_TRANSLATE_NOOP("App::Property","Clock Inverted"),
+    QT_TRANSLATE_NOOP("App::Property","Reset Inverted"),
+    QT_TRANSLATE_NOOP("App::Property","Invert Inputs"),
+    QT_TRANSLATE_NOOP("App::Property","S R Inverted"),
+    QT_TRANSLATE_NOOP("App::Property","Num Inputs"),
+    QT_TRANSLATE_NOOP("App::Property","Num Outputs"),
+    QT_TRANSLATE_NOOP("App::Property","Num Bits"),
+    QT_TRANSLATE_NOOP("App::Property","Channels"),
+};
 
 LogicComponent::LogicComponent( QObject* parent, QString type, QString id )
-       : Component( parent, type, id )
+              : Component( parent, type, id )
 {
+    Q_UNUSED( LogicComponent_properties );
+    
     m_numInPins  = 0;
     m_numOutPins = 0;
 }
@@ -163,6 +183,36 @@ void LogicComponent::setNumOuts( int outPins )
     m_outPin.resize( outPins );
     
     m_numOutPins = outPins;
+}
+
+void LogicComponent::deleteInputs( int inputs )
+{
+    if( m_numInPins-inputs < 0 ) inputs = m_numInPins;
+
+    for( int i=m_numInPins-1; i>m_numInPins-inputs-1; i-- )
+    {
+        if( m_inPin[i]->isConnected() ) m_inPin[i]->connector()->remove();
+        if( m_inPin[i]->scene() ) Circuit::self()->removeItem( m_inPin[i] );
+        m_inPin[i]->reset();
+        delete m_inPin[i];
+    }
+    m_numInPins -= inputs;
+    m_inPin.resize( m_numInPins );
+}
+
+void LogicComponent::deleteOutputs( int outputs )
+{
+    for( int i=m_numOutPins-1; i>m_numOutPins-outputs-1; i-- )
+    {
+        if( m_outPin[i]->isConnected() ) m_outPin[i]->connector()->remove();
+        //else                             m_outPin[i]->reset();
+
+        if( m_outPin[i]->scene() ) Circuit::self()->removeItem( m_outPin[i] );
+
+        delete m_outPin[i];
+    }
+    m_numOutPins -= outputs;
+    m_outPin.resize( m_numOutPins );
 }
 
 void LogicComponent::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget )

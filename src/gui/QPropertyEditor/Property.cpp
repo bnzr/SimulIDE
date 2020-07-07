@@ -20,16 +20,32 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 // *************************************************************************************************
+/***************************************************************************
+ *   Modified 2012 by santiago González                                    *
+ *   santigoro@gmail.com                                                   *
+ *                                                                         *
+ ***************************************************************************/
+ 
 #include "Property.h"
 #include "ColorCombo.h"
 
 #include <QtCore/QMetaProperty>
-#include <QSpinBox>
+#include <QApplication>
+//#include <QDebug>
 
-Property::Property(const QString& name /*= QString()*/, QObject* propertyObject /*= 0*/, QObject* parent /*= 0*/) : QObject(parent), 
-m_propertyObject(propertyObject)
+Property::Property(const QString& name /*= QString()*/, QObject* propertyObject /*= 0*/, QObject* parent /*= 0*/) 
+        : QObject(parent)
+        , m_propertyObject(propertyObject) 
+{ 
+    setObjectName(name); 
+    QString propName = name;
+    propName.replace('_', ' ');
+    m_propName = QApplication::translate( "App::Property", propName.toLatin1() );
+}
+
+QString Property::propName()
 {
-    setObjectName(name);
+    return m_propName;
 }
 
 QVariant Property::value(int /*role = Qt::UserRole*/) const
@@ -65,7 +81,7 @@ QWidget* Property::createEditor(QWidget *parent, const QStyleOptionViewItem& /*o
         editor = new ColorCombo(parent);
         break;
     case QVariant::Int:
-        editor = new QSpinBox(parent);
+        editor = new QSpinBox( parent );
                 editor->setProperty("minimum", -1e9);
                 editor->setProperty("maximum", 1e9);
         //connect(editor, SIGNAL(valueChanged(int)), this, SLOT(setValue(int)));
@@ -85,7 +101,7 @@ QWidget* Property::createEditor(QWidget *parent, const QStyleOptionViewItem& /*o
 }
 
 bool Property::setEditorData(QWidget *editor, const QVariant &data)
-{
+{//qDebug() <<"Property::setEditorData"<<data;
     switch(value().type())
     {
     case QVariant::Color:
@@ -109,7 +125,7 @@ bool Property::setEditorData(QWidget *editor, const QVariant &data)
 }
 
 QVariant Property::editorData(QWidget *editor)
-{
+{//qDebug() <<"Property::editorData";
     switch(value().type())
     {
     case QVariant::Color:
@@ -147,3 +163,23 @@ void Property::setValue(int value)
 {
     setValue(QVariant(value));
 }
+
+
+/*SpinBox::SpinBox( QWidget *parent )
+       : QSpinBox( parent )
+{
+}
+    
+int SpinBox::valueFromText( const QString &text ) const
+{
+    qDebug()<<"SpinBox::valueFromText" << text;
+    QScriptEngine engine;
+    int value = engine.evaluate( text ).toNumber();
+    //m_sEngine.evaluate( text ).toNumber();
+    return value;
+}
+
+QString SpinBox::textFromValue( int value ) const
+{
+    return tr("%1 OK").arg(value);
+}*/

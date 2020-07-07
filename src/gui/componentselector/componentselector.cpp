@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -46,9 +46,8 @@ ComponentSelector::ComponentSelector( QWidget* parent )
     //QWhatsThis::add( this, QString::fromUtf8( gettext("Drag a Component and drop it into the Circuit." ) ) );
 
     LoadLibraryItems();
-    LoadCompSet();
+    //LoadCompSet();
 
-    
     setContextMenuPolicy( Qt::CustomContextMenu );
 
     connect( this, SIGNAL(customContextMenuRequested(const QPoint&)),
@@ -71,49 +70,30 @@ void ComponentSelector::LoadLibraryItems()
     }
 }
 
-void ComponentSelector::LoadCompSet()
+/*void ComponentSelector::LoadCompSet()
 {
-    QStringList compSetUnique;
-    // First, load the system component sets, because user sets can depend on it
     QDir compSetDir = SIMUAPI_AppPath::self()->RODataFolder();
-            //( qApp->applicationDirPath() );
 
-    //compSetDir.cd( "../share/simulide/data" );
-    
-    if( compSetDir.exists() ) 
-    {
-        compSetDir.setNameFilters( QStringList( "*.xml" ) );
-        qDebug() << "\n    Loading Component sets at:\n"<<compSetDir.absolutePath()<<"\n";
-        
-        foreach( QString compSetName, compSetDir.entryList( QDir::Files ) )
-        {
-            // This way user can override selected component sets
-            QString compSetFilePath = SIMUAPI_AppPath::self()->availableDataFilePath(compSetName);
-            //loadXml( compSetDir.absoluteFilePath(compSetName) );
-            if (!compSetFilePath.isEmpty()) {
-                loadXml(compSetFilePath);
-                qDebug() << "        Loaded Component set:  "<< compSetName;
-                compSetUnique.append(compSetName);
-            }
-        }
-        qDebug() << "\n";
-    }
+    if( compSetDir.exists() ) LoadCompSetAt( compSetDir );
+}*/
 
-    compSetDir = SIMUAPI_AppPath::self()->RWDataFolder();
-    if( compSetDir.exists() ) 
+void ComponentSelector::LoadCompSetAt( QDir compSetDir )
+{
+    compSetDir.setNameFilters( QStringList( "*.xml" ) );
+
+    QStringList xmlList = compSetDir.entryList( QDir::Files );
+
+    if( xmlList.isEmpty() ) return;                  // No comp sets to load
+
+    qDebug() << "\n" << tr("    Loading Component sets at:")<< "\n" << compSetDir.absolutePath()<<"\n";
+
+    foreach( QString compSetName, xmlList )
     {
-        compSetDir.setNameFilters( QStringList( "*.xml" ) );
-        qDebug() << "\n    Loading Component sets at:\n"<<compSetDir.absolutePath()<<"\n";
-        
-        foreach( QString compSetName, compSetDir.entryList( QDir::Files ) )
-        {
-            if (compSetUnique.contains(compSetName)) continue;
-            
-            loadXml( compSetDir.absoluteFilePath(compSetName) );
-            qDebug() << "        Loaded Component set:  "<< compSetName;
-        }
-        qDebug() << "\n";
+        QString compSetFilePath = compSetDir.absoluteFilePath( compSetName );
+
+        if( !compSetFilePath.isEmpty( ))  loadXml( compSetFilePath );
     }
+    qDebug() << "\n";
 }
 
 void ComponentSelector::loadXml( const QString &setFile )
@@ -121,13 +101,13 @@ void ComponentSelector::loadXml( const QString &setFile )
     QFile file( setFile );
     if( !file.open(QFile::ReadOnly | QFile::Text) )
     {
-          QMessageBox::warning(0, tr("Application"), tr("Cannot read file %1:\n%2.").arg(setFile).arg(file.errorString()));
+          QMessageBox::warning(0, "ComponentSelector::loadXml", tr("Cannot read file %1:\n%2.").arg(setFile).arg(file.errorString()));
           return;
     }
     QDomDocument domDoc;
     if( !domDoc.setContent(&file) )
     {
-         QMessageBox::warning(0, tr("Application"), tr("Cannot set file %1\nto DomDocument").arg(setFile));
+         QMessageBox::warning(0, "ComponentSelector::loadXml", tr("Cannot set file %1\nto DomDocument").arg(setFile));
          file.close();
          return;
     }
@@ -141,37 +121,52 @@ void ComponentSelector::loadXml( const QString &setFile )
         QDomElement element = rNode.toElement();
         QDomNode    node    = element.firstChild();
 
-        QString category = element.attribute( "category");
-        QString type     = element.attribute( "type");
-
-        //LibraryItem* parent = m_itemLibrary.itemByName(category);
-        LibraryItem* parent = m_itemLibrary.libraryItem(type);
+        QString category = element.attribute( "category" );
+        //const char* charCat = category.toUtf8().data();
+        std::string stdCat = category.toStdString();
+        const char* charCat = &(stdCat[0]);
+        category = QApplication::translate( "xmlfile", charCat );
+        //qDebug()<<"category = " <<category;
+        
+        QString type = element.attribute( "type");
+        LibraryItem* parent = m_itemLibrary.libraryItem( type );
 
         if( parent )
         {
             while( !node.isNull() )
             {
                 element = node.toElement();
-
                 QString icon = "";
 
                 if( element.hasAttribute("icon") )
                 {
                     QDir compSetDir( qApp->applicationDirPath() );
                     compSetDir.cd( "../share/simulide/data/images" );
-                    //icon = QCoreApplication::applicationDirPath();
-                    //icon.append("/data/images/");
-                    //icon.append(element.attribute("icon"));
-                    icon = compSetDir.absoluteFilePath(element.attribute("icon"));
+                    icon = compSetDir.absoluteFilePath( element.attribute("icon") );
                 }
-                addItem( element.attribute( "name" ), category, icon, type );
-
+                QString name = element.attribute( "name" );
+                
+                m_xmlFileList[ name ] = setFile;   // Save xml File used to create this item
+                
+                if( element.hasAttribute("info") ) name += "???"+element.attribute( "info" );
+                
+                addItem( name, category, icon, type );
+                
                 node = node.nextSibling();
             }
         }
-
         rNode = rNode.nextSibling();
     }
+    QString compSetName = setFile.split( "/").last();
+
+    qDebug() << tr("        Loaded Component set:           ") << compSetName;
+
+    m_compSetUnique.append( compSetName );
+}
+
+QString ComponentSelector::getXmlFile( QString compName )
+{
+    return m_xmlFileList[ compName ];
 }
 
 void ComponentSelector::addLibraryItem( LibraryItem* libItem ) // Used By Plugins
@@ -190,90 +185,112 @@ void ComponentSelector::addItem( LibraryItem* libItem )
     }
 }
 
-void ComponentSelector::addItem( const QString &name, const QString &_category, const QString &icon, const QString &type )
+void ComponentSelector::addItem( const QString &caption, const QString &_category, const QString &icon, const QString &type )
 {
+    QStringList nameFull = caption.split( "???" );
+    QString name = nameFull.first();
+    QString info = "";
+    if( nameFull.size() > 1 ) info = nameFull.last();
+    
+    //qDebug()<<name<<info;
+    
     bool hidden = MainWindow::self()->settings()->value( name+"/hidden" ).toBool();
 
-    QTreeWidgetItem* titulo = 0l;
+    QTreeWidgetItem* catItem = 0l;
     
     QStringList catPath = _category.split( "/" );
-    
-    QString category = catPath.takeLast();
+    bool isRootCat      = (catPath.size() == 1);
+    QString category    = catPath.takeLast();
+    if( category.isEmpty() ) return;
 
-    if( !m_categories.contains(category, Qt::CaseSensitive) )  // Create new Category
+    if( !m_categories.contains( category, Qt::CaseSensitive ))  // Create new Category
     {
-        bool c_hidden =  MainWindow::self()->settings()->value( category+"/hidden" ).toBool();
-        bool expanded =  !MainWindow::self()->settings()->value( category+"/collapsed" ).toBool();
+        bool c_hidden = false;
+        bool expanded = false;
+        
+        if( isRootCat )                              // Is Main Category
+        {
+            catItem = new QTreeWidgetItem( this );
+            catItem->setIcon( 0, QIcon(":/null-0.png") );
+            catItem->setTextColor( 0, QColor( 110, 95, 50 )/*QColor(255, 230, 200)*/ );
+            catItem->setBackground( 0, QBrush(QColor(240, 235, 245)) );
+            expanded = true;
+        }
+        else catItem = new QTreeWidgetItem(0);
 
-        m_categories.append(category);
-        titulo = new QTreeWidgetItem(0);
-        titulo->setFlags( QFlag(32) );
-        QFont font = titulo->font(0);
-        font.setPointSize(11);
+        catItem->setFlags( QFlag(32) );
+        QFont font = catItem->font(0);
+        font.setPixelSize( 13*MainWindow::self()->fontScale() );
         font.setWeight(75);
-        titulo->setIcon( 0, QIcon(":/null-0.png") );
-        titulo->setFont( 0, font );
-        titulo->setText( 0, category );
-        titulo->setTextColor( 0, QColor( 110, 95, 50 )/*QColor(255, 230, 200)*/ );
-        titulo->setBackground( 0, QBrush(QColor(240, 235, 245)) );
-        titulo->setChildIndicatorPolicy( QTreeWidgetItem::ShowIndicator );
+        catItem->setFont( 0, font );
+        catItem->setText( 0, category );
+        catItem->setChildIndicatorPolicy( QTreeWidgetItem::ShowIndicator );
+        m_categories.append( category );
         
         if( !catPath.isEmpty() )
         {
             QString topCat = catPath.takeLast();
             
-            QList<QTreeWidgetItem*> list = findItems( topCat, Qt::MatchExactly );
+            QList<QTreeWidgetItem*> list = findItems( topCat, Qt::MatchExactly | Qt::MatchRecursive );
             
             if( !list.isEmpty() ) 
             {
-                QTreeWidgetItem* topItem = list.takeLast();
-                topItem->addChild( titulo );
+                QTreeWidgetItem* topItem = list.first();
+                topItem->addChild( catItem );
             }
         }
-        else addTopLevelItem( titulo );
+        else if( name != "" ) addTopLevelItem( catItem );
         
-        titulo->setExpanded( expanded );
-        titulo->setHidden( c_hidden );
+        if( MainWindow::self()->settings()->contains( category+"/hidden" ) )
+            c_hidden =  MainWindow::self()->settings()->value( category+"/hidden" ).toBool();
+
+        if( MainWindow::self()->settings()->contains( category+"/collapsed" ) )
+            expanded = !MainWindow::self()->settings()->value( category+"/collapsed" ).toBool();
+
+        catItem->setExpanded( expanded );
+        catItem->setHidden( c_hidden );
     }
     else                                                                // Find Category
     {
-        QList<QTreeWidgetItem*> list = findItems(category, Qt::MatchExactly );
+        QList<QTreeWidgetItem*> list = findItems( category, Qt::MatchExactly | Qt::MatchRecursive );
 
-        if( list.length() > 0 ) titulo = list.first();
-        else
-        {
-            for( int i=0; i<topLevelItemCount(); i++ )
-            {
-                QTreeWidgetItem* it = topLevelItem(i);
-
-                for( int j=0; j<it->childCount(); j++ )
-                {
-                    if( it->child(j)->text(0) == category ) {
-                        titulo = it->child(j);
-                        break;
-                    }
-                }
-                if( titulo ) break;
-            }
-        }
+        if( !list.isEmpty() ) catItem = list.first();
     }
-    if( !titulo ) return;
+    if( !catItem ) return;
 
-    if( !m_categories.contains(name, Qt::CaseSensitive) )
-        m_categories.append(name);
+    if( !m_categories.contains( name, Qt::CaseSensitive ) )
+        m_categories.append( name );
 
     QTreeWidgetItem* item =  new QTreeWidgetItem(0);
     QFont font = item->font(0);
-    font.setPointSize(9);
+    
+    double fontScale = MainWindow::self()->fontScale();
+    if( type == "" ) font.setPixelSize( 12*fontScale );
+    else             font.setPixelSize( 11*fontScale );
     font.setWeight( QFont::Bold );
+    
     item->setFont( 0, font );
-    item->setText( 0, name );
     item->setFlags( QFlag(32) );
     item->setIcon( 0, QIcon(icon) );
+    item->setText( 0, name+info );
     item->setData( 0, Qt::UserRole, type );
-
-    titulo->addChild( item );
+    
+    if( ( type == "Subcircuit" )
+      ||( type == "PIC" )
+      ||( type == "AVR" )
+      ||( type == "Arduino" ) )
+    {
+         item->setData( 0, Qt::WhatsThisRole, name );
+    }
+    else item->setData( 0, Qt::WhatsThisRole, type );
+    
+    catItem->addChild( item );
     item->setHidden( hidden );
+    if( MainWindow::self()->settings()->contains( name+"/collapsed" ) )
+    {
+        bool expanded = !MainWindow::self()->settings()->value( name+"/collapsed" ).toBool();
+        item->setExpanded( expanded );
+    }
 }
 
 /*void ComponentSelector::removeLibItem( LibraryItem* libItem )
@@ -307,20 +324,21 @@ void ComponentSelector::mouseReleaseEvent( QMouseEvent* event )
     setCursor( Qt::OpenHandCursor );
 }
 
-void ComponentSelector::slotItemClicked( QTreeWidgetItem* item, int column)
+void ComponentSelector::slotItemClicked( QTreeWidgetItem* item, int column )
 {
     Q_UNUSED( column );
     
     if( !item ) return;
     
     QString type = item->data(0, Qt::UserRole).toString();
-    m_lastItemClicked = type;
     
     if( type == "" ) return;
     
-    QMimeData *mimeData = new QMimeData;
+    QMimeData* mimeData = new QMimeData;
     
-    mimeData->setText( item->text(0) );
+    QString name = item->data(0, Qt::WhatsThisRole).toString(); //item->text(0);
+    //qDebug() <<"ComponentSelector::slotItemClicked"<<name<<type;
+    mimeData->setText( name );
     mimeData->setHtml( type );              // esto hay que revisarlo
     
     QDrag *drag = new QDrag(this);

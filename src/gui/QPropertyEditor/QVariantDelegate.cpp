@@ -20,6 +20,11 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 // *************************************************************************************************
+/***************************************************************************
+ *   Modified 2012 by santiago González                                    *
+ *   santigoro@gmail.com                                                   *
+ *                                                                         *
+ ***************************************************************************/
 
 #include "QVariantDelegate.h"
 
@@ -27,7 +32,7 @@
 
 #include <QAbstractItemView>
 #include <QtCore/QSignalMapper>
-
+//#include <QDebug>
 
 QVariantDelegate::QVariantDelegate(QObject* parent) : QItemDelegate(parent)
 {
@@ -70,7 +75,7 @@ void QVariantDelegate::setEditorData(QWidget *editor, const QModelIndex &index) 
 {        
     m_finishedMapper->blockSignals(true);
     QVariant data = index.model()->data(index, Qt::EditRole);    
-    
+    //qDebug() <<"QVariantDelegate::setEditorData"<<data;
     switch(data.type())
     {
     case QVariant::Color:                 

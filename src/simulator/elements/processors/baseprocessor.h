@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -47,12 +47,14 @@ class MAINMODULE_EXPORT BaseProcessor : public QObject
         virtual bool getLoadStatus() { return m_loadStatus; }
         virtual void terminate();
 
-        virtual void setSteps( int steps );
+        virtual void setSteps( double steps );
         virtual void step()=0;
         virtual void stepOne()=0;
+        virtual void stepCpu()=0;
         virtual void reset()=0;
         virtual int  pc()=0;
-
+        
+        virtual void hardReset( bool reset );
         virtual int getRamValue( QString name );
         virtual int getRamValue( int address )=0;
         virtual int getRegAddress( QString name );
@@ -65,25 +67,39 @@ class MAINMODULE_EXPORT BaseProcessor : public QObject
         virtual void uartIn( uint32_t value );
         
         virtual void initialized();
+        virtual QStringList getRegList() { return m_regList; }
+        
+        virtual RamTable* getRamTable() { return m_ramTable; }
+
+        virtual QVector<int> eeprom()=0;
+        virtual void setEeprom( QVector<int> eep );
+        
+        virtual void setRegisters();
     
     protected:
  static BaseProcessor* m_pSelf;
- 
-        virtual void setRegisters();
+        
         virtual int  validate( int address )=0;
+        
+        void runSimuStep();
 
         QString m_symbolFile;
         QString m_dataFile;
         QString m_device;
         
-        int  m_mcuStepsPT;
-        unsigned long m_nextCycle;
+        double m_mcuStepsPT;
+        int  m_msimStep;
+        double m_nextCycle;
 
         RamTable* m_ramTable;
+        QStringList m_regList;
         QHash<QString, int> m_regsTable;     // int max 32 bits
         QHash<QString, float> m_floatTable;  // float 32 bits
         QHash<QString, QString> m_typeTable;
 
+        QVector<int> m_eeprom;
+
+        bool m_resetStatus;
         bool m_loadStatus;
         bool m_usartTerm;
         bool m_serialPort;

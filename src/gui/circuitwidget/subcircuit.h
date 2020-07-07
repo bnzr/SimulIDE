@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -20,10 +20,10 @@
 #ifndef SUBCIRCUIT_H
 #define SUBCIRCUIT_H
 
-#include "package.h"
+#include "chip.h"
 #include "itemlibrary.h"
 
-class MAINMODULE_EXPORT SubCircuit : public Package
+class MAINMODULE_EXPORT SubCircuit : public Chip
 {
     Q_OBJECT
 
@@ -36,20 +36,25 @@ class MAINMODULE_EXPORT SubCircuit : public Package
         static LibraryItem * libraryItem();
 
         virtual void initialize();
-
-    
+        virtual void initChip();
+        
+        virtual void setLogicSymbol( bool ls );
+        
     public slots:
         virtual void remove();
 
     protected:
         virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent* event);
 
-        virtual void initPackage();
         virtual void initSubcircuit();
+        
+        void clear();
 
         void connectEpin( ePin *epin, QString connetTo );
 
         int m_numItems;
+        
+        QString m_subcFile;     // file containig subcircuit defs
 
         QList<eNode*> m_internal_eNode;
         QList<eElement*> m_elementList;

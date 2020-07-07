@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -22,61 +22,85 @@
 
 #include <QtWidgets>
 
+#include "e-element.h"
 #include "renderoscope.h"
 #include "probe.h"
 
-class MAINMODULE_EXPORT OscopeWidget : public QWidget
+class Oscope;
+
+class MAINMODULE_EXPORT OscopeWidget : public QWidget, public eElement
 {
     Q_OBJECT
 
     public:
         OscopeWidget( QWidget *parent );
         ~OscopeWidget();
-
- static OscopeWidget* self() { return m_pSelf; }
         
-        void setProbe( Probe* probe );
+        void setOscope( Oscope* oscope );
+        void read();
         void clear();
-        void step();
-        void setData();
-        void setTicksPs( int tps );
-        void setOscopeTick( int tickUs );
+        void setupWidget( int size );
+        double filter()                 { return m_filter; }
+        void setFilter( double filter ) { m_filter = filter; }
+        
+        virtual void simuClockStep();
+        virtual void resetState();
         
     public slots:
-        void speedChanged( int speed );
-        //void ampliChanged( int ampli );
-        void centeChanged( int offset );
+        void HscaleChanged( int Hscale );
+        void VscaleChanged( int Vscale );
+        void HposChanged( int hPos );
+        void VposChanged( int Vpos );
+        void autoChanged( int au );
 
     private:
- static OscopeWidget* m_pSelf;
-
-        void setupWidget();
-
         QHBoxLayout* m_horizontalLayout;
         QVBoxLayout* m_verticalLayout;
-
-        RenderOscope*  m_rArea;
         
-        bool newReading;
+        QLabel* m_freqLabel;
+        QLabel* m_ampLabel;
+        QLabel* m_tickLabel;
+        QCheckBox* m_autoCheck;
+        QDial* m_HscaleDial;
+        QDial* m_VscaleDial;
+        QDial* m_HposDial;
+        QDial* m_VposDial;
+        RenderOscope* m_display;
+        
+        Oscope* m_oscope;
         
         int m_data[140];
         int m_counter;
-        int m_newReadCount;
+        int m_step;
+        int m_totalP;
         int m_ticksPs;
         int m_tick;
-        int m_speed;
-        int m_offset;
-        int m_prevSpeed;
-        int m_prevOffset;
+        int m_lastMax;
+        int m_numMax;
+        int m_numCycles;
+        int m_freq;
+        
+        int m_Hscale;
+        int m_prevHscale;
+        int Hpos;
+        int m_Hpos;
+        int m_prevHpos;
+        
+        double m_Vscale;
+        double m_prevVscale;
+        double m_Vpos;
+        double m_prevVpos;
         double m_ampli;
+        double m_filter;
+        double m_lastData;
+        double m_max;
+        double m_min;
         
-        
-        Probe* m_probe;
-        
-        QDial* m_speedDial;
-        //QDial* m_ampliDial;
-        QDial* m_centeDial;
+        bool m_reading;
+        bool m_newRead;
+        bool m_rising;
+        bool m_falling;
+        bool m_auto;
 };
 
 #endif
-

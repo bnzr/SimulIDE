@@ -4,7 +4,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  *   This program is distributed in the hope that it will be useful,       *
@@ -21,6 +21,7 @@
 #define ELOGICDEVICE_H
 
 #include <string>
+#include <math.h>
 
 #include "e-source.h"
 #include "e-pin.h"
@@ -62,7 +63,7 @@ class MAINMODULE_EXPORT eLogicDevice : public eElement
         void  setOutImp( double imp );
 
         bool clockInv() const            { return m_clockPin->isInverted(); }
-        void setClockInv( bool inv )     { m_clockPin->setInverted(inv);}
+        void setClockInv( bool inv );
 
         bool inverted() { return m_inverted; }
         void setInverted( bool inverted );
@@ -71,6 +72,7 @@ class MAINMODULE_EXPORT eLogicDevice : public eElement
         void setInvertInps( bool invert );
         
         void setOutputEnabled( bool enabled );
+        void updateOutEnabled();
 
         void initEpins(){;}
         //ePin* getEpin( int pin );
@@ -105,6 +107,7 @@ class MAINMODULE_EXPORT eLogicDevice : public eElement
         void setOut( int num, bool out );
         
         bool getInputState( int input );
+        bool getOutputState( int output );
 
         double m_inputHighV;
         double m_inputLowV;
@@ -133,5 +136,4 @@ class MAINMODULE_EXPORT eLogicDevice : public eElement
 };
 
 #endif
-
 
