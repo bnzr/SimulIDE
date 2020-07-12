@@ -76,10 +76,13 @@
 #include "pcd8544.h"
 #include "probe.h"
 #include "potentiometer.h"
+#include "potentiometer2.h"
 #include "push.h"
 #include "rail.h"
 #include "rectangle.h"
 #include "relay-spst.h"
+#include "sensor_ldr.h"
+#include "sensor_dummy.h"
 #include "resistor.h"
 #include "resistordip.h"
 #include "servo.h"
@@ -138,6 +141,7 @@ void ItemLibrary::loadItems()
     addItem( RelaySPST::libraryItem() );
     // Passive
     addItem( Potentiometer::libraryItem() );
+    addItem( Potentiometer2::libraryItem() );
     addItem( Resistor::libraryItem() );
     addItem( ResistorDip::libraryItem() );
     addItem( Capacitor::libraryItem() );
@@ -150,6 +154,9 @@ void ItemLibrary::loadItems()
     addItem( Mosfet::libraryItem() );
     addItem( BJT::libraryItem() );
     addItem( MuxAnalog::libraryItem() );
+    // Sensors
+    addItem( SensorLDR::libraryItem() );
+    addItem( SensorDummy::libraryItem() );
     // Outputs
     addItem( Led::libraryItem() );
     addItem( LedBar::libraryItem() );
@@ -166,7 +173,7 @@ void ItemLibrary::loadItems()
     addItem( PICComponent::libraryItem() );
     addItem( AVRComponent::libraryItem() );
     addItem( Arduino::libraryItem() );
-    addItem( new LibraryItem( tr("Sensors"),tr("Micro"), "1to2.png","", 0l ) );
+    //addItem( new LibraryItem( tr("Sensors"),tr("Micro"), "1to2.png","", 0l ) );
     addItem( SR04::libraryItem() );
     // Logic
     addItem( new LibraryItem( tr("Gates"),tr("Logic"), "gates.png","", 0l ) );
@@ -309,8 +316,9 @@ QString* LibraryItem::help()
     {
         QString locale   = "_"+QLocale::system().name().split("_").first();
         QString type = m_type;
-        type= type.replace( " ", "" );
         QString dfPath = SIMUAPI_AppPath::self()->availableDataFilePath( "help/"+locale+"/"+type.toLower()+locale+".txt" );
+
+        type= type.replace( " ", "" );
         
         if( dfPath == "" ) 
             dfPath = SIMUAPI_AppPath::self()->availableDataFilePath( "help/"+type.toLower()+".txt" );
@@ -322,7 +330,6 @@ QString* LibraryItem::help()
             if( file.open(QFile::ReadOnly | QFile::Text) ) // Get Text from Help File
             {
                 QTextStream s1( &file );
-                s1.setCodec("UTF-8");
             
                 m_help = "";
                 m_help.append(s1.readAll());

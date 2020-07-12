@@ -17,31 +17,31 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "potentiometer.h"
+#include "potentiometer2.h"
 #include "connector.h"
 #include "circuit.h"
 #include "itemlibrary.h"
 
-static const char* Potentiometer_properties[] = {
+static const char* Potentiometer2_properties[] = {
     QT_TRANSLATE_NOOP("App::Property","Value Ohm")
 };
 
-Component* Potentiometer::construct( QObject* parent, QString type, QString id )
+Component* Potentiometer2::construct( QObject* parent, QString type, QString id )
 {
-    return new Potentiometer( parent, type, id );
+    return new Potentiometer2( parent, type, id );
 }
 
-LibraryItem* Potentiometer::libraryItem()
+LibraryItem* Potentiometer2::libraryItem()
 {
     return new LibraryItem(
-        tr( "Potentiometer" ),
+        tr( "Potentiometer2" ),
         tr( "Passive" ),
-        "potentiometer.png",
-        "Potentiometer",
-        Potentiometer::construct );
+        "potentiometer2.png",
+        "Potentiometer2",
+        Potentiometer2::construct );
 }
 
-Potentiometer::Potentiometer( QObject* parent, QString type, QString id )
+Potentiometer2::Potentiometer2( QObject* parent, QString type, QString id )
              : Component( parent, type, id )
              , eElement( (id+"-eElement").toStdString() )
              , m_pinA( 180, QPoint(-16,0 ), id+"-PinA", 0, this )
@@ -52,7 +52,7 @@ Potentiometer::Potentiometer( QObject* parent, QString type, QString id )
              , m_resA(  (id+"-resA").toStdString() )
              , m_resB(  (id+"-resB").toStdString() )
 {
-    Q_UNUSED( Potentiometer_properties );
+    Q_UNUSED( Potentiometer2_properties );
     
     m_area = QRectF( -12, -4.5, 24, 12.5 );
     
@@ -92,11 +92,11 @@ Potentiometer::Potentiometer( QObject* parent, QString type, QString id )
              this,   SLOT  (resChanged(int)) );
 }
 
-Potentiometer::~Potentiometer() 
+Potentiometer2::~Potentiometer2() 
 {
 }
 
-void Potentiometer::initialize()
+void Potentiometer2::initialize()
 {
     eNode* enod = m_pinM.getEnode();        // Get eNode from middle Pin
 
@@ -119,14 +119,14 @@ void Potentiometer::initialize()
     updateStep();
 }
 
-void Potentiometer::updateStep()
+void Potentiometer2::updateStep()
 {
     if( m_changed ) 
     {
         double res1 = double( m_resist*m_dial->value()/1000 );
         double res2 = m_resist-res1;
-	qDebug()<<"Potentiometer::dialValue"<<m_dial->value();
-	qDebug()<<"Potentiometer::resist"<<m_resist;
+	qDebug()<<"Potentiometer2::dialValue"<<m_dial->value();
+	qDebug()<<"Potentiometer2::resist"<<m_resist;
         
         if( res1 < 1e-6 ) 
         {
@@ -138,7 +138,7 @@ void Potentiometer::updateStep()
             res2 = 1e-6;
             res1 = m_resist-res2;
         }
-        qDebug()<<"Potentiometer::updateStep"<<res1<<res2;
+        qDebug()<<"Potentiometer2::updateStep"<<res1<<res2;
         m_resA.setRes( res1 );
         m_resB.setRes( res2 );
         
@@ -146,23 +146,23 @@ void Potentiometer::updateStep()
     }
 }
 
-void Potentiometer::resChanged( int res ) // Called when dial is rotated
+void Potentiometer2::resChanged( int res ) // Called when dial is rotated
 {
     //qDebug() << res << m_resist;
-    qDebug() <<"Potentiometer::resChanged" << res << m_resist;
+    qDebug() <<"Potentiometer2::resChanged" << res << m_resist;
     m_changed = true;
 }
 
-void Potentiometer::setRes( double res ) // Called when property resistance is changed
+void Potentiometer2::setRes( double res ) // Called when property resistance is changed
 {
     Component::setValue( res );       // Takes care about units multiplier
-    qDebug() <<"Potentiometer::setRes" << res << m_value << m_unitMult;
+    qDebug() <<"Potentiometer2::setRes" << res << m_value << m_unitMult;
     m_resist = m_value*m_unitMult;
     
     m_changed = true;
 }
 
-void Potentiometer::setUnit( QString un ) 
+void Potentiometer2::setUnit( QString un ) 
 {
     Component::setUnit( un );
     m_resist = m_value*m_unitMult;
@@ -170,18 +170,18 @@ void Potentiometer::setUnit( QString un )
     m_changed = true;
 }
 
-void Potentiometer::setVal( int val )
+void Potentiometer2::setVal( int val )
 {
     m_dial->setValue( val*1000/m_resist );
     //resChanged( val );
 }
 
-int Potentiometer::val()
+int Potentiometer2::val()
 {
     return m_resist*m_dial->value()/1000;
 }
 
-void Potentiometer::remove()
+void Potentiometer2::remove()
 {
     if( m_pinA.isConnected() ) m_pinA.connector()->remove();
     if( m_pinB.isConnected() ) m_pinB.connector()->remove();
@@ -198,7 +198,7 @@ void Potentiometer::remove()
     Component::remove();
 }
 
-void Potentiometer::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget )
+void Potentiometer2::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget )
 {
     //p->setBrush(Qt::white);
     //p->drawRoundedRect( QRect( 0, 0, 48, 48 ), 1, 1 );
@@ -218,6 +218,6 @@ void Potentiometer::paint( QPainter *p, const QStyleOptionGraphicsItem *option, 
     p->drawLine( 0, 6,  3, 9 );
 }
 
-#include "moc_potentiometer.cpp"
+#include "moc_potentiometer2.cpp"
 
 

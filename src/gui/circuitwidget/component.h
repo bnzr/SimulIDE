@@ -71,6 +71,9 @@ class MAINMODULE_EXPORT Component : public QObject, public QGraphicsItem
         
         bool showVal();
         void setShowVal( bool show );
+
+        bool showSense();
+        void setShowSense( bool show );
         
         QString unit();
         void setUnit( QString un );
@@ -105,9 +108,13 @@ class MAINMODULE_EXPORT Component : public QObject, public QGraphicsItem
         void setValLabelPos( int x, int y, int rot );
         void setValLabelPos();
         
+        void setSenseLabelPos( int x, int y, int rot );
+        void setSenseLabelPos();
+        
         void updateLabel( Label* label, QString txt );
         
         double getmultValue();
+        double getmultSenseValue();
         
         //QString getHelp( QString file );
         
@@ -149,14 +156,20 @@ class MAINMODULE_EXPORT Component : public QObject, public QGraphicsItem
         void contextMenu( QGraphicsSceneContextMenuEvent* event, QMenu* menu );
 
         void setValue( double val );
+        void setSenseValue( double val );
         void setflip();
         
         double m_value;
+        double m_sense_value;
 
         const QString multUnits;
         QString m_unit;
         QString m_mult;
         double  m_unitMult;
+
+        QString m_sense_unit;
+        QString m_sense_mult;
+        double  m_sense_unitMult;
         
         int m_Hflip;
         int m_Vflip;
@@ -164,6 +177,7 @@ class MAINMODULE_EXPORT Component : public QObject, public QGraphicsItem
 
         Label* m_idLabel;
         Label* m_valLabel;
+        Label* m_senseLabel;
 
         QString m_id;
         QString m_type;
@@ -179,6 +193,7 @@ class MAINMODULE_EXPORT Component : public QObject, public QGraphicsItem
 
         bool m_showId;
         bool m_showVal;
+        bool m_showSense;
         bool m_moving;
         bool m_printable;
         

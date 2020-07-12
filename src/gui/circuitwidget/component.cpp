@@ -59,7 +59,12 @@ Component::Component( QObject* parent, QString type, QString id )
     m_moving = false;
     m_printable = false;
     m_BackGround = "";
-
+    m_showSense = false;
+    m_sense_mult  = " ";
+    m_sense_unit  = " ";
+    m_sense_value = 0;
+    m_sense_unitMult = 1;
+    
     if( ( type != "Connector" )&&( type != "Node" ) )
     {
         LibraryItem* li= ItemLibrary::self()->libraryItem( type );
@@ -81,7 +86,14 @@ Component::Component( QObject* parent, QString type, QString id )
     f.setPixelSize(9);
     m_valLabel->setFont(f);
     setShowVal( false );
-    
+
+    m_senseLabel = new Label( this );
+    m_senseLabel->setDefaultTextColor( Qt::blue );
+    setValLabelPos( 0, 0, 0);
+    f.setPixelSize(9);
+    m_senseLabel->setFont(f);
+    setShowSense( false );
+   
     setObjectName( id );
     setIdLabel( id );
     setId(id);
@@ -98,6 +110,8 @@ Component::~Component(){}
 
 void Component::mousePressEvent( QGraphicsSceneMouseEvent* event )
 {
+    qDebug()<<"Component::mousePressEvent";
+
     if( event->button() == Qt::LeftButton )
     {
         event->accept();
@@ -138,8 +152,10 @@ void Component::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
     
     bool deltaH  = fabs( delta.x() )> 0;
     bool deltaV  = fabs( delta.y() )> 0;
-    
+
     if( !deltaH && !deltaV ) return;
+
+    qDebug()<<"Component::mouseMoveEvent "<<deltaH<<", "<<deltaV<<", "<<delta;
 
     QList<QGraphicsItem*> itemlist = Circuit::self()->selectedItems();
     if( itemlist.size() > 1 )
@@ -179,6 +195,7 @@ void Component::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
 
 void Component::move( QPointF delta )
 {
+  qDebug()<<"Component::move";
     setPos( pos() + delta );
     emit moved();
 }
@@ -317,7 +334,7 @@ void Component::rotateHalf()
 void Component::updateLabel( Label* label, QString txt )
 {
     if     ( label == m_idLabel ) m_id = txt;
-    else if( label == m_valLabel )
+    else if( label == m_valLabel || label == m_senseLabel )
     {
         QString value = "";
         int x;
@@ -360,6 +377,19 @@ void Component::setValLabelPos()
     m_valLabel->setLabelPos();
 }
 
+void Component::setSenseLabelPos( int x, int y, int rot )
+{
+    m_senseLabel->m_labelx = x;
+    m_senseLabel->m_labely = y;
+    m_senseLabel->m_labelrot = rot;
+    m_senseLabel->setLabelPos();
+}
+
+void Component::setSenseLabelPos()
+{
+    m_senseLabel->setLabelPos();
+}
+
 void Component::setValue( double val) 
 { 
     if( fabs(val) < 1e-12 ) 
@@ -392,6 +422,40 @@ void Component::setValue( double val)
     m_valLabel->setPlainText( QString::number(m_value)+m_mult+m_unit );
 }
 
+void Component::setSenseValue( double val) 
+{
+  qDebug()<<"Component::setSenseValue "<<val;
+    if( fabs(val) < 1e-12 ) 
+    {
+        m_sense_value = 0;
+        m_sense_mult = " ";
+    }
+    else
+    {
+        val = val*m_sense_unitMult;
+        qDebug()<<"Component::setSenseValue "<<val;
+        int index = 4;   // We are in bare units "TGMK munp"
+        m_sense_unitMult = 1;
+        while( fabs(val) >= 1000 )
+        {
+            index--;
+            m_sense_unitMult = m_sense_unitMult*1000;
+            val = val/1000;
+        }
+        while( fabs(val) < 1 )
+        {
+            index++;
+            m_sense_unitMult = m_sense_unitMult/1000;
+            val = val*1000;
+        }
+        m_sense_mult = multUnits.at( index );
+        if( m_sense_mult != " " ) m_sense_mult.prepend( " " );
+        m_sense_value = val;
+    } 
+    qDebug()<<"Component::setSenseValue "<<m_sense_value<<m_sense_mult<<m_sense_unit;
+    m_senseLabel->setPlainText( QString::number(m_sense_value)+m_sense_mult+m_sense_unit );
+}
+
 QString Component::unit()                { return m_mult+m_unit; }
 void Component::setUnit( QString un ) 
 { 
@@ -422,6 +486,7 @@ void Component::setUnit( QString un )
 }
 
 double Component::getmultValue() { return m_value*m_unitMult; }
+double Component::getmultSenseValue() { return m_sense_value*m_sense_unitMult; }
 
 bool Component::showId()               { return m_showId; }
 void Component::setShowId( bool show ) 
@@ -435,6 +500,13 @@ void Component::setShowVal( bool show )
 { 
     m_valLabel->setVisible( show );
     m_showVal = show; 
+}
+
+bool Component::showSense()               { return m_showSense;}
+void Component::setShowSense( bool show ) 
+{ 
+    m_senseLabel->setVisible( show );
+    m_showSense = show; 
 }
 
 QString Component::idLabel() { return m_idLabel->toPlainText(); }
@@ -513,6 +585,7 @@ void Component::paint( QPainter* painter, const QStyleOptionGraphicsItem* option
     Q_UNUSED(option); Q_UNUSED(widget);
 
     QPen pen(Qt::black, 1.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    //qDebug()<<"Component::paint painter"<<painter; 
 
     if ( isSelected() )
     {

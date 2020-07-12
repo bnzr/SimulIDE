@@ -68,3 +68,27 @@ Run time dependencies:
 
 SimuliDE executable is in bin folder.
 No need for installation, place SimulIDE folder wherever you want and run the executable.
+
+---------------------------------------
+
+Work in progress : creating a new component.
+The component is a LDR (Light Dependent Resistor) sensor.
+We will copy and modify the simulation of the potentiometer as the sensor acts like a variable resistor, except the law is not linear but in negative power of the illuminance
+
+We first need to create an icon image of the sensor, the file is sensor_ldr.png
+
+Then we modify the src folder to include this new component in the simulator.
+
+1 - Copy the icon file sensor_ldr.png in icons/components folder
+
+2 - Add an alias to component display image in application.qrc
+<file alias="sensor_ldr.png">../src/icons/components/sensor_ldr.png</file>
+
+3 - Create a file
+
+4 - Update the GUI layout to be able to select the new component
+modify file : ../src/gui/circuitwidget/itemlibrary.cpp
+add
+#include "sensor_ldr.h"
+and after // Sensors
+addItem( SensorLDR::libraryItem() );

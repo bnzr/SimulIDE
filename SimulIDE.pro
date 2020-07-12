@@ -173,7 +173,7 @@ QMAKE_CFLAGS += -O2
 QMAKE_CFLAGS += -O2
 QMAKE_CFLAGS -= -fPIC
 QMAKE_CFLAGS += -fno-pic
-
+#QMAKE_CFLAGS += -g
 
 win32 {
     LIBS +=  ../resources/bin/libglibc_win.a
@@ -186,7 +186,8 @@ unix {
 
 CONFIG += qt 
 CONFIG += warn_on
-CONFIG += no_qml_debug
+#CONFIG += no_qml_debug
+CONFIG += force_debug_info
 CONFIG *= c++11
 
 DEFINES += MAINMODULE_EXPORT=
