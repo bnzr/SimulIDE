@@ -484,6 +484,34 @@ void Component::setUnit( QString un )
     m_mult     = " ";
     m_valLabel->setPlainText( QString::number(m_value)+m_mult+m_unit );
 }
+QString Component::senseUnit()                { return m_sense_mult+m_sense_unit; }
+void Component::setSenseUnit( QString un ) 
+{ 
+    QString mul = " ";
+    un.replace( " ", "" );
+    if( un.size() > 0 ) 
+    {
+        mul = un.at(0);
+        
+        double sense_unitMult = 1e12;        // We start in Tera units "TGMk munp"
+        
+        for( int x=0; x<9; x++ )
+        {
+            if( mul == sense_MultUnits.at(x) ) 
+            {
+                m_sense_unitMult = sense_unitMult;
+                m_sense_mult     = mul;
+                if( m_sense_mult != " " ) m_sense_mult.prepend( " " );
+                m_senseLabel->setPlainText( QString::number(m_sense_value)+m_sense_mult+m_sense_unit );
+                return;
+            }
+            sense_unitMult = sense_unitMult/1000;
+        }
+    }
+    m_sense_unitMult = 1;
+    m_sense_mult     = " ";
+    m_senseLabel->setPlainText( QString::number(m_sense_value)+m_sense_mult+m_sense_unit );
+}
 
 double Component::getmultValue() { return m_value*m_unitMult; }
 double Component::getmultSenseValue() { return m_sense_value*m_sense_unitMult; }

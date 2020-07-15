@@ -98,6 +98,7 @@ Potentiometer::~Potentiometer()
 
 void Potentiometer::initialize()
 {
+    qDebug()<<"Potentiometer::initialize";
     eNode* enod = m_pinM.getEnode();        // Get eNode from middle Pin
 
     if( !enod )                       // Not connected: Create mid eNode

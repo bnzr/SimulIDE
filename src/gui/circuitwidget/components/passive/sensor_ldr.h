@@ -20,76 +20,40 @@
 #ifndef SENSORLDR_H
 #define SENSORLDR_H
 
-#include "component.h"
+#include "itemlibrary.h"
 #include "e-resistor.h"
-#include "e-element.h"
-#include "dialwidget.h"
 #include "pin.h"
 
-class LibraryItem;
 
-class MAINMODULE_EXPORT SensorLDR : public Component, public eElement
+class MAINMODULE_EXPORT SensorLDR : public Component, public eResistor
 {
     Q_OBJECT
-    Q_PROPERTY( double  Resistance READ res     WRITE setRes    DESIGNABLE true USER true )
-    Q_PROPERTY( QString Unit       READ unit    WRITE setUnit    DESIGNABLE true USER true )
-    Q_PROPERTY( bool    Show_res   READ showVal WRITE setShowVal DESIGNABLE true USER true )
-    Q_PROPERTY( int     Value_Ohm  READ val     WRITE setVal    DESIGNABLE true USER true )
+    Q_PROPERTY( double Resistance READ resist   WRITE setResist  DESIGNABLE true USER true )
+    Q_PROPERTY( QString  Unit     READ unit     WRITE setUnit    DESIGNABLE true USER true )
+    Q_PROPERTY( bool     Show_res READ showVal  WRITE setShowVal DESIGNABLE true USER true )
 
     public:
+        QRectF boundingRect() const { return QRectF( -11, -4.5, 22, 9 ); }
 
         SensorLDR( QObject* parent, QString type, QString id );
         ~SensorLDR();
 
         static Component* construct( QObject* parent, QString type, QString id );
-        static LibraryItem* libraryItem();
+        static LibraryItem *libraryItem();
 
-        virtual void initialize();
-        virtual void updateStep();
-        
-        void setVal( int val );
-        int val();
-        
-        double res() const      { return m_value; }
-        void setRes( double v );
+        double resist();
+        void setResist( double r );
         
         void setUnit( QString un );
+	void update ();
 
-        virtual void paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* widget );
+        virtual void paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget );
 
     public slots:
-        void resChanged( int volt );
-        virtual void remove();
+        void updateTimer();
+        void remove();
 
     private:
-        double m_resist;
-        double m_voltOut;
-        
-        bool m_changed;
-        
-        Pin m_pinA;
-        Pin m_pinM;
-        Pin m_pinB;
-        ePin m_ePinA;
-        ePin m_ePinB;
-        
-        eResistor m_resA;
-        eResistor m_resB;
-        
-        eNode* m_midEnode;
-        
-        DialWidget m_dialW;
-	QLabel* m_tstLabel;
-	
-        QDial* m_dial;
-        QGraphicsProxyWidget* m_proxy;
-        QGraphicsProxyWidget* m_proxy2;
-
-	int luxMin = 50;
-	int luxMax = 1000;
-	int luxStep = 50;
-	
 };
 
 #endif
-

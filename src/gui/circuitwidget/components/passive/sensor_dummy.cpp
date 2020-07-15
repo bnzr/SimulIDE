@@ -61,30 +61,69 @@ SensorDummy::SensorDummy( QObject* parent, QString type, QString id )
 
     m_idLabel->setPos(-12,-24);
     setLabelPos(-12,-20, 0);
+    setShowId( true );
     
+    m_sense_unit = "MesUnit";
+    setSenseLabelPos(-16, 26, 0);
+    setSenseUnit (" ");
+    setSenseValue(1050);
+    setShowSense ( true );
+
     m_unit = "Ω";
-    setResist( m_resist );
-    
+    setUnit (" ");
+    m_resist = sensorFunction( m_sense_value*m_sense_unitMult );
+    setResist( m_resist );   
     setValLabelPos(-16, 6, 0);
     setShowVal( true );
 
-    m_sense_unit = "Lux";
-    setSenseLabelPos(-16, 26, 0);
-    setSenseValue(1200);
-    setShowSense ( true );
+    m_dialW.setupWidget();
+    m_dialW.setFixedSize( 24, 24 ); // 24,24
+    m_dialW.dial->setMinimum(m_sense_min);
+    m_dialW.dial->setMaximum(m_sense_max); 
+    m_dialW.dial->setValue(m_sense_value*m_sense_unitMult);
+    m_dialW.dial->setSingleStep(m_sense_step);
     
+    m_proxy = Circuit::self()->addWidget( &m_dialW );
+    m_proxy->setParentItem( this );
+    m_proxy->setPos( QPoint( -12, -24-5) );
+    //m_proxy->setFlag(QGraphicsItem::ItemNegativeZStacksBehindParent, true );
+
+    m_dial = m_dialW.dial;
+    
+    //Simulator::self()->addToUpdateList( this );
+    
+    connect( m_dial, SIGNAL(valueChanged(int)),
+             this,   SLOT  (senseChanged(int)) );
+
 }
 
 SensorDummy::~SensorDummy(){}
+
+void SensorDummy::senseChanged( int val ) // Called when dial is rotated
+{
+    qDebug() <<"SensorDummy::senseChanged" << val;
+    double c_sense_value = (double)(m_dial->value());
+    c_sense_value = round(c_sense_value/(double)m_sense_step)*(double)m_sense_step;
+    qDebug()<<"SensorDummy::senseChanged dialValue c_sense_value"<<m_dial->value()<<c_sense_value;
+    m_dialW.dial->setValue(c_sense_value);
+    setSenseUnit (" ");
+    setSenseValue(c_sense_value);
+    m_resist = sensorFunction (c_sense_value);
+    setUnit (" ");
+    setResist ( m_resist);
+    qDebug()<<"SensorDummy::senseChanged m_resist m_value "<<m_resist <<m_value;
+}
 
 double SensorDummy::resist() { return m_value; }
 
 void SensorDummy::setResist( double r )
 {
     if( r < 1e-12 ) r = 1e-12;
-    
+    qDebug() <<"SensorDummy::setResist r "<<r;
     Component::setValue( r );       // Takes care about units multiplier
+    qDebug() <<"SensorDummy::setResist  m_value m_unitMult "<<m_value<<m_unitMult;
     eResistor::setResSafe( m_value*m_unitMult );
+    qDebug() <<"SensorDummy::setResist eResistor res "<<eResistor::res();
 }
 
 void SensorDummy::setUnit( QString un ) 
@@ -113,6 +152,15 @@ void SensorDummy::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QW
     p->setFont(font);
 
 
+}
+
+double SensorDummy::sensorFunction (double sense)
+{
+  const double a = 0.5;
+  const double b = 1000.0;
+  double r_sense = a*sense+b;
+    qDebug()<<"SensorDummy::sensorFunction"<<sense<<r_sense;
+  return r_sense;
 }
 
 #include "moc_sensor_dummy.cpp"

@@ -27,6 +27,7 @@
 #include "itemlibrary.h"
 #include "e-resistor.h"
 #include "pin.h"
+#include "dialwidget.h"
 
 
 class MAINMODULE_EXPORT SensorDummy : public Component, public eResistor
@@ -47,15 +48,26 @@ class MAINMODULE_EXPORT SensorDummy : public Component, public eResistor
 
         double resist();
         void setResist( double r );
+	double sensorFunction ( double sense );
         
         void setUnit( QString un );
 
         virtual void paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget );
 
     public slots:
+        void senseChanged( int val );
         void remove();
 
     private:
+        double m_resist;
+        //double m_voltOut;        
+	
+	int m_sense_min = 50;
+	int m_sense_max = 2000;
+	int m_sense_step = 50;
+        DialWidget m_dialW;	
+        QDial* m_dial;
+        QGraphicsProxyWidget* m_proxy;
 };
 
 #endif

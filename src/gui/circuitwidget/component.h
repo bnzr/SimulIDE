@@ -78,6 +78,9 @@ class MAINMODULE_EXPORT Component : public QObject, public QGraphicsItem
         QString unit();
         void setUnit( QString un );
 
+        QString senseUnit();
+        void setSenseUnit( QString un );
+
         int labelx();
         void setLabelX( int x );
 
@@ -167,6 +170,7 @@ class MAINMODULE_EXPORT Component : public QObject, public QGraphicsItem
         QString m_mult;
         double  m_unitMult;
 
+        const QString sense_MultUnits;
         QString m_sense_unit;
         QString m_sense_mult;
         double  m_sense_unitMult;
