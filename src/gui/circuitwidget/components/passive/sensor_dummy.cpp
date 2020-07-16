@@ -156,7 +156,7 @@ void SensorDummy::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QW
     p->drawRect( -10.5, -4, 21, 8 );
     double x0, y0;
     x0 = -9;
-    y0 = -9;
+    y0 = -7;
     for (int i=0; i<3; i++)
     {	
        p->drawLine( x0, y0, x0,  y0-3);

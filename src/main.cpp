@@ -21,7 +21,6 @@
 #include <QTranslator>
 
 #include "mainwindow.h"
-#include "circuit.h"
 
 int main(int argc, char *argv[])
 {
@@ -49,6 +48,14 @@ int main(int argc, char *argv[])
     //QApplication::setGraphicsSystem( "raster" );//native, raster, opengl
     QApplication app( argc, argv );
 
+    QCommandLineParser parser;
+    parser.addHelpOption();
+    parser.addVersionOption();
+    parser.addPositionalArgument("circuitfile", QCoreApplication::translate("main", "Circuit File"));
+    QCommandLineOption startSimulationOption("r", QCoreApplication::translate("main", "auto run the simulation at start"));
+    parser.addOption(startSimulationOption);
+    parser.process(app);
+    
     QString locale   = QLocale::system().name().split("_").first();
     QString langFile = "../share/simulide/translations/simulide_"+locale+".qm";
     
@@ -69,16 +76,7 @@ int main(int argc, char *argv[])
 
     window.show();
     app.setApplicationVersion( APP_VERSION );
-
-    /*
-    qDebug()<<"input params cnt = "<<argc;
-    if (argc >= 2)
-    {
-      Circuit::loadCircuit (QString &argv[1]);
-    }
-    */
-
-    
+ 
     return app.exec();
 }
 
