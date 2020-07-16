@@ -21,6 +21,7 @@
 #include <QTranslator>
 
 #include "mainwindow.h"
+#include "circuit.h"
 
 int main(int argc, char *argv[])
 {
@@ -58,7 +59,7 @@ int main(int argc, char *argv[])
     translator.load( langFile );
     app.installTranslator( &translator );
 
-    MainWindow window;
+    MainWindow window;	
     
     /*QRect screenGeometry = QApplication::desktop()->screenGeometry();
     int x = ( screenGeometry.width()-window.width() ) / 2;
@@ -68,6 +69,16 @@ int main(int argc, char *argv[])
 
     window.show();
     app.setApplicationVersion( APP_VERSION );
+
+    /*
+    qDebug()<<"input params cnt = "<<argc;
+    if (argc >= 2)
+    {
+      Circuit::loadCircuit (QString &argv[1]);
+    }
+    */
+
+    
     return app.exec();
 }
 

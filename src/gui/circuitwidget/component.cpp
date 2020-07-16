@@ -195,7 +195,7 @@ void Component::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
 
 void Component::move( QPointF delta )
 {
-  qDebug()<<"Component::move";
+  //qDebug()<<"Component::move";
     setPos( pos() + delta );
     emit moved();
 }
@@ -366,6 +366,7 @@ void Component::setLabelPos()
 
 void Component::setValLabelPos( int x, int y, int rot )
 {
+    qDebug()<<"Component::setValLabelPos"<<x<<y<<rot;
     m_valLabel->m_labelx = x;
     m_valLabel->m_labely = y;
     m_valLabel->m_labelrot = rot;

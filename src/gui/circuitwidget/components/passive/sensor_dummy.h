@@ -33,12 +33,15 @@
 class MAINMODULE_EXPORT SensorDummy : public Component, public eResistor
 {
     Q_OBJECT
-    Q_PROPERTY( double Resistance READ resist   WRITE setResist  DESIGNABLE true USER true )
-    Q_PROPERTY( QString  Unit     READ unit     WRITE setUnit    DESIGNABLE true USER true )
-    Q_PROPERTY( bool     Show_res READ showVal  WRITE setShowVal DESIGNABLE true USER true )
+    //Q_PROPERTY( double Resistance READ resist   WRITE setResist  DESIGNABLE true USER true )
+    //Q_PROPERTY( QString  Unit     READ unit     WRITE setUnit    DESIGNABLE true USER true )
+    //Q_PROPERTY( bool     Show_res READ showVal  WRITE setShowVal DESIGNABLE true USER true )
+    Q_PROPERTY( double Sense READ getSense   WRITE setSense  DESIGNABLE true USER true )
+    Q_PROPERTY( bool     Show_sense READ showSense  WRITE setShowSense DESIGNABLE true USER true )
 
     public:
-        QRectF boundingRect() const { return QRectF( -11, -4.5, 22, 9 ); }
+        //QRectF boundingRect() const { return QRectF( -11, -4.5, 22, 9 ); }
+        QRectF boundingRect() const { return QRectF( -25, -25, 50, 50 ); }
 
         SensorDummy( QObject* parent, QString type, QString id );
         ~SensorDummy();
@@ -49,6 +52,9 @@ class MAINMODULE_EXPORT SensorDummy : public Component, public eResistor
         double resist();
         void setResist( double r );
 	double sensorFunction ( double sense );
+
+	double getSense();
+	void setSense( double sense);
         
         void setUnit( QString un );
 
@@ -60,7 +66,7 @@ class MAINMODULE_EXPORT SensorDummy : public Component, public eResistor
 
     private:
         double m_resist;
-        //double m_voltOut;        
+        double m_sense;        
 	
 	int m_sense_min = 50;
 	int m_sense_max = 2000;

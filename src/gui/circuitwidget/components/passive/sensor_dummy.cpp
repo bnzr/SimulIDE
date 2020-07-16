@@ -59,21 +59,15 @@ SensorDummy::SensorDummy( QObject* parent, QString type, QString id )
     pinPos = QPoint(8+8,0);
     m_ePin[1] = new Pin( 0, pinPos, pinId, 1, this);
 
-    m_idLabel->setPos(-12,-24);
-    setLabelPos(-12,-20, 0);
-    setShowId( true );
-    
+    m_idLabel->setPos(-12,24);
     m_sense_unit = "MesUnit";
-    setSenseLabelPos(-16, 26, 0);
-    setSenseUnit (" ");
-    setSenseValue(1050);
-    setShowSense ( true );
-
     m_unit = "Ω";
-    setUnit (" ");
-    m_resist = sensorFunction( m_sense_value*m_sense_unitMult );
-    setResist( m_resist );   
-    setValLabelPos(-16, 6, 0);
+    setSense (1050);
+    setLabelPos(-18,-30, 0);
+    setSenseLabelPos(-16, 6, 0);
+    setValLabelPos(-16, 40, 0);
+    setShowId( true );
+    setShowSense ( true );
     setShowVal( true );
 
     m_dialW.setupWidget();
@@ -85,7 +79,8 @@ SensorDummy::SensorDummy( QObject* parent, QString type, QString id )
     
     m_proxy = Circuit::self()->addWidget( &m_dialW );
     m_proxy->setParentItem( this );
-    m_proxy->setPos( QPoint( -12, -24-5) );
+    //m_proxy->setPos( QPoint( -12, -24-5) );
+    m_proxy->setPos( QPoint( -12, 18) );
     //m_proxy->setFlag(QGraphicsItem::ItemNegativeZStacksBehindParent, true );
 
     m_dial = m_dialW.dial;
@@ -99,19 +94,31 @@ SensorDummy::SensorDummy( QObject* parent, QString type, QString id )
 
 SensorDummy::~SensorDummy(){}
 
+double SensorDummy::getSense ()
+{
+  return (m_sense);
+}
+
+void SensorDummy::setSense( double sense)
+{
+    m_sense = sense;
+    setSenseUnit (" ");
+    setSenseValue(sense);
+    m_resist = sensorFunction (sense);
+    setUnit (" ");
+    setResist ( m_resist);
+    qDebug()<<"SensorDummy::setSsense m_resist m_sense "<<m_resist <<m_sense;
+}
+  
+
 void SensorDummy::senseChanged( int val ) // Called when dial is rotated
 {
     qDebug() <<"SensorDummy::senseChanged" << val;
-    double c_sense_value = (double)(m_dial->value());
-    c_sense_value = round(c_sense_value/(double)m_sense_step)*(double)m_sense_step;
-    qDebug()<<"SensorDummy::senseChanged dialValue c_sense_value"<<m_dial->value()<<c_sense_value;
-    m_dialW.dial->setValue(c_sense_value);
-    setSenseUnit (" ");
-    setSenseValue(c_sense_value);
-    m_resist = sensorFunction (c_sense_value);
-    setUnit (" ");
-    setResist ( m_resist);
-    qDebug()<<"SensorDummy::senseChanged m_resist m_value "<<m_resist <<m_value;
+    double sense = (double)(m_dial->value());
+    sense = round(sense/(double)m_sense_step)*(double)m_sense_step;
+    qDebug()<<"SensorDummy::senseChanged dialValue sense"<<m_dial->value()<<sense;
+    m_dialW.dial->setValue(sense);
+    setSense( sense );
 }
 
 double SensorDummy::resist() { return m_value; }
@@ -143,14 +150,22 @@ void SensorDummy::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QW
 {
     //qDebug()<<"SensorDummy::paint p"<<p; 
     Component::paint( p, option, widget );
-    
+
+    // draw the sensor symbol
+    // example a resistor modified by incoming flux (arraows)
     p->drawRect( -10.5, -4, 21, 8 );
-
-
-    QFont font = p->font();
-    font.setPixelSize(12);
-    p->setFont(font);
-
+    double x0, y0;
+    x0 = -9;
+    y0 = -9;
+    for (int i=0; i<3; i++)
+    {	
+       p->drawLine( x0, y0, x0,  y0-3);
+       p->drawLine( x0, y0, x0+3,  y0);
+       p->drawLine( x0, y0, x0+6,  y0-6);
+       p->drawLine( x0+6, y0-6, x0+2,  y0-6);
+       p->drawLine( x0+2, y0-6, x0+6,  y0-2*6);
+       x0 += 8.0;
+    }
 
 }
 
