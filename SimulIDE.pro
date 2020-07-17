@@ -49,6 +49,7 @@ SOURCES += ../src/*.cpp \
     ../src/gui/circuitwidget/components/sources/*.cpp \
     ../src/gui/circuitwidget/components/switches/*.cpp \
     ../src/gui/oscopewidget/*.cpp \
+    ../src/gui/timeplotwidget/*.cpp \
     ../src/gui/plotterwidget/*.cpp \
     ../src/gui/terminalwidget/*.cpp \
     ../src/gui/QPropertyEditor/*.cpp \
@@ -85,6 +86,7 @@ HEADERS += ../src/*.h \
     ../src/gui/circuitwidget/components/sources/*.h \
     ../src/gui/circuitwidget/components/switches/*.h \
     ../src/gui/oscopewidget/*.h \
+    ../src/gui/timeplotwidget/*.h \
     ../src/gui/plotterwidget/*.h \
     ../src/gui/terminalwidget/*.h \
     ../src/gui/QPropertyEditor/*.h \
@@ -123,6 +125,7 @@ INCLUDEPATH += ../src \
     ../src/gui/circuitwidget/components/sources \
     ../src/gui/circuitwidget/components/switches \
     ../src/gui/oscopewidget \
+    ../src/gui/timeplotwidget \
     ../src/gui/plotterwidget \
     ../src/gui/terminalwidget \
     ../src/gui/QPropertyEditor \

@@ -17,38 +17,38 @@
  *                                                                         *
  ***************************************************************************/
 
-#include "oscope.h"
+#include "timeplot.h"
 #include "connector.h"
 #include "circuit.h"
 #include "itemlibrary.h"
 #include "circuitwidget.h"
-#include "oscopewidget.h"
+#include "timeplotwidget.h"
 
-static const char* Oscope_properties[] = {
+static const char* Timeplot_properties[] = {
     QT_TRANSLATE_NOOP("App::Property","Filter")
 };
 
-Component* Oscope::construct( QObject* parent, QString type, QString id )
+Component* Timeplot::construct( QObject* parent, QString type, QString id )
 {
-    return new Oscope( parent, type, id );
+    return new Timeplot( parent, type, id );
 }
 
-LibraryItem* Oscope::libraryItem()
+LibraryItem* Timeplot::libraryItem()
 {
     return new LibraryItem(
-        tr( "Oscope" ),
+        tr( "Timeplot" ),
         tr( "Meters" ),
-        "oscope.png",
-        "Oscope",
-        Oscope::construct );
+        "timeplot.png",
+        "Timeplot",
+        Timeplot::construct );
 }
 
-Oscope::Oscope( QObject* parent, QString type, QString id )
+Timeplot::Timeplot( QObject* parent, QString type, QString id )
       : Component( parent, type, id )
       , eElement( (id+"-eElement").toStdString() )
       , m_topW( )
 {
-    Q_UNUSED( Oscope_properties );
+    Q_UNUSED( Timeplot_properties );
     
     m_area = QRectF( -115, -65, 230, 130 );
     setLabelPos(-100,-80, 0);
@@ -67,12 +67,12 @@ Oscope::Oscope( QObject* parent, QString type, QString id )
     m_pin[0]->setLength( 5 );
     m_pin[1]->setLength( 5 );
     
-    m_oscopeW = new OscopeWidget( &m_topW );
-    m_oscopeW->setupWidget( 116 );
-    m_oscopeW->setFixedSize( 220, 120 );
-    m_oscopeW->setVisible( true );
-    m_oscopeW->setOscope( this );
-    m_topW.setupWidget( m_oscopeW );
+    m_timeplotW = new TimeplotWidget( &m_topW );
+    m_timeplotW->setupWidget( 116 );
+    m_timeplotW->setFixedSize( 220, 120 );
+    m_timeplotW->setVisible( true );
+    m_timeplotW->setTimeplot( this );
+    m_topW.setupWidget( m_timeplotW );
     
     m_proxy = Circuit::self()->addWidget( &m_topW);
     m_proxy->setParentItem( this );
@@ -82,35 +82,35 @@ Oscope::Oscope( QObject* parent, QString type, QString id )
     Simulator::self()->addToUpdateList( this );
 }
 
-Oscope::~Oscope() 
+Timeplot::~Timeplot() 
 {
 }
 
-void Oscope::updateStep()
+void Timeplot::updateStep()
 {
-    m_oscopeW->read();
+    m_timeplotW->read();
     update();
 }
 
-void Oscope::initialize()
+void Timeplot::initialize()
 {
 }
 
-double Oscope::getVolt()
+double Timeplot::getVolt()
 {
     qDebug() <<m_pin[0]->getVolt() - m_pin[1]->getVolt();
     return m_pin[0]->getVolt() - m_pin[1]->getVolt();
 }
 
-void Oscope::remove()
+void Timeplot::remove()
 {    
     Simulator::self()->remFromUpdateList( this );
-    m_oscopeW->setOscope( 0l );
+    m_timeplotW->setTimeplot( 0l );
     
     Component::remove();
 }
 
-void Oscope::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget )
+void Timeplot::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget )
 {
     Component::paint( p, option, widget );
     
@@ -127,6 +127,6 @@ void Oscope::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget
 
 }
 
-#include "moc_oscope.cpp"
+#include "moc_timeplot.cpp"
 
 

@@ -51,12 +51,12 @@ SensorDummy::SensorDummy( QObject* parent, QString type, QString id )
     Q_UNUSED( SensorDummy_properties );
     QString pinId = m_id;
     pinId.append(QString("-lPin"));
-    QPoint pinPos = QPoint(-8-8,0);
+    QPoint pinPos = QPoint(-8-20,0);
     m_ePin[0] = new Pin( 180, pinPos, pinId, 0, this);
 
     pinId = m_id;
     pinId.append(QString("-rPin"));
-    pinPos = QPoint(8+8,0);
+    pinPos = QPoint(8+20,0);
     m_ePin[1] = new Pin( 0, pinPos, pinId, 1, this);
 
     m_idLabel->setPos(-12,24);
@@ -90,6 +90,9 @@ SensorDummy::SensorDummy( QObject* parent, QString type, QString id )
     connect( m_dial, SIGNAL(valueChanged(int)),
              this,   SLOT  (senseChanged(int)) );
 
+    QTimer *timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(sensorTimeRespons()));
+    timer->start(100);
 }
 
 SensorDummy::~SensorDummy(){}
@@ -99,15 +102,41 @@ double SensorDummy::getSense ()
   return (m_sense);
 }
 
-void SensorDummy::setSense( double sense)
+void SensorDummy::setSense( double sense)  // direct update , no time constant
 {
     m_sense = sense;
     setSenseUnit (" ");
     setSenseValue(sense);
     m_resist = sensorFunction (sense);
+    m_last_resist = m_resist;
+    m_new_resist = m_resist;    
     setUnit (" ");
     setResist ( m_resist);
     qDebug()<<"SensorDummy::setSsense m_resist m_sense "<<m_resist <<m_sense;
+    m_last_step =  Simulator::self()->step();
+}
+
+void SensorDummy::updateSense( double sense)
+{
+    m_sense = sense;
+    setSenseUnit (" ");
+    setSenseValue(sense);
+    m_last_resist = m_resist;
+    m_new_resist = sensorFunction (sense);
+    qDebug()<<"SensorDummy::updateSense m_last_resist m_new_resist" <<  m_last_resist <<  m_new_resist;
+    m_last_step =  Simulator::self()->step();
+}
+
+void SensorDummy::sensorTimeRespons()
+{
+    double dr = m_new_resist - m_last_resist;
+    m_step = Simulator::self()->step();
+    double dt = (double) (m_step-m_last_step)/1e6;
+    qDebug() << "update timer dr dt m_step" << dr << dt << m_step;
+    m_resist = m_last_resist + dr * (1.0 -exp(-dt/m_tau));
+    setUnit (" ");
+    setResistFast ( m_resist);
+    qDebug()<<"SensorDummy::sensorTimeRespons m_resist m_sense "<<m_resist <<m_sense;
 }
   
 
@@ -118,7 +147,7 @@ void SensorDummy::senseChanged( int val ) // Called when dial is rotated
     sense = round(sense/(double)m_sense_step)*(double)m_sense_step;
     qDebug()<<"SensorDummy::senseChanged dialValue sense"<<m_dial->value()<<sense;
     m_dialW.dial->setValue(sense);
-    setSense( sense );
+    updateSense( sense );
 }
 
 double SensorDummy::resist() { return m_value; }
@@ -130,6 +159,16 @@ void SensorDummy::setResist( double r )
     Component::setValue( r );       // Takes care about units multiplier
     qDebug() <<"SensorDummy::setResist  m_value m_unitMult "<<m_value<<m_unitMult;
     eResistor::setResSafe( m_value*m_unitMult );
+    qDebug() <<"SensorDummy::setResist eResistor res "<<eResistor::res();
+}
+
+void SensorDummy::setResistFast( double r )
+{
+    if( r < 1e-12 ) r = 1e-12;
+    qDebug() <<"SensorDummy::setResist r "<<r;
+    Component::setValue( r );       // Takes care about units multiplier
+    qDebug() <<"SensorDummy::setResist  m_value m_unitMult "<<m_value<<m_unitMult;
+    eResistor::setRes( m_value*m_unitMult );
     qDebug() <<"SensorDummy::setResist eResistor res "<<eResistor::res();
 }
 
@@ -154,6 +193,8 @@ void SensorDummy::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QW
     // draw the sensor symbol
     // example a resistor modified by incoming flux (arraows)
     p->drawRect( -10.5, -4, 21, 8 );
+    p->drawLine( -20, 0, -10.5, 0 );
+    p->drawLine( 20, 0, 12.5, 0 );
     double x0, y0;
     x0 = -9;
     y0 = -7;
@@ -171,8 +212,8 @@ void SensorDummy::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QW
 
 double SensorDummy::sensorFunction (double sense)
 {
-  const double a = 0.5;
-  const double b = 1000.0;
+  const double a = 0.25;
+  const double b = 10.0;
   double r_sense = a*sense+b;
     qDebug()<<"SensorDummy::sensorFunction"<<sense<<r_sense;
   return r_sense;

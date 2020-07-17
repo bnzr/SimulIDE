@@ -51,22 +51,30 @@ class MAINMODULE_EXPORT SensorDummy : public Component, public eResistor
 
         double resist();
         void setResist( double r );
+        void setResistFast( double r );
 	double sensorFunction ( double sense );
 
 	double getSense();
-	void setSense( double sense);
-        
+	void setSense( double sense );
+ 	void updateSense( double sense );
+       
         void setUnit( QString un );
 
         virtual void paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget );
 
     public slots:
         void senseChanged( int val );
+	void sensorTimeRespons ();
         void remove();
 
     private:
-        double m_resist;
-        double m_sense;        
+	uint64_t m_step;
+	uint64_t m_last_step;
+	double m_resist;
+	double m_new_resist;
+	double m_last_resist;
+        double m_sense;
+	double m_tau = 0.25;
 	
 	int m_sense_min = 50;
 	int m_sense_max = 2000;
