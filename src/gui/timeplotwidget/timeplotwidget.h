@@ -23,7 +23,7 @@
 #include <QtWidgets>
 
 #include "e-element.h"
-#include "renderoscope.h"
+#include "rendertimeplot.h"
 #include "probe.h"
 
 class Timeplot;
@@ -36,7 +36,7 @@ class MAINMODULE_EXPORT TimeplotWidget : public QWidget, public eElement
         TimeplotWidget( QWidget *parent );
         ~TimeplotWidget();
         
-        void setTimeplot( Timeplot* oscope );
+        void setTimeplot( Timeplot* timeplot );
         void read();
         void clear();
         void setupWidget( int size );
@@ -47,11 +47,11 @@ class MAINMODULE_EXPORT TimeplotWidget : public QWidget, public eElement
         virtual void resetState();
         
     public slots:
-        void HscaleChanged( int Hscale );
-        void VscaleChanged( int Vscale );
-        void HposChanged( int hPos );
-        void VposChanged( int Vpos );
-        void autoChanged( int au );
+        void HscaleTimeplotChanged( int Hscale );
+        void VscaleTimeplotChanged( int Vscale );
+        void HposTimeplotChanged( int hPos );
+        void VposTimeplotChanged( int Vpos );
+        void autoTimeplotChanged( int au );
 
     private:
         QHBoxLayout* m_horizontalLayout;
@@ -65,9 +65,9 @@ class MAINMODULE_EXPORT TimeplotWidget : public QWidget, public eElement
         QDial* m_VscaleDial;
         QDial* m_HposDial;
         QDial* m_VposDial;
-        RenderOscope* m_display;
+        RenderTimeplot* m_display;
         
-        Timeplot* m_oscope;
+        Timeplot* m_timeplot;
         
         int m_data[140];
         int m_counter;

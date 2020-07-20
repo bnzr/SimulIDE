@@ -36,7 +36,7 @@ class MAINMODULE_EXPORT SensorDummy : public Component, public eResistor
     //Q_PROPERTY( double Resistance READ resist   WRITE setResist  DESIGNABLE true USER true )
     //Q_PROPERTY( QString  Unit     READ unit     WRITE setUnit    DESIGNABLE true USER true )
     //Q_PROPERTY( bool     Show_res READ showVal  WRITE setShowVal DESIGNABLE true USER true )
-    Q_PROPERTY( double Sense READ getSense   WRITE setSense  DESIGNABLE true USER true )
+    Q_PROPERTY( double Sense READ getSense   WRITE updateSense  DESIGNABLE true USER true )
     Q_PROPERTY( bool     Show_sense READ showSense  WRITE setShowSense DESIGNABLE true USER true )
 
     public:

@@ -25,7 +25,7 @@
 
 TimeplotWidget::TimeplotWidget(  QWidget *parent  )
             : QWidget( parent )
-            , eElement( "oscope" )
+            , eElement( "oscope" )  // "oscope"
 {
     this->setVisible( false );
 
@@ -48,7 +48,7 @@ TimeplotWidget::TimeplotWidget(  QWidget *parent  )
     m_newRead = true;
     m_auto = true;
     
-    m_oscope  = 0l;
+    m_timeplot  = 0l;
     //clear();
 }
 TimeplotWidget::~TimeplotWidget()
@@ -60,11 +60,11 @@ void TimeplotWidget::resetState()
     clear();
 }
 
-void TimeplotWidget::setTimeplot( Timeplot* oscope )
+void TimeplotWidget::setTimeplot( Timeplot* timeplot )
 {
-    m_oscope = oscope;
+    m_timeplot = timeplot;
     
-    if( oscope  ) Simulator::self()->addToSimuClockList( this );
+    if( timeplot  ) Simulator::self()->addToSimuClockList( this );
     else          Simulator::self()->remFromSimuClockList( this );
 }
 
@@ -137,7 +137,7 @@ void TimeplotWidget::simuClockStep()
 {
     m_step++;
 
-    double data = m_oscope->getVolt();
+    double data = m_timeplot->getVolt();
     double delta = data-m_lastData;
     
     if( data > m_max ) m_max = data;
@@ -227,7 +227,7 @@ void TimeplotWidget::simuClockStep()
     }
 }
 
-void TimeplotWidget::HscaleChanged( int Hscale )
+void TimeplotWidget::HscaleTimeplotChanged( int Hscale )
 {
     if( m_auto ) return;
     
@@ -243,7 +243,7 @@ void TimeplotWidget::HscaleChanged( int Hscale )
     }
     m_prevHscale = Hscale;
 }
-void TimeplotWidget::VscaleChanged( int Vscale )
+void TimeplotWidget::VscaleTimeplotChanged( int Vscale )
 {
     if( m_auto ) return;
     
@@ -261,7 +261,7 @@ void TimeplotWidget::VscaleChanged( int Vscale )
     m_prevVscale = vscale;
 }
 
-void TimeplotWidget::HposChanged( int hPos )
+void TimeplotWidget::HposTimeplotChanged( int hPos )
 {
     if( m_auto ) return;
     
@@ -278,7 +278,7 @@ void TimeplotWidget::HposChanged( int hPos )
     m_prevHpos = hPos;
 }
 
-void TimeplotWidget::VposChanged( int Vpos )
+void TimeplotWidget::VposTimeplotChanged( int Vpos )
 {
     if( m_auto ) return;
     
@@ -295,7 +295,7 @@ void TimeplotWidget::VposChanged( int Vpos )
     m_prevVpos = vpos;
 }
 
-void TimeplotWidget::autoChanged( int au )
+void TimeplotWidget::autoTimeplotChanged( int au )
 {
     m_auto = au;
 }
@@ -435,27 +435,27 @@ void TimeplotWidget::setupWidget(  int size  )
 
     m_horizontalLayout->addLayout( m_verticalLayout );
 
-    m_display = new RenderOscope( size, size, this );
-    m_display->setObjectName( "oscope" );
+    m_display = new RenderTimeplot( size, size, this );
+    m_display->setObjectName( "timeplot" );
     
     m_horizontalLayout->addWidget( m_display );
     m_horizontalLayout->setAlignment( m_display, Qt::AlignRight );
     
     
     connect(m_HscaleDial, SIGNAL( valueChanged(int) ),
-             this,        SLOT  ( HscaleChanged(int)) );
+             this,        SLOT  ( HscaleTimeplotChanged(int)) );
              
     connect( m_VscaleDial, SIGNAL( valueChanged(int) ),
-             this,         SLOT  ( VscaleChanged(int)) );
+             this,         SLOT  ( VscaleTimeplotChanged(int)) );
              
     connect( m_HposDial, SIGNAL( valueChanged(int) ),
-             this,       SLOT  ( HposChanged(int)) );
+             this,       SLOT  ( HposTimeplotChanged(int)) );
              
     connect( m_VposDial, SIGNAL( valueChanged(int) ),
-             this,       SLOT  ( VposChanged(int)) );
+             this,       SLOT  ( VposTimeplotChanged(int)) );
              
     connect( m_autoCheck, SIGNAL( stateChanged(int) ),
-             this,        SLOT  ( autoChanged(int)) );
+             this,        SLOT  ( autoTimeplotChanged(int)) );
 }
 
-//#include "moc_timeplotwidget.cpp"
+#include "moc_timeplotwidget.cpp"

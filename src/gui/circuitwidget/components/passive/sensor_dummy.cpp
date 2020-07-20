@@ -104,6 +104,8 @@ double SensorDummy::getSense ()
 
 void SensorDummy::setSense( double sense)  // direct update , no time constant
 {
+    if (sense > m_sense_max) sense = m_sense_max;
+    if (sense < m_sense_min) sense = m_sense_min;
     m_sense = sense;
     setSenseUnit (" ");
     setSenseValue(sense);
@@ -118,6 +120,8 @@ void SensorDummy::setSense( double sense)  // direct update , no time constant
 
 void SensorDummy::updateSense( double sense)
 {
+    if (sense > m_sense_max) sense = m_sense_max;
+    if (sense < m_sense_min) sense = m_sense_min;
     m_sense = sense;
     setSenseUnit (" ");
     setSenseValue(sense);

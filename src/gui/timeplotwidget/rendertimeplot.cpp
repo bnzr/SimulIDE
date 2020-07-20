@@ -17,7 +17,7 @@
  *                                                                         *
  ***************************************************************************/
 
- #include "rendertimeplot.h"
+#include "rendertimeplot.h"
  
 #include <QBrush>
 #include <QPen>
@@ -106,4 +106,4 @@ void RenderTimeplot::paintEvent( QPaintEvent* /* event */ )
     p.end();
 }
 
-//#include "moc_rendertimeplot.cpp"
+#include "moc_rendertimeplot.cpp"

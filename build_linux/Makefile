@@ -377,8 +377,6 @@ SOURCES       = ../src/main.cpp \
 		build/release/moc_frequencimeter.cpp \
 		build/release/moc_mech_contact.cpp \
 		build/release/moc_relay_base.cpp \
-		build/release/moc_rendertimeplot.cpp \
-		build/release/moc_timeplotwidget.cpp \
 		build/release/moc_ColorCombo.cpp \
 		build/release/moc_EnumProperty.cpp \
 		build/release/moc_Property.cpp \
@@ -715,8 +713,6 @@ OBJECTS       = build/release/main.o \
 		build/release/moc_frequencimeter.o \
 		build/release/moc_mech_contact.o \
 		build/release/moc_relay_base.o \
-		build/release/moc_rendertimeplot.o \
-		build/release/moc_timeplotwidget.o \
 		build/release/moc_ColorCombo.o \
 		build/release/moc_EnumProperty.o \
 		build/release/moc_Property.o \
@@ -795,6 +791,7 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xcb_qpa_lib_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml_private.pri \
+		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xmlpatterns.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_functions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf \
@@ -1533,6 +1530,7 @@ Makefile: SimulIDE_Build.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qma
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xcb_qpa_lib_private.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml_private.pri \
+		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xmlpatterns.pri \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_functions.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf \
@@ -1640,6 +1638,7 @@ Makefile: SimulIDE_Build.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qma
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xcb_qpa_lib_private.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xml_private.pri:
+/usr/lib/x86_64-linux-gnu/qt5/mkspecs/modules/qt_lib_xmlpatterns.pri:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_functions.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf:
@@ -2751,7 +2750,7 @@ build/release/moc_timeplot.cpp: ../src/gui/circuitwidget/component.h \
 		../src/simulator/e-element.h \
 		../src/simulator/e-pin.h \
 		../src/gui/timeplotwidget/timeplotwidget.h \
-		../src/gui/oscopewidget/renderoscope.h \
+		../src/gui/timeplotwidget/rendertimeplot.h \
 		../src/gui/circuitwidget/components/meters/probe.h \
 		../src/gui/topwidget.h \
 		../src/gui/circuitwidget/pin.h \
@@ -3330,7 +3329,7 @@ build/release/moc_rendertimeplot.cpp: ../src/gui/timeplotwidget/rendertimeplot.h
 
 build/release/moc_timeplotwidget.cpp: ../src/simulator/e-element.h \
 		../src/simulator/e-pin.h \
-		../src/gui/oscopewidget/renderoscope.h \
+		../src/gui/timeplotwidget/rendertimeplot.h \
 		../src/gui/circuitwidget/components/meters/probe.h \
 		../src/gui/circuitwidget/component.h \
 		../src/gui/QPropertyEditor/QPropertyEditorWidget.h \
@@ -5064,7 +5063,7 @@ build/release/timeplot.o: ../src/gui/circuitwidget/components/meters/timeplot.cp
 		../src/simulator/e-element.h \
 		../src/simulator/e-pin.h \
 		../src/gui/timeplotwidget/timeplotwidget.h \
-		../src/gui/oscopewidget/renderoscope.h \
+		../src/gui/timeplotwidget/rendertimeplot.h \
 		../src/gui/circuitwidget/components/meters/probe.h \
 		../src/gui/topwidget.h \
 		../src/gui/circuitwidget/pin.h \
@@ -5749,26 +5748,24 @@ build/release/renderoscope.o: ../src/gui/oscopewidget/renderoscope.cpp ../src/gu
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/release/renderoscope.o ../src/gui/oscopewidget/renderoscope.cpp
 
 build/release/rendertimeplot.o: ../src/gui/timeplotwidget/rendertimeplot.cpp ../src/gui/timeplotwidget/rendertimeplot.h \
-		build/release/moc_renderoscope.cpp \
-		../src/gui/oscopewidget/renderoscope.h
+		build/release/moc_rendertimeplot.cpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/release/rendertimeplot.o ../src/gui/timeplotwidget/rendertimeplot.cpp
 
 build/release/timeplotwidget.o: ../src/gui/timeplotwidget/timeplotwidget.cpp ../src/gui/timeplotwidget/timeplotwidget.h \
 		../src/simulator/e-element.h \
 		../src/simulator/e-pin.h \
-		../src/gui/oscopewidget/renderoscope.h \
+		../src/gui/timeplotwidget/rendertimeplot.h \
 		../src/gui/circuitwidget/components/meters/probe.h \
 		../src/gui/circuitwidget/component.h \
 		../src/gui/QPropertyEditor/QPropertyEditorWidget.h \
 		../src/simulator/simulator.h \
 		../src/simulator/circmatrix.h \
 		../src/simulator/e-node.h \
-		../src/gui/circuitwidget/components/meters/oscope.h \
-		../src/gui/oscopewidget/oscopewidget.h \
+		../src/gui/circuitwidget/components/meters/timeplot.h \
 		../src/gui/topwidget.h \
 		../src/gui/circuitwidget/pin.h \
 		../src/gui/circuitwidget/connector.h \
-		build/release/moc_oscopewidget.cpp
+		build/release/moc_timeplotwidget.cpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/release/timeplotwidget.o ../src/gui/timeplotwidget/timeplotwidget.cpp
 
 build/release/plotterwidget.o: ../src/gui/plotterwidget/plotterwidget.cpp ../src/gui/plotterwidget/plotterwidget.h \
@@ -10827,12 +10824,6 @@ build/release/moc_mech_contact.o: build/release/moc_mech_contact.cpp
 
 build/release/moc_relay_base.o: build/release/moc_relay_base.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/release/moc_relay_base.o build/release/moc_relay_base.cpp
-
-build/release/moc_rendertimeplot.o: build/release/moc_rendertimeplot.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/release/moc_rendertimeplot.o build/release/moc_rendertimeplot.cpp
-
-build/release/moc_timeplotwidget.o: build/release/moc_timeplotwidget.cpp 
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/release/moc_timeplotwidget.o build/release/moc_timeplotwidget.cpp
 
 build/release/moc_ColorCombo.o: build/release/moc_ColorCombo.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/release/moc_ColorCombo.o build/release/moc_ColorCombo.cpp
