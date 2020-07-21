@@ -49,34 +49,59 @@ Timeplot::Timeplot( QObject* parent, QString type, QString id )
       , m_topW( )
 {
     Q_UNUSED( Timeplot_properties );
-    
-    m_area = QRectF( -115, -65, 230, 130 );
-    setLabelPos(-100,-80, 0);
-    
-    m_pin.resize(2);
-    m_ePin.resize(2);
-    m_pin[0] = new Pin( 180, QPoint(-120,0 ), id+"-PinP", 0, this );
-    m_pin[1] = new Pin( 180, QPoint(-120,16), id+"-PinN", 0, this );
-    m_ePin[0] = m_pin[0];
-    m_ePin[1] = m_pin[1];
+    qDebug() << "Timeplot::Timeplot get types" << typeid(m_topW).name() << typeid(*this).name() ; 
 
-    m_pin[0]->setLabelText( "+" );
-    m_pin[1]->setLabelText( "_" );
-    m_pin[0]->setLabelColor( QColor( 0, 0, 0 ) );
-    m_pin[1]->setLabelColor( QColor( 0, 0, 0 ) );
-    m_pin[0]->setLength( 5 );
-    m_pin[1]->setLength( 5 );
+    m_component_width = 220;
+    m_component_height = 120;
+    m_area = QRectF(0, 0, m_component_width, m_component_height);
+    setLabelPos((m_component_width*1)/4,-16, 0);
+    setShowId( true );
+    
+    m_pin.resize(5);
+    m_ePin.resize(5);
+
+    x_pin = -10;
+    y_pin1 = 8;
+    y_pin2 = 8+24;
+    y_pin3 = 8+24*2;
+    y_pin4 = 8+24*3;
+    y_pin0 = 8+24*4;
+
+    m_pin[1] = new Pin( 180, QPoint(x_pin,y_pin1), id+"-PinS1", 0, this );
+    m_pin[2] = new Pin( 180, QPoint(x_pin,y_pin2), id+"-PinS2", 0, this );
+    m_pin[3] = new Pin( 180, QPoint(x_pin,y_pin3), id+"-PinS3", 0, this );
+    m_pin[4] = new Pin( 180, QPoint(x_pin,y_pin4), id+"-PinS4", 0, this );
+    m_pin[0] = new Pin( 180, QPoint(x_pin,y_pin0), id+"-PinN", 0, this );
+
+    for (int i_pin=0; i_pin<5; i_pin++)
+    {
+        m_ePin[i_pin] = m_pin[i_pin];
+    }
+    
+    m_pin[1]->setLabelText( "+S1" );
+    m_pin[2]->setLabelText( "+S2" );
+    m_pin[3]->setLabelText( "+S3" );
+    m_pin[4]->setLabelText( "+S4" );
+    m_pin[0]->setLabelText( "- (Gnd)" );
+    
+    for (int i_pin=0; i_pin<5; i_pin++)
+    {
+        m_pin[i_pin]->setLabelColor( QColor( 0, 0, 0 ) );
+	m_pin[i_pin]->setLength( 10 );
+    }
+
+    for (int i_inp=0; i_inp<4; i_inp++) m_input_on[i_inp] = false;
+    m_input_changed = true;
     
     m_timeplotW = new TimeplotWidget( &m_topW );
-    m_timeplotW->setupWidget( 116 );
-    m_timeplotW->setFixedSize( 220, 120 );
+    m_timeplotW->setupWidget( );
     m_timeplotW->setVisible( true );
     m_timeplotW->setTimeplot( this );
     m_topW.setupWidget( m_timeplotW );
     
     m_proxy = Circuit::self()->addWidget( &m_topW);
     m_proxy->setParentItem( this );
-    m_proxy->setPos( QPoint( -110, -60) );
+    m_proxy->setPos( QPoint(  m_component_width-10-60, 10) );
     //m_proxy->setFlag(QGraphicsItem::ItemNegativeZStacksBehindParent, true );
     
     Simulator::self()->addToUpdateList( this );
@@ -86,20 +111,40 @@ Timeplot::~Timeplot()
 {
 }
 
+
 void Timeplot::updateStep()
 {
-    m_timeplotW->read();
-    update();
+   //qDebug() << "Timeplot::updateStep" ;
+    m_input_changed = false;
+    for (int i_inp=0; i_inp<4; i_inp++)
+    {
+	bool last_v =  m_input_on[i_inp];
+	bool new_v = false;
+	if (m_ePin[i_inp+1]->isConnected() && m_ePin[0]->isConnected())
+	{
+	    new_v = true;
+	}
+	if (new_v != last_v) m_input_changed = true;
+	m_input_on[i_inp] = new_v;
+    }
+  m_timeplotW->read();
+  update();
 }
 
 void Timeplot::initialize()
 {
+  // qDebug() << "Timeplot::initialize" ;
 }
 
-double Timeplot::getVolt()
+bool Timeplot::channelOn( int i_chan)
 {
-    qDebug() <<m_pin[0]->getVolt() - m_pin[1]->getVolt();
-    return m_pin[0]->getVolt() - m_pin[1]->getVolt();
+    return m_input_on[i_chan-1];
+}
+
+double Timeplot::getVolt(int i_chan)
+{
+  //qDebug() << "Timeplot::getVolt" << i_chan << m_pin[i_chan]->getVolt() - m_pin[0]->getVolt();
+    return m_pin[i_chan]->getVolt() - m_pin[0]->getVolt();
 }
 
 void Timeplot::remove()
@@ -113,18 +158,29 @@ void Timeplot::remove()
 void Timeplot::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget )
 {
     Component::paint( p, option, widget );
-    
-    p->setBrush( Qt::darkGray );
+
+    //qDebug() << "Timeplot::paint pin1" << m_input_changed;
+    p->setBrush( Qt::lightGray);
     p->drawRoundedRect( m_area, 4, 4 );
     
-    p->setBrush( Qt::white );
-    QPen pen = p->pen();
-    pen.setWidth( 0 );
-    pen.setColor( Qt::white );
-    p->setPen(pen);
-    
-    p->drawRoundedRect( QRectF( -114, -64, 225, 125 ), 3, 3 );
+    //p->setBrush( Qt::white );
+    //QPen pen = p->pen();
+    //pen.setWidth( 0 );
+    //pen.setColor( Qt::white );
+    //p->setPen(pen);
 
+    p->setBrush( Qt::darkRed );
+    if (m_input_on[0]) p->setBrush( Qt::red );
+    p->drawRoundedRect( QRectF( 25, y_pin1-5, 20, 10 ), 1, 1 );
+    p->setBrush( Qt::darkBlue );
+    if (m_input_on[1]) p->setBrush( Qt::blue );
+    p->drawRoundedRect( QRectF( 25, y_pin2-5, 20, 10 ), 1, 1 );
+    p->setBrush( Qt::darkGreen);
+    if (m_input_on[2]) p->setBrush( Qt::green );
+    p->drawRoundedRect( QRectF( 25, y_pin3-5, 20, 10 ), 1, 1 );
+    p->setBrush( Qt::darkCyan );
+    if (m_input_on[3]) p->setBrush( Qt::cyan );
+    p->drawRoundedRect( QRectF( 25, y_pin4-5, 20, 10 ), 1, 1 );
 }
 
 #include "moc_timeplot.cpp"

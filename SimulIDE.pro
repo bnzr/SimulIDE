@@ -34,6 +34,7 @@ QT += widgets
 QT += concurrent
 QT += serialport
 QT += multimedia widgets
+QT += printsupport
 
 SOURCES += ../src/*.cpp \
     ../src/gui/*.cpp \

@@ -23,8 +23,9 @@
 #include <QtWidgets>
 
 #include "e-element.h"
-#include "rendertimeplot.h"
 #include "probe.h"
+
+#include <qcustomplot.h>
 
 class Timeplot;
 
@@ -39,68 +40,40 @@ class MAINMODULE_EXPORT TimeplotWidget : public QWidget, public eElement
         void setTimeplot( Timeplot* timeplot );
         void read();
         void clear();
-        void setupWidget( int size );
-        double filter()                 { return m_filter; }
-        void setFilter( double filter ) { m_filter = filter; }
+        void setupWidget();
         
         virtual void simuClockStep();
         virtual void resetState();
-        
+        //void simuClockStep();
+        //void resetState();
+	void realtimeDataSlotDemo();
+
     public slots:
-        void HscaleTimeplotChanged( int Hscale );
-        void VscaleTimeplotChanged( int Vscale );
-        void HposTimeplotChanged( int hPos );
-        void VposTimeplotChanged( int Vpos );
-        void autoTimeplotChanged( int au );
+	void realtimeDataSlot();
+	void handlePlotButton();
+        void handleResetButton();
 
     private:
-        QHBoxLayout* m_horizontalLayout;
-        QVBoxLayout* m_verticalLayout;
-        
-        QLabel* m_freqLabel;
-        QLabel* m_ampLabel;
-        QLabel* m_tickLabel;
-        QCheckBox* m_autoCheck;
-        QDial* m_HscaleDial;
-        QDial* m_VscaleDial;
-        QDial* m_HposDial;
-        QDial* m_VposDial;
-        RenderTimeplot* m_display;
+        QCustomPlot* customPlot;
+	QTimer dataTimer;
         
         Timeplot* m_timeplot;
-        
-        int m_data[140];
-        int m_counter;
-        int m_step;
-        int m_totalP;
-        int m_ticksPs;
-        int m_tick;
-        int m_lastMax;
-        int m_numMax;
-        int m_numCycles;
-        int m_freq;
-        
-        int m_Hscale;
-        int m_prevHscale;
-        int Hpos;
-        int m_Hpos;
-        int m_prevHpos;
-        
-        double m_Vscale;
-        double m_prevVscale;
-        double m_Vpos;
-        double m_prevVpos;
-        double m_ampli;
-        double m_filter;
-        double m_lastData;
-        double m_max;
-        double m_min;
-        
-        bool m_reading;
-        bool m_newRead;
-        bool m_rising;
-        bool m_falling;
-        bool m_auto;
+	QPushButton *m_button_plot;
+	QPushButton *m_button_reset;
+
+        uint64_t m_step;
+	double m_step_time;
+ 	double m_step_time_last;
+        double m_plot_clock = 0.01;
+        double m_plot_signal[2][4][200];
+  	double m_plot_time[2][200];
+        int m_plot_fill[2]= {0, 0};
+        int m_plot_maxpt = 200;
+        int m_wr = 0;
+        int m_rd = 1;
+        bool m_time_plot_window = false;
+        int m_cnt_replot = 0;
+        int m_cnt_replot_ok = 10;
 };
 
 #endif

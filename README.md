@@ -82,13 +82,13 @@ Then we modify the src folder to include this new component in the simulator.
 1 - Copy the icon file sensor_ldr.png in icons/components folder
 
 2 - Add an alias to component display image in application.qrc
-<file alias="sensor_ldr.png">../src/icons/components/sensor_ldr.png</file>
+\<file alias=\"sensor_ldr.png\"\>../src/icons/components/sensor_ldr.png\<\/file\>
 
 3 - Create a file
 
 4 - Update the GUI layout to be able to select the new component
 modify file : ../src/gui/circuitwidget/itemlibrary.cpp
 add
-#include "sensor_ldr.h"
-and after // Sensors
-addItem( SensorLDR::libraryItem() );
+\#include \"sensor_ldr.h\"
+and after \/\/ Sensors
+addItem\( SensorLDR::libraryItem\(\) \);

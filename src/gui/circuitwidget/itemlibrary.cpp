@@ -96,6 +96,7 @@
 #include "switch.h"
 #include "switchdip.h"
 #include "textcomponent.h"
+#include "timeplot.h"
 #include "voltimeter.h"
 #include "volt_reg.h"
 #include "voltsource.h"
@@ -125,6 +126,7 @@ void ItemLibrary::loadItems()
     addItem( Amperimeter::libraryItem() );
     addItem( Frequencimeter::libraryItem() );
     addItem( Oscope::libraryItem() );
+    addItem( Timeplot::libraryItem() );
     // Sources
     addItem( LogicInput::libraryItem() );
     addItem( Clock::libraryItem() );

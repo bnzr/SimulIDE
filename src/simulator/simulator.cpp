@@ -227,15 +227,13 @@ void Simulator::startSim()
     foreach( eNode* busNode, m_eNodeBusList ) busNode->initialize(); // Clear Buses
     foreach( eElement* el, m_elementList )    // Initialize all Elements
     {
-        //std::cout << "initializing  "<< el->getId()
-        //         <<  std::endl;
+        //std::cout << "initializing  "<< el->getId() <<  std::endl;
         if( !m_paused ) el->resetState();
         el->initialize();
     }
-    std::cout <<"\nInitializing "<< m_eNodeBusList.size() << " Buses"<< std::endl;
+    //std::cout <<"\nInitializing "<< m_eNodeBusList.size() << " Buses"<< std::endl;
     foreach( eNode* busNode, m_eNodeBusList ) busNode->createBus(); // Create Buses
     foreach( eElement* el, m_elementList ) el->initialize();   // Initialize all Elements
-    
     m_nonLinear.clear();
     m_changedFast.clear();
     m_reactiveList.clear();

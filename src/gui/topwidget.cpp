@@ -26,6 +26,7 @@ TopWidget::~TopWidget() {}
 
 void TopWidget::setupWidget( QWidget* intWidget)
 {
+    qDebug() << "TopWidget::setupWidget add" << intWidget->geometry();
     verticalLayout = new QVBoxLayout(this);
     verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
     verticalLayout->setContentsMargins(0, 0, 0, 0);

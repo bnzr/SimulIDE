@@ -66,8 +66,8 @@ Circuit::Circuit( qreal x, qreal y, qreal width, qreal height, QGraphicsView*  p
     m_showScroll = MainWindow::self()->settings()->value( "Circuit/showScroll" ).toBool();
     m_filePath = qApp->applicationDirPath()+"/new.simu";
 
-    QString fileCircuit = QString::fromUtf8("/home/newubu/MyInstall/simulide/git/tests_circuits/sensor_dummy.simu");
-    qDebug() << "fileCircuit" << fileCircuit;
+    //QString fileCircuit = QString::fromUtf8("/home/newubu/MyInstall/simulide/git/tests_circuits/sensor_dummy.simu");
+    //qDebug() << "fileCircuit" << fileCircuit;
     //loadCircuit (fileCircuit);
 
     connect( &m_bckpTimer, SIGNAL(timeout() ), this, SLOT( saveChanges()) );
@@ -435,7 +435,7 @@ void Circuit::loadCircuit( QString &fileName )
         tr("Cannot read file %1:\n%2.").arg(fileName).arg(file.errorString()));
         return;
     }
-    //qDebug() << "Circuit::loadCircuit"<<m_filePath;
+    qDebug() << "Circuit::loadCircuit"<<m_filePath;
 
     if( !m_domDoc.setContent(&file) )
     {

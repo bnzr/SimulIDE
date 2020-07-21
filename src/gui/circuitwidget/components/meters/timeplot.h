@@ -31,7 +31,6 @@ class LibraryItem;
 class MAINMODULE_EXPORT Timeplot : public Component, public eElement
 {
     Q_OBJECT
-    Q_PROPERTY( double Filter READ filter  WRITE setFilter DESIGNABLE true USER true )
 
     public:
 
@@ -44,11 +43,8 @@ class MAINMODULE_EXPORT Timeplot : public Component, public eElement
         virtual void initialize();
         virtual void updateStep();
         
-        double getVolt();
-        
-        double filter()                 { return m_timeplotW->filter(); }
-        void setFilter( double filter ) { m_timeplotW->setFilter( filter ); }
-
+        double getVolt( int i_chan );
+        bool channelOn ( int i_chan );
         virtual void paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* widget );
 
     public slots:
@@ -59,6 +55,19 @@ class MAINMODULE_EXPORT Timeplot : public Component, public eElement
         TimeplotWidget* m_timeplotW;
         TopWidget    m_topW;
         QGraphicsProxyWidget* m_proxy;
+
+	int m_component_width;
+	int m_component_height;
+
+	int x_pin;
+	int y_pin1;
+	int y_pin2;
+	int y_pin3;
+	int y_pin4;
+	int y_pin0;
+
+	bool m_input_on [4];
+        bool m_input_changed;
 };
 
 #endif

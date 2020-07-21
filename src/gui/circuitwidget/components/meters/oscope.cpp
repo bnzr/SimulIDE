@@ -94,11 +94,11 @@ void Oscope::updateStep()
 
 void Oscope::initialize()
 {
+  qDebug() << "Oscope::initialize" ;
 }
 
 double Oscope::getVolt()
 {
-    qDebug() <<m_pin[0]->getVolt() - m_pin[1]->getVolt();
     return m_pin[0]->getVolt() - m_pin[1]->getVolt();
 }
 
