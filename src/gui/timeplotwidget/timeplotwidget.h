@@ -44,36 +44,33 @@ class MAINMODULE_EXPORT TimeplotWidget : public QWidget, public eElement
         
         virtual void simuClockStep();
         virtual void resetState();
-        //void simuClockStep();
-        //void resetState();
-	void realtimeDataSlotDemo();
 
     public slots:
-	void realtimeDataSlot();
 	void handlePlotButton();
-        void handleResetButton();
-
+        void handleScaleButton();
+	void closeCustomPlotWidget();
+	void widgetDestroyed(QObject*);
+	void time_axis_value(int);
+	
     private:
         QCustomPlot* customPlot;
-	QTimer dataTimer;
-        
+	QWidget *customPlotWidget;
+	
         Timeplot* m_timeplot;
 	QPushButton *m_button_plot;
 	QPushButton *m_button_reset;
 
         uint64_t m_step;
+	double m_start_time;
 	double m_step_time;
  	double m_step_time_last;
-        double m_plot_clock = 0.01;
-        double m_plot_signal[2][4][200];
-  	double m_plot_time[2][200];
-        int m_plot_fill[2]= {0, 0};
-        int m_plot_maxpt = 200;
-        int m_wr = 0;
-        int m_rd = 1;
+        double m_plot_clock = 0.0001;
         bool m_time_plot_window = false;
         int m_cnt_replot = 0;
-        int m_cnt_replot_ok = 10;
+        int m_cnt_replot_ok = 100;
+
+	QSlider *m_time_axis_slider;
+	int m_time_axis_window = 4;
 };
 
 #endif

@@ -41,7 +41,14 @@ TimeplotWidget::TimeplotWidget(  QWidget *parent  )
 
 }
 TimeplotWidget::~TimeplotWidget()
-{ 
+{
+  qDebug() << "End of TimeplotWidget";
+  if (m_time_plot_window)
+    {
+      customPlotWidget->close();
+      m_time_plot_window = false;
+      qDebug() << "End of CustomPlotlotWidget";
+    }
 }
 
 void TimeplotWidget::resetState()
@@ -49,10 +56,16 @@ void TimeplotWidget::resetState()
     clear();
 }
 
+void TimeplotWidget::read()
+{
+}
+
 void TimeplotWidget::simuClockStep()
 {
   m_step = Simulator::self()->step();
   m_step_time = (double) m_step * 1e-6;
+  if (m_time_plot_window)
+    {
   if (((m_step_time - m_step_time_last) > m_plot_clock) && m_time_plot_window)
     {
       qDebug() << "TimeplotWidget::simuClockStep"<< m_step << m_step_time;
@@ -62,7 +75,7 @@ void TimeplotWidget::simuClockStep()
 	  //if (m_timeplot->channelOn(i_chan))
 	    v = m_timeplot->getVolt(i_chan);
 	  customPlot->graph(i_chan-1)->addData(m_step_time, v);
-	  customPlot->xAxis->setRange(m_step_time, 4, Qt::AlignRight);
+	  customPlot->xAxis->setRange(m_step_time,  m_time_axis_window, Qt::AlignRight);
 	}
       m_cnt_replot ++;
       if (m_cnt_replot == m_cnt_replot_ok)
@@ -70,49 +83,11 @@ void TimeplotWidget::simuClockStep()
 	  customPlot->replot();
 	  m_cnt_replot = 0;
 	}
-
-      /*
-      if (m_plot_fill[m_wr] < 0) m_plot_fill[m_wr] = 0;
-      if (m_plot_fill[m_wr] < m_plot_maxpt)
-	{
-	  m_plot_time[m_wr][m_plot_fill[m_wr]] = m_step_time;
-	  for (int i_chan=1; i_chan<=4; i_chan++)
-	    {
-	      double v = 0.0;
-	      if (m_timeplot->channelOn(i_chan))
-		v = m_timeplot->getVolt(i_chan);
-	      m_plot_signal[m_wr][i_chan-1][m_plot_fill[m_wr]] = v;
-	    }
-	  m_plot_fill[m_wr] ++;
-	}
       m_step_time_last = m_step_time;
-      */
-      m_step_time_last = m_step_time;
+    }
     }
 }
 
-void TimeplotWidget::read()
-{
-  //for (int i_chan=1; i_chan<=4; i_chan++) qDebug() << i_chan << m_timeplot->channelOn(i_chan);
-  m_step = Simulator::self()->step();
-  m_step_time = (double) m_step * 1e-6;
-  //qDebug() << "TimeplotWidget::read" << m_plot_fill << m_step << m_step_time;
-  /*
-  if (m_plot_fill < 0) m_plot_fill = 0;
-  if (m_plot_fill < m_plot_maxpt)
-    {
-      m_plot_time[m_plot_fill] = m_step_time;
-      for (int i_chan=1; i_chan<=4; i_chan++)
-	{
-	  double v = 0.0;
-	  if (m_timeplot->channelOn(i_chan))
-  	      v = m_timeplot->getVolt(i_chan);
-	  m_plot_signal[i_chan-1][m_plot_fill] = v;
-	}
-      m_plot_fill ++;
-    }
-  */
-}
 
 
 void TimeplotWidget::clear()
@@ -135,105 +110,33 @@ void TimeplotWidget::setupWidget()
      m_button_plot->setStyleSheet("QPushButton {font-size: 12px;font-family: Arial;background-color : lightblue; color : black;}");
      m_button_plot->setGeometry(QRect(QPoint(10, 5), QSize(50, 20)));
      connect(m_button_plot, SIGNAL (released()), this, SLOT (handlePlotButton()));
-     m_button_reset = new QPushButton ("Reset", this);
+     m_button_reset = new QPushButton ("Scalet", this);
      m_button_reset->setStyleSheet("QPushButton {font-size: 12px;font-family: Arial;background-color : lightblue; color : black;}");
      m_button_reset->setGeometry(QRect(QPoint(10, 30), QSize(50, 20)));
-     connect(m_button_reset, SIGNAL (released()), this, SLOT (handleResetButton()));
- 
-    
-    //m_display = new RenderTimeplot( size, size, this );
-    //m_display->setObjectName( "timeplot" );
-    
-              
-    //connect( m_autoCheck, SIGNAL( stateChanged(int) ),
-    //         this,        SLOT  ( autoTimeplotChanged(int)) );
-}
-
-void TimeplotWidget::realtimeDataSlotDemo()
-{
-  static QTime time(QTime::currentTime());
-  // calculate two new data points:
-  double key = time.elapsed()/1000.0; // time elapsed since start of demo, in seconds
-  static double lastPointKey = 0;
-  if (key-lastPointKey > 0.002) // at most add point every 2 ms
-  {
-    // add data to lines:
-    customPlot->graph(0)->addData(key, qSin(key)+qrand()/(double)RAND_MAX*1*qSin(key/0.3843));
-    customPlot->graph(1)->addData(key, qCos(key)+qrand()/(double)RAND_MAX*0.5*qSin(key/0.4364));
-    // rescale value (vertical) axis to fit the current data:
-    //ui->customPlot->graph(0)->rescaleValueAxis();
-    //ui->customPlot->graph(1)->rescaleValueAxis(true);
-    lastPointKey = key;
-  }
-  // make key axis range scroll with the data (at a constant range size of 8):
-  customPlot->xAxis->setRange(key, 8, Qt::AlignRight);
-  customPlot->replot();
-  
-  // calculate frames per second:
-  static double lastFpsKey;
-  static int frameCount;
-  ++frameCount;
-  if (key-lastFpsKey > 2) // average fps over 2 seconds
-  {
-    /*ui->statusBar->showMessage(
-          QString("%1 FPS, Total Data points: %2")
-          .arg(frameCount/(key-lastFpsKey), 0, 'f', 0)
-          .arg(ui->customPlot->graph(0)->data()->size()+ui->customPlot->graph(1)->data()->size())
-          , 0);
-    */
-    qDebug() << QString("%1 FPS, Total Data points: %2")
-      .arg(frameCount/(key-lastFpsKey), 0, 'f', 0)
-      .arg(customPlot->graph(0)->data()->size()+customPlot->graph(1)->data()->size());
-    lastFpsKey = key;
-    frameCount = 0;
-  }
-}
-
-void TimeplotWidget::realtimeDataSlot()
-{
-  qDebug() << "TimeplotWidget::realtimeDataSlot" << m_plot_fill[m_rd];
-  int cnt = 0;
-  double key;
-  if (m_plot_fill[m_rd] >= 0)
-    {
-      for (int ip=0; ip<=m_plot_fill[m_rd]; ip++) 
-	{
-	  key = m_plot_time[m_rd][ip];
-	  for (int i_chan=1; i_chan<=2; i_chan++)
-	    {      
-	      customPlot->graph(i_chan-1)->addData(key, m_plot_signal[m_rd][i_chan-1][ip]);
-	      customPlot->xAxis->setRange(key, 4, Qt::AlignRight);
-	    }
-	  cnt ++;
-	}
-    }
-  customPlot->replot();
-  m_plot_fill[m_rd] = -1;
-  if (m_rd == 0)
-    {
-      m_rd = 1;
-      m_wr = 0;
-    }
-  else
-    {
-      m_rd = 0;
-      m_wr = 1;
-    }
-      
+     connect(m_button_reset, SIGNAL (released()), this, SLOT (handleScaleButton()));
+     m_time_axis_slider = new QSlider(Qt::Horizontal, this);
+     m_time_axis_slider->setGeometry(QRect(QPoint(10, 55), QSize(50, 20)));
+     m_time_axis_slider->setValue(3);
+     connect(m_time_axis_slider, SIGNAL(valueChanged(int)), this, SLOT(time_axis_value(int)));
 }
 
 void TimeplotWidget::handlePlotButton()
 {
+  
+  if (!m_time_plot_window)
+    {
     // change the text
     //m_button->setText("Plot Active");
     // resize button
     //m_button->resize(100,100);
 
-    QWidget *wdg = new QWidget;
-    wdg->resize (800,400);
-    wdg->setWindowFlags(Qt::WindowStaysOnTopHint);
-
-    customPlot = new QCustomPlot( wdg );
+    customPlotWidget = new QWidget;
+    customPlotWidget->resize (800,400);
+    customPlotWidget->setWindowFlags(Qt::WindowStaysOnTopHint);
+    customPlotWidget->setAttribute( Qt::WA_DeleteOnClose );
+    connect(customPlotWidget, SIGNAL(destroyed(QObject*)), this, SLOT(widgetDestroyed(QObject*)) );
+ 
+    customPlot = new QCustomPlot( customPlotWidget );
     customPlot->setObjectName(QStringLiteral("customPlot"));
     customPlot->resize (800,400);
  
@@ -251,16 +154,48 @@ void TimeplotWidget::handlePlotButton()
     // make left and bottom axes transfer their ranges to right and top axes:
     connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis2, SLOT(setRange(QCPRange)));
     connect(customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->yAxis2, SLOT(setRange(QCPRange)));
-  
-    // setup a timer that repeatedly calls MainWindow::realtimeDataSlot:
-    connect(&dataTimer, SIGNAL(timeout()), this, SLOT(realtimeDataSlot()));
-    //dataTimer.start(10); // Interval 0 means to refresh as fast as possible
-    wdg->show();
+    
+    //connect(customPlotWidget,SIGNAL(aboutToQuit()),this,SLOT(closeCustomPlotWidget()));
+ 
+    uint64_t c_step = Simulator::self()->step();
+    m_start_time = (double) c_step * 1e-6;
+    m_step_time_last = m_start_time;
+
     m_time_plot_window = true;
-
+    customPlotWidget->show();
+    }
 }
-void TimeplotWidget::handleResetButton()
+
+void TimeplotWidget::closeCustomPlotWidget()
 {
+  qDebug() << "about to close";
+  customPlotWidget->close();
+  m_time_plot_window = false;
+}  
+
+void TimeplotWidget::handleScaleButton()
+{
+  customPlotWidget->close();
+  m_time_plot_window = false;
 }
 
+void TimeplotWidget::widgetDestroyed(QObject*)
+{
+  m_time_plot_window = false;
+}  
+
+void TimeplotWidget::time_axis_value(int val)
+{
+  qDebug() << "time_axis_value"<< val;
+  m_time_axis_window = 1+val;
+  if( !Simulator::self()->isRunning() )
+    {
+      customPlot->xAxis->setRange(0, m_time_axis_window, Qt::AlignRight);
+    }
+  else
+    {
+      customPlot->xAxis->setRange(m_step_time, m_time_axis_window, Qt::AlignRight);
+    }
+  customPlot->replot();
+}
 #include "moc_timeplotwidget.cpp"
