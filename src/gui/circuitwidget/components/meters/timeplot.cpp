@@ -51,7 +51,7 @@ Timeplot::Timeplot( QObject* parent, QString type, QString id )
     Q_UNUSED( Timeplot_properties );
     qDebug() << "Timeplot::Timeplot get types" << typeid(m_topW).name() << typeid(*this).name() ; 
 
-    m_component_width = 220;
+    m_component_width = 320;
     m_component_height = 120;
     m_area = QRectF(0, 0, m_component_width, m_component_height);
     setLabelPos((m_component_width*1)/4,-16, 0);
@@ -93,7 +93,7 @@ Timeplot::Timeplot( QObject* parent, QString type, QString id )
     for (int i_inp=0; i_inp<4; i_inp++) m_input_on[i_inp] = false;
     m_input_changed = true;
     
-    m_timeplotW = new TimeplotWidget( &m_topW );
+    m_timeplotW = new TimeplotWidget( &m_topW , timeplotWidgetWidth,  timeplotWidgetHeight);
     m_timeplotW->setupWidget( );
     m_timeplotW->setVisible( true );
     m_timeplotW->setTimeplot( this );
@@ -101,7 +101,7 @@ Timeplot::Timeplot( QObject* parent, QString type, QString id )
     
     m_proxy = Circuit::self()->addWidget( &m_topW);
     m_proxy->setParentItem( this );
-    m_proxy->setPos( QPoint(  m_component_width-10-60, 10) );
+    m_proxy->setPos( QPoint(  m_component_width-10-timeplotWidgetWidth, 10) );
     //m_proxy->setFlag(QGraphicsItem::ItemNegativeZStacksBehindParent, true );
     
     Simulator::self()->addToUpdateList( this );

@@ -47,6 +47,9 @@ class MAINMODULE_EXPORT Timeplot : public Component, public eElement
         bool channelOn ( int i_chan );
         virtual void paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* widget );
 
+	int timeplotWidgetWidth = 220;
+	int timeplotWidgetHeight = 100;
+
     public slots:
         void remove();
 

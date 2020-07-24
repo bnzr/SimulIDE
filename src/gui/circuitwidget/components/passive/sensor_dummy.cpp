@@ -114,7 +114,7 @@ void SensorDummy::setSense( double sense)  // direct update , no time constant
     m_new_resist = m_resist;    
     setUnit (" ");
     setResist ( m_resist);
-    qDebug()<<"SensorDummy::setSsense m_resist m_sense "<<m_resist <<m_sense;
+    //qDebug()<<"SensorDummy::setSsense m_resist m_sense "<<m_resist <<m_sense;
     m_last_step =  Simulator::self()->step();
 }
 
@@ -127,7 +127,7 @@ void SensorDummy::updateSense( double sense)
     setSenseValue(sense);
     m_last_resist = m_resist;
     m_new_resist = sensorFunction (sense);
-    qDebug()<<"SensorDummy::updateSense m_last_resist m_new_resist" <<  m_last_resist <<  m_new_resist;
+    //qDebug()<<"SensorDummy::updateSense m_last_resist m_new_resist" <<  m_last_resist <<  m_new_resist;
     m_last_step =  Simulator::self()->step();
 }
 
@@ -136,20 +136,20 @@ void SensorDummy::sensorTimeRespons()
     double dr = m_new_resist - m_last_resist;
     m_step = Simulator::self()->step();
     double dt = (double) (m_step-m_last_step)/1e6;
-    qDebug() << "update timer dr dt m_step" << dr << dt << m_step;
+    //qDebug() << "update timer dr dt m_step" << dr << dt << m_step;
     m_resist = m_last_resist + dr * (1.0 -exp(-dt/m_tau));
     setUnit (" ");
     setResistFast ( m_resist);
-    qDebug()<<"SensorDummy::sensorTimeRespons m_resist m_sense "<<m_resist <<m_sense;
+    //qDebug()<<"SensorDummy::sensorTimeRespons m_resist m_sense "<<m_resist <<m_sense;
 }
   
 
 void SensorDummy::senseChanged( int val ) // Called when dial is rotated
 {
-    qDebug() <<"SensorDummy::senseChanged" << val;
+    //qDebug() <<"SensorDummy::senseChanged" << val;
     double sense = (double)(m_dial->value());
     sense = round(sense/(double)m_sense_step)*(double)m_sense_step;
-    qDebug()<<"SensorDummy::senseChanged dialValue sense"<<m_dial->value()<<sense;
+    //qDebug()<<"SensorDummy::senseChanged dialValue sense"<<m_dial->value()<<sense;
     m_dialW.dial->setValue(sense);
     updateSense( sense );
 }
@@ -159,21 +159,21 @@ double SensorDummy::resist() { return m_value; }
 void SensorDummy::setResist( double r )
 {
     if( r < 1e-12 ) r = 1e-12;
-    qDebug() <<"SensorDummy::setResist r "<<r;
+    //qDebug() <<"SensorDummy::setResist r "<<r;
     Component::setValue( r );       // Takes care about units multiplier
-    qDebug() <<"SensorDummy::setResist  m_value m_unitMult "<<m_value<<m_unitMult;
+    //qDebug() <<"SensorDummy::setResist  m_value m_unitMult "<<m_value<<m_unitMult;
     eResistor::setResSafe( m_value*m_unitMult );
-    qDebug() <<"SensorDummy::setResist eResistor res "<<eResistor::res();
+    //qDebug() <<"SensorDummy::setResist eResistor res "<<eResistor::res();
 }
 
 void SensorDummy::setResistFast( double r )
 {
     if( r < 1e-12 ) r = 1e-12;
-    qDebug() <<"SensorDummy::setResist r "<<r;
+    //qDebug() <<"SensorDummy::setResist r "<<r;
     Component::setValue( r );       // Takes care about units multiplier
-    qDebug() <<"SensorDummy::setResist  m_value m_unitMult "<<m_value<<m_unitMult;
+    //qDebug() <<"SensorDummy::setResist  m_value m_unitMult "<<m_value<<m_unitMult;
     eResistor::setRes( m_value*m_unitMult );
-    qDebug() <<"SensorDummy::setResist eResistor res "<<eResistor::res();
+    //qDebug() <<"SensorDummy::setResist eResistor res "<<eResistor::res();
 }
 
 void SensorDummy::setUnit( QString un ) 
@@ -219,7 +219,7 @@ double SensorDummy::sensorFunction (double sense)
   const double a = 0.25;
   const double b = 10.0;
   double r_sense = a*sense+b;
-    qDebug()<<"SensorDummy::sensorFunction"<<sense<<r_sense;
+    //qDebug()<<"SensorDummy::sensorFunction"<<sense<<r_sense;
   return r_sense;
 }
 

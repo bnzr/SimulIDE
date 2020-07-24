@@ -26,6 +26,7 @@
 #include "probe.h"
 
 #include <qcustomplot.h>
+#include "customplotwidget.h"
 
 class Timeplot;
 
@@ -34,13 +35,14 @@ class MAINMODULE_EXPORT TimeplotWidget : public QWidget, public eElement
     Q_OBJECT
 
     public:
-        TimeplotWidget( QWidget *parent );
+        TimeplotWidget( QWidget *parent , int timeplotWidgetWidth,  int timeplotWidgetHeight);
         ~TimeplotWidget();
         
         void setTimeplot( Timeplot* timeplot );
         void read();
         void clear();
         void setupWidget();
+	void set_time_plot_window_flag (bool t);
         
         virtual void simuClockStep();
         virtual void resetState();
@@ -48,13 +50,13 @@ class MAINMODULE_EXPORT TimeplotWidget : public QWidget, public eElement
     public slots:
 	void handlePlotButton();
         void handleScaleButton();
-	void closeCustomPlotWidget();
 	void widgetDestroyed(QObject*);
 	void time_axis_value(int);
+	void resetTimeplotWindow();
 	
-    private:
+    private:	
         QCustomPlot* customPlot;
-	QWidget *customPlotWidget;
+	CustomPlotWidget *customPlotWidget;
 	
         Timeplot* m_timeplot;
 	QPushButton *m_button_plot;
@@ -71,6 +73,11 @@ class MAINMODULE_EXPORT TimeplotWidget : public QWidget, public eElement
 
 	QSlider *m_time_axis_slider;
 	int m_time_axis_window = 4;
+	double m_time_axis_window_sec = 5.0;
+	double v_time_axis_window[7] = {0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0};
+	int m_time_axis_window_min = 0;
+	int m_time_axis_window_max = 6;
+	QLabel *m_time_axis_label;
 };
 
 #endif
