@@ -1822,6 +1822,7 @@ qrc_application.cpp: ../src/application.qrc \
 		../src/icons/components/xorgate.png \
 		../src/icons/mainwindow/poweron.png \
 		../src/icons/components/2to3.png \
+		../src/icons/components/sensor_ldr_illumination.png \
 		../src/icons/mainwindow/reset.png \
 		../src/icons/components/ellipse.png \
 		../src/icons/components/hd44780.png \
@@ -3094,12 +3095,12 @@ build/release/moc_sensor_dummy.cpp: ../src/gui/circuitwidget/itemlibrary.h \
 		/usr/lib/qt5/bin/moc
 	/usr/lib/qt5/bin/moc $(DEFINES) --include /home/newubu/MyInstall/simulide/git/SimulIDE/build_linux/build/release/moc_predefs.h -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++ -I/home/newubu/MyInstall/simulide/git/SimulIDE/build_linux -I/home/newubu/MyInstall/simulide/git/SimulIDE/src -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/circuitwidget -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/circuitwidget/components -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/circuitwidget/components/active -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/circuitwidget/components/logic -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/circuitwidget/components/mcu -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/circuitwidget/components/meters -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/circuitwidget/components/other -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/circuitwidget/components/outputs -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/circuitwidget/components/passive -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/circuitwidget/components/sources -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/circuitwidget/components/switches -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/oscopewidget -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/timeplotwidget -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/plotterwidget -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/terminalwidget -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/QPropertyEditor -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/componentselector -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/filebrowser -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/editorwidget -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/editorwidget/findreplacedialog -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gui/serialporwidget -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/simulator -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/simulator/elements -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/simulator/elements/active -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/simulator/elements/logic -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/simulator/elements/outputs -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/simulator/elements/passive -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/simulator/elements/processors -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/simavr -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/simavr/sim -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/simavr/sim/avr -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/simavr/cores -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gpsim -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gpsim/devices -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gpsim/modules -I/home/newubu/MyInstall/simulide/git/SimulIDE/src/gpsim/registers -I/home/newubu/MyInstall/simulide/git/SimulIDE/build_linux/build/release -I/usr/include/x86_64-linux-gnu/qt5 -I/usr/include/x86_64-linux-gnu/qt5/QtSvg -I/usr/include/x86_64-linux-gnu/qt5/QtPrintSupport -I/usr/include/x86_64-linux-gnu/qt5/QtWidgets -I/usr/include/x86_64-linux-gnu/qt5/QtMultimedia -I/usr/include/x86_64-linux-gnu/qt5/QtGui -I/usr/include/x86_64-linux-gnu/qt5/QtXml -I/usr/include/x86_64-linux-gnu/qt5/QtScript -I/usr/include/x86_64-linux-gnu/qt5/QtConcurrent -I/usr/include/x86_64-linux-gnu/qt5/QtSerialPort -I/usr/include/x86_64-linux-gnu/qt5/QtNetwork -I/usr/include/x86_64-linux-gnu/qt5/QtCore -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../src/gui/circuitwidget/components/passive/sensor_dummy.h -o build/release/moc_sensor_dummy.cpp
 
-build/release/moc_sensor_ldr.cpp: ../src/gui/circuitwidget/itemlibrary.h \
-		../src/gui/circuitwidget/component.h \
+build/release/moc_sensor_ldr.cpp: ../src/gui/circuitwidget/component.h \
 		../src/gui/QPropertyEditor/QPropertyEditorWidget.h \
 		../src/simulator/elements/passive/e-resistor.h \
 		../src/simulator/e-element.h \
 		../src/simulator/e-pin.h \
+		../src/gui/dialwidget.h \
 		../src/gui/circuitwidget/pin.h \
 		../src/gui/circuitwidget/connector.h \
 		../src/gui/circuitwidget/components/passive/sensor_ldr.h \
@@ -5497,14 +5498,19 @@ build/release/sensor_dummy.o: ../src/gui/circuitwidget/components/passive/sensor
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/release/sensor_dummy.o ../src/gui/circuitwidget/components/passive/sensor_dummy.cpp
 
 build/release/sensor_ldr.o: ../src/gui/circuitwidget/components/passive/sensor_ldr.cpp ../src/gui/circuitwidget/components/passive/sensor_ldr.h \
-		../src/gui/circuitwidget/itemlibrary.h \
 		../src/gui/circuitwidget/component.h \
 		../src/gui/QPropertyEditor/QPropertyEditorWidget.h \
 		../src/simulator/elements/passive/e-resistor.h \
 		../src/simulator/e-element.h \
 		../src/simulator/e-pin.h \
+		../src/gui/dialwidget.h \
 		../src/gui/circuitwidget/pin.h \
 		../src/gui/circuitwidget/connector.h \
+		../src/gui/circuitwidget/circuit.h \
+		../src/simulator/simulator.h \
+		../src/simulator/circmatrix.h \
+		../src/simulator/e-node.h \
+		../src/gui/circuitwidget/itemlibrary.h \
 		build/release/moc_sensor_ldr.cpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/release/sensor_ldr.o ../src/gui/circuitwidget/components/passive/sensor_ldr.cpp
 

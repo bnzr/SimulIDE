@@ -158,7 +158,7 @@ void ItemLibrary::loadItems()
     addItem( BJT::libraryItem() );
     addItem( MuxAnalog::libraryItem() );
     // Sensors
-    addItem( SensorLDR::libraryItem() );
+    addItem( SensorLdr::libraryItem() );
     addItem( SensorDummy::libraryItem() );
     addItem( SensorPt100::libraryItem() );
     // Outputs

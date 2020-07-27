@@ -1,59 +1,76 @@
-/***************************************************************************
- *   Copyright (C) 2012 by santiago González                               *
- *   santigoro@gmail.com                                                   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 3 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, see <http://www.gnu.org/licenses/>.  *
- *                                                                         *
- ***************************************************************************/
-
 #ifndef SENSORLDR_H
 #define SENSORLDR_H
 
-#include "itemlibrary.h"
+#include "component.h"
 #include "e-resistor.h"
+#include "e-element.h"
+#include "dialwidget.h"
 #include "pin.h"
 
+class LibraryItem;
 
-class MAINMODULE_EXPORT SensorLDR : public Component, public eResistor
+class MAINMODULE_EXPORT SensorLdr : public Component, public eElement
 {
     Q_OBJECT
-    Q_PROPERTY( double Resistance READ resist   WRITE setResist  DESIGNABLE true USER true )
-    Q_PROPERTY( QString  Unit     READ unit     WRITE setUnit    DESIGNABLE true USER true )
-    Q_PROPERTY( bool     Show_res READ showVal  WRITE setShowVal DESIGNABLE true USER true )
+    //Q_PROPERTY( double  Resistance READ res     WRITE setRes    DESIGNABLE true USER true )
+    //Q_PROPERTY( QString Unit       READ unit    WRITE setUnit    DESIGNABLE true USER true )
+    //Q_PROPERTY( bool    Show_res   READ showVal WRITE setShowVal DESIGNABLE true USER true )
+    //Q_PROPERTY( int     Value_Ohm  READ val     WRITE setVal    DESIGNABLE true USER true )
+    Q_PROPERTY( double Sense READ getSense   WRITE setSense  DESIGNABLE true USER true )
+    Q_PROPERTY( bool     Show_sense READ showSense  WRITE setShowSense DESIGNABLE true USER true )
 
-    public:
-        QRectF boundingRect() const { return QRectF( -11, -4.5, 22, 9 ); }
+ public:
+    SensorLdr( QObject* parent, QString type, QString id );
+    ~SensorLdr();
 
-        SensorLDR( QObject* parent, QString type, QString id );
-        ~SensorLDR();
+    static Component* construct( QObject* parent, QString type, QString id );
+    static LibraryItem* libraryItem();
 
-        static Component* construct( QObject* parent, QString type, QString id );
-        static LibraryItem *libraryItem();
+    virtual void initialize();
+    virtual void updateStep();
+    virtual void paint( QPainter* p, const QStyleOptionGraphicsItem* option, QWidget* widget );
 
-        double resist();
-        void setResist( double r );
-        
-        void setUnit( QString un );
-	void update ();
-
-        virtual void paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget );
-
+    double getSense();
+    void setSense( double sense );
+    void setUnit( QString un );
+    double resist();
+    void setResist( double r );
+    void setResistSlow( double r );
+    double sensorFunction ( double sense );
+    
     public slots:
-        void updateTimer();
-        void remove();
+      void senseChanged( int val );
+      virtual void remove();
+      
+ private:
+    Pin m_pinA;
+    Pin m_pinB;
+    Pin m_pinM;
+    ePin m_ePinA;
+    ePin m_ePinB;
+    ePin* m_ePinTst1;
+    ePin* m_ePinTst2;
+    
+    eResistor m_res;
 
-    private:
+    int m_sense_min = 50;
+    int m_sense_max = 2000;
+    int m_sense_step = 50;
+    DialWidget m_dialW;	
+    QDial* m_dial;
+    QGraphicsProxyWidget* m_proxy;
+
+    uint64_t m_step;
+    uint64_t m_last_step;
+    double m_resist;
+    double m_new_resist;
+    double m_last_resist;
+    double m_sense;
+    double m_tau = 0.3;  
+ 
+    double r1 = 127410;
+    double gamma = 0.8582;
+
 };
 
 #endif
