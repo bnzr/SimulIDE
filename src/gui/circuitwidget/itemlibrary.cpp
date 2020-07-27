@@ -82,6 +82,7 @@
 #include "rectangle.h"
 #include "relay-spst.h"
 #include "sensor_ldr.h"
+#include "sensor_pt100.h"
 #include "sensor_dummy.h"
 #include "resistor.h"
 #include "resistordip.h"
@@ -159,6 +160,7 @@ void ItemLibrary::loadItems()
     // Sensors
     addItem( SensorLDR::libraryItem() );
     addItem( SensorDummy::libraryItem() );
+    addItem( SensorPt100::libraryItem() );
     // Outputs
     addItem( Led::libraryItem() );
     addItem( LedBar::libraryItem() );

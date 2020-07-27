@@ -49,6 +49,7 @@ SensorDummy::SensorDummy( QObject* parent, QString type, QString id )
         , eResistor( id.toStdString() )
 {
     Q_UNUSED( SensorDummy_properties );
+    
     QString pinId = m_id;
     pinId.append(QString("-lPin"));
     QPoint pinPos = QPoint(-8-20,0);
@@ -58,7 +59,7 @@ SensorDummy::SensorDummy( QObject* parent, QString type, QString id )
     pinId.append(QString("-rPin"));
     pinPos = QPoint(8+20,0);
     m_ePin[1] = new Pin( 0, pinPos, pinId, 1, this);
-
+    
     m_idLabel->setPos(-12,24);
     m_sense_unit = "MesUnit";
     m_unit = "Ω";
@@ -96,6 +97,7 @@ SensorDummy::SensorDummy( QObject* parent, QString type, QString id )
 }
 
 SensorDummy::~SensorDummy(){}
+
 
 double SensorDummy::getSense ()
 {

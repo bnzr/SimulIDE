@@ -79,16 +79,17 @@ We first need to create an icon image of the sensor, the file is sensor_ldr.png
 
 Then we modify the src folder to include this new component in the simulator.
 
-1 - Copy the icon file sensor_ldr.png in icons/components folder
+1 - Create a png file with the icon that will display the componet in the left menus. Copy this file let's say, my_component png, in icons\/components folder.
 
-2 - Add an alias to component display image in application.qrc
-\<file alias=\"sensor_ldr.png\"\>../src/icons/components/sensor_ldr.png\<\/file\>
+2 - Add an alias to component display image in src\/application.qrc
+\<file alias=\"my_component.png\"\>../src/icons/components/my_component.png\<\/file\>
 
-3 - Create a file
+3 - Create the files for the component : my_component.cpp and my_component.h and place this files in a folder below src\/gui\/circuitwidget\/components
+For example, for a passive component put these file in src\/gui\/circuitwidget\/components\/passive
 
 4 - Update the GUI layout to be able to select the new component
-modify file : ../src/gui/circuitwidget/itemlibrary.cpp
+modify file : ..\/src\/gui\/circuitwidget\/itemlibrary.cpp
 add
 \#include \"sensor_ldr.h\"
-and after \/\/ Sensors
+and in the right category \(e.g passive\) :
 addItem\( SensorLDR::libraryItem\(\) \);

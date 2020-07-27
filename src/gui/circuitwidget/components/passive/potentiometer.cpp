@@ -98,7 +98,6 @@ Potentiometer::~Potentiometer()
 
 void Potentiometer::initialize()
 {
-    qDebug()<<"Potentiometer::initialize";
     eNode* enod = m_pinM.getEnode();        // Get eNode from middle Pin
 
     if( !enod )                       // Not connected: Create mid eNode
@@ -126,8 +125,6 @@ void Potentiometer::updateStep()
     {
         double res1 = double( m_resist*m_dial->value()/1000 );
         double res2 = m_resist-res1;
-	qDebug()<<"Potentiometer::dialValue"<<m_dial->value();
-	qDebug()<<"Potentiometer::resist"<<m_resist;
         
         if( res1 < 1e-6 ) 
         {
@@ -139,7 +136,7 @@ void Potentiometer::updateStep()
             res2 = 1e-6;
             res1 = m_resist-res2;
         }
-        qDebug()<<"Potentiometer::updateStep"<<res1<<res2;
+        //qDebug()<<"Potentiometer::updateStep"<<res1<<res2;
         m_resA.setRes( res1 );
         m_resB.setRes( res2 );
         
@@ -150,14 +147,12 @@ void Potentiometer::updateStep()
 void Potentiometer::resChanged( int res ) // Called when dial is rotated
 {
     //qDebug() << res << m_resist;
-    qDebug() <<"Potentiometer::resChanged" << res << m_resist;
     m_changed = true;
 }
 
 void Potentiometer::setRes( double res ) // Called when property resistance is changed
 {
     Component::setValue( res );       // Takes care about units multiplier
-    qDebug() <<"Potentiometer::setRes" << res << m_value << m_unitMult;
     m_resist = m_value*m_unitMult;
     
     m_changed = true;

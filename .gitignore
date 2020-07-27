@@ -12,9 +12,12 @@ tramp
 # build and release dir
 build_linux/build
 build_linux/release
+build_linux/Makefile
 build_macos/build
 build_macos/release
+build_macos/Makefile
 build_wind10/build
 build_wind10/release
+build_wind10/Makefile
 
 

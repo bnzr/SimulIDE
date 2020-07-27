@@ -49,6 +49,8 @@ class MAINMODULE_EXPORT SensorDummy : public Component, public eResistor
         static Component* construct( QObject* parent, QString type, QString id );
         static LibraryItem *libraryItem();
 
+        virtual void paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget );
+
         double resist();
         void setResist( double r );
         void setResistFast( double r );
@@ -58,16 +60,14 @@ class MAINMODULE_EXPORT SensorDummy : public Component, public eResistor
 	void setSense( double sense );
  	void updateSense( double sense );
        
-        void setUnit( QString un );
-
-        virtual void paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget );
+	void setUnit( QString un );
 
     public slots:
         void senseChanged( int val );
 	void sensorTimeRespons ();
         void remove();
 
-    private:
+    private:   
 	uint64_t m_step;
 	uint64_t m_last_step;
 	double m_resist;

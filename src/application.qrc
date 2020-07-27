@@ -116,6 +116,9 @@
         <file alias="potentiometer2.png">../src/icons/components/potentiometer2.png</file>
         <file alias="sensor_dummy.png">../src/icons/components/sensor_dummy.png</file>
         <file alias="timeplot.png">../src/icons/components/timeplot.png</file>
+        <file alias="sensor_pt100.png">../src/icons/components/sensor_pt100.png</file>
+	
+        <file alias="sensor_pt100_thermometer.png">../src/icons/components/sensor_pt100_thermometer.png</file>
       
         <file alias="inbus.png">../src/icons/components/inbus.png</file>
         <file alias="outbus.png">../src/icons/components/outbus.png</file>
