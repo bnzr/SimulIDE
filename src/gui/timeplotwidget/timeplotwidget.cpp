@@ -163,6 +163,11 @@ void TimeplotWidget::handleScaleButton()
 {
   qDebug() << "rescale y axis";
   customPlot->yAxis->rescale();
+  // add an upper and lower margin
+  double lower_bound = customPlot->yAxis->range().lower;
+  double upper_bound = customPlot->yAxis->range().upper;
+  double range = upper_bound-lower_bound;
+  customPlot->yAxis->setRange(lower_bound-range*0.02,upper_bound+range*0.02);
   customPlot->replot();
 }
 

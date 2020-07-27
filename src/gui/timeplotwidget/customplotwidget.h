@@ -59,6 +59,7 @@ class CustomPlotWidget : public QWidget
 	QCPItemStraightLine *mouseMarkerX;
 	QCPItemStraightLine *mouseMarkerY;
 	QPen crosshairpen;
+	QCPItemText *textItem;
 };
 
 #endif

@@ -54,6 +54,7 @@ CustomPlotWidget::CustomPlotWidget(int width, int height)
     customPlot->axisRect()->setupFullAxesBox();
     customPlot->yAxis->setRange(-6, 6);
 
+
     gridLayout->addWidget(customPlot);
     setLayout(gridLayout);
     
@@ -67,6 +68,11 @@ CustomPlotWidget::CustomPlotWidget(int width, int height)
     mouseMarkerX->point2->setCoords(0, 1);
     mouseMarkerY->point1->setCoords(0, 0);
     mouseMarkerY->point2->setCoords(1, 0);
+
+    textItem = new QCPItemText(customPlot);
+    textItem->setText("");
+    textItem->position->setCoords(QPointF(0, 0.5));
+    textItem->setFont(QFont(font().family(), 16));
 
    connect(customPlot, SIGNAL(mouseMove(QMouseEvent*)), this, SLOT(onMouseMove(QMouseEvent *)));
 
@@ -85,18 +91,29 @@ void CustomPlotWidget::paintEvent( QPaintEvent* event )
 
 void CustomPlotWidget::onMouseMove(QMouseEvent * event)
 {
-  double x = customPlot->xAxis->pixelToCoord(event->pos().x());
-  double y = customPlot->xAxis->pixelToCoord(event->pos().y());
-  qDebug() << "mouse" << event->x() << event->y() << x << y;
-  double positionX = customPlot->xAxis->pixelToCoord( event->pos().x() );
-  double positionY = customPlot->yAxis->pixelToCoord( event->pos().y() );
+  //double x = customPlot->xAxis->pixelToCoord(event->pos().x());
+  //double y = customPlot->xAxis->pixelToCoord(event->pos().y());
+  //qDebug() << "mouse" << event->x() << event->y() << x << y;
+  double x = customPlot->xAxis->pixelToCoord( event->pos().x() );
+  double y = customPlot->yAxis->pixelToCoord( event->pos().y() );
+  //qDebug() << "yaxis" << customPlot->yAxis->range().lower << customPlot->yAxis->range().upper;
+  double lower_bound = customPlot->yAxis->range().lower;
+  double upper_bound = customPlot->yAxis->range().upper;
+  double range = upper_bound-lower_bound;
   crosshairpen.setColor(Qt::darkYellow);
   mouseMarkerX->setPen(crosshairpen);
   mouseMarkerY->setPen(crosshairpen);
-  mouseMarkerX->point1->setCoords(positionX, 0);
-  mouseMarkerX->point2->setCoords(positionX, 1);
-  mouseMarkerY->point1->setCoords(0, positionY);
-  mouseMarkerY->point2->setCoords(1, positionY);
+  mouseMarkerX->point1->setCoords(x, 0);
+  mouseMarkerX->point2->setCoords(x, 1);
+  mouseMarkerY->point1->setCoords(0, y);
+  mouseMarkerY->point2->setCoords(1, y);
+  double offs_y = -0.03*range;
+  if (y < lower_bound+0.2*range) offs_y = 0.03*range;
+  QString stx = QString::number(x, 'f', 4);
+  QString sty = QString::number(y, 'f', 4);
+  textItem->setText(QString("x=%1 s , y=%2 V").arg(stx).arg(sty));
+  textItem->position->setCoords(QPointF(x, y+offs_y));
+
   customPlot->replot();
 }
 
