@@ -110,7 +110,7 @@ Component::~Component(){}
 
 void Component::mousePressEvent( QGraphicsSceneMouseEvent* event )
 {
-    qDebug()<<"Component::mousePressEvent";
+    //qDebug()<<"Component::mousePressEvent";
 
     if( event->button() == Qt::LeftButton )
     {
@@ -155,8 +155,6 @@ void Component::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
 
     if( !deltaH && !deltaV ) return;
 
-    qDebug()<<"Component::mouseMoveEvent "<<deltaH<<", "<<deltaV<<", "<<delta;
-
     QList<QGraphicsItem*> itemlist = Circuit::self()->selectedItems();
     if( itemlist.size() > 1 )
     {
@@ -195,7 +193,6 @@ void Component::mouseMoveEvent( QGraphicsSceneMouseEvent* event )
 
 void Component::move( QPointF delta )
 {
-  //qDebug()<<"Component::move";
     setPos( pos() + delta );
     emit moved();
 }
@@ -366,7 +363,6 @@ void Component::setLabelPos()
 
 void Component::setValLabelPos( int x, int y, int rot )
 {
-    qDebug()<<"Component::setValLabelPos"<<x<<y<<rot;
     m_valLabel->m_labelx = x;
     m_valLabel->m_labely = y;
     m_valLabel->m_labelrot = rot;
@@ -425,7 +421,6 @@ void Component::setValue( double val)
 
 void Component::setSenseValue( double val) 
 {
-  qDebug()<<"Component::setSenseValue "<<val;
     if( fabs(val) < 1e-12 ) 
     {
         m_sense_value = 0;
@@ -434,7 +429,6 @@ void Component::setSenseValue( double val)
     else
     {
         val = val*m_sense_unitMult;
-        qDebug()<<"Component::setSenseValue "<<val;
         int index = 4;   // We are in bare units "TGMK munp"
         m_sense_unitMult = 1;
         while( fabs(val) >= 1000 )
@@ -453,7 +447,6 @@ void Component::setSenseValue( double val)
         if( m_sense_mult != " " ) m_sense_mult.prepend( " " );
         m_sense_value = val;
     } 
-    qDebug()<<"Component::setSenseValue "<<m_sense_value<<m_sense_mult<<m_sense_unit;
     m_senseLabel->setPlainText( QString::number(m_sense_value)+m_sense_mult+m_sense_unit );
 }
 

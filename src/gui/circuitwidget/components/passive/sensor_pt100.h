@@ -1,5 +1,5 @@
-#ifndef SENSORLDR_H
-#define SENSORLDR_H
+#ifndef SENSORPT100_H
+#define SENSORPT100_H
 
 #include "component.h"
 #include "e-resistor.h"
@@ -9,7 +9,7 @@
 
 class LibraryItem;
 
-class MAINMODULE_EXPORT SensorLdr : public Component, public eElement
+class MAINMODULE_EXPORT SensorPt100 : public Component, public eElement
 {
     Q_OBJECT
     //Q_PROPERTY( double  Resistance READ res     WRITE setRes    DESIGNABLE true USER true )
@@ -20,8 +20,8 @@ class MAINMODULE_EXPORT SensorLdr : public Component, public eElement
     Q_PROPERTY( bool     Show_sense READ showSense  WRITE setShowSense DESIGNABLE true USER true )
 
  public:
-    SensorLdr( QObject* parent, QString type, QString id );
-    ~SensorLdr();
+    SensorPt100( QObject* parent, QString type, QString id );
+    ~SensorPt100();
 
     static Component* construct( QObject* parent, QString type, QString id );
     static LibraryItem* libraryItem();
@@ -53,9 +53,9 @@ class MAINMODULE_EXPORT SensorLdr : public Component, public eElement
     
     eResistor m_res;
 
-    int m_sense_min = 50;
-    int m_sense_max = 2000;
-    int m_sense_step = 50;
+    int m_sense_min = -50;
+    int m_sense_max = 250;
+    int m_sense_step = 10;
     DialWidget m_dialW;	
     QDial* m_dial;
     QGraphicsProxyWidget* m_proxy;
@@ -66,11 +66,11 @@ class MAINMODULE_EXPORT SensorLdr : public Component, public eElement
     double m_new_resist;
     double m_last_resist;
     double m_sense;
-    double m_tau = 0.3;  
+    double m_tau = 0.3;  // 0.3 in water 4.0 in air
  
-    double r1 = 127410;
-    double gamma = 0.8582;
-
+    double r0 = 100.0;
+    double coef_temp = 0.00385;
+    
 };
 
 #endif
