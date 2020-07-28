@@ -67,7 +67,8 @@ class MAINMODULE_EXPORT SensorLdr : public Component, public eElement
     double m_last_resist;
     double m_sense;
     double m_tau = 0.3;  
- 
+    double m_t0_tau = 0.0;
+    
     double r1 = 127410;
     double gamma = 0.8582;
 

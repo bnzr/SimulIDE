@@ -67,7 +67,7 @@ class MAINMODULE_EXPORT SensorPt100 : public Component, public eElement
     double m_last_resist;
     double m_sense;
     double m_tau = 0.3;  // 0.3 in water 4.0 in air
- 
+    double m_t0_tau = 0.0;
     double r0 = 100.0;
     double coef_temp = 0.00385;
     

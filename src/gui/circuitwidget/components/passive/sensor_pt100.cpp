@@ -56,7 +56,7 @@ SensorPt100::SensorPt100 (QObject* parent, QString type, QString id)
     m_idLabel->setPos(-12,24);
     m_sense_unit = "°C";
     m_unit = "Ω";
-    setSense (1050);
+    setSense (0);  // start at 0 °C
     setLabelPos(-18,-30, 0);
     setSenseLabelPos(-12, 6, 0);
     setValLabelPos(-16, 40, 0);
@@ -103,13 +103,13 @@ void SensorPt100::initialize()
 void SensorPt100::updateStep()
 {
     m_step = Simulator::self()->step();
-    double dt = (double) (m_step-m_last_step)/1e6;
+    double t = (double) m_step/1e6;
+    double dt = t - m_t0_tau;
 
-    m_last_resist = m_resist;
     m_new_resist = sensorFunction (m_sense);
     double dr = m_new_resist - m_last_resist;
     m_resist = m_last_resist + dr * (1.0 -exp(-dt/m_tau));
-
+    
     setUnit (" ");
     setResist ( m_resist);
 
@@ -150,6 +150,8 @@ void SensorPt100::senseChanged( int val ) // Called when dial is rotated
     //qDebug()<<"SensorPt100::senseChanged dialValue sense"<<m_dial->value()<<sense;
     setSense( sense );
     m_dialW.dial->setValue(m_sense);
+    m_t0_tau = (double) (Simulator::self()->step())/1e6;
+    m_last_resist = m_resist;
 }
 
 double SensorPt100::resist() { return m_value; }
