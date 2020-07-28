@@ -69,7 +69,7 @@ class MAINMODULE_EXPORT TimeplotWidget : public QWidget, public eElement
         double m_plot_clock = 0.0001;
         bool m_time_plot_window = false;
         int m_cnt_replot = 0;
-        int m_cnt_replot_ok = 100;
+        int m_cnt_replot_ok = 1000;
 
 	QSlider *m_time_axis_slider;
 	int m_time_axis_window = 4;
@@ -78,6 +78,8 @@ class MAINMODULE_EXPORT TimeplotWidget : public QWidget, public eElement
 	int m_time_axis_window_min = 0;
 	int m_time_axis_window_max = 6;
 	QLabel *m_time_axis_label;
+
+	bool m_reset_graph = false;
 };
 
 #endif

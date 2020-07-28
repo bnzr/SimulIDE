@@ -14437,22 +14437,36 @@ void QCustomPlot::replot(QCustomPlot::RefreshPriority refreshPriority)
   mReplotting = true;
   mReplotQueued = false;
   emit beforeReplot();
-  
+  //qDebug()<<"QCustomPlot::replot"<<"updateLayout";
   updateLayout();
   // draw all layered objects (grid, axes, plottables, items, legend,...) into their buffers:
+  //qDebug()<<"QCustomPlot::replot"<<"setupPaintBuffers";
   setupPaintBuffers();
+  //qDebug()<<"QCustomPlot::replot"<<"drawPaintBuffers";
   foreach (QCPLayer *layer, mLayers)
     layer->drawToPaintBuffer();
   for (int i=0; i<mPaintBuffers.size(); ++i)
     mPaintBuffers.at(i)->setInvalidated(false);
   
   if ((refreshPriority == rpRefreshHint && mPlottingHints.testFlag(QCP::phImmediateRefresh)) || refreshPriority==rpImmediateRefresh)
-    repaint();
+    {
+      //qDebug()<<"QCustomPlot::replot"<<"repaint";
+      repaint();
+    }
   else
-    update();
+    {
+      //qDebug()<<"QCustomPlot::replot"<<"update";
+      update();
+    }
+  //qDebug()<<"QCustomPlot::replot"<<"end";
   
   emit afterReplot();
   mReplotting = false;
+}
+
+bool QCustomPlot::isReplotting()
+{
+  return mReplotting;
 }
 
 /*!

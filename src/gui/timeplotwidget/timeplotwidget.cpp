@@ -53,7 +53,19 @@ TimeplotWidget::~TimeplotWidget()
 
 void TimeplotWidget::resetState()
 {
-    clear();
+  
+  if (m_time_plot_window)
+    {
+      m_step = Simulator::self()->step();
+      m_step_time_last = (double) m_step * 1e-6;
+      m_reset_graph = true;
+      //bool found_range;
+      //qDebug() << "TimeplotWidget::resetState" << Simulator::self()->isPaused() << customPlot->graph(0)->getKeyRange(found_range,QCP::sdBoth) ;
+    }
+  else
+    {
+      qDebug() << "TimeplotWidget::resetState" << Simulator::self()->isPaused() ;
+    }
 }
 
 void TimeplotWidget::read()
@@ -64,11 +76,17 @@ void TimeplotWidget::simuClockStep()
 {
   m_step = Simulator::self()->step();
   m_step_time = (double) m_step * 1e-6;
+  if (m_reset_graph)
+    {
+      for (int i=0; i<4; i++)
+	customPlot->graph(i)->data()->clear();
+      m_reset_graph = false;
+    }
   if (m_time_plot_window)
     {
   if (((m_step_time - m_step_time_last) > m_plot_clock) && m_time_plot_window)
     {
-      //qDebug() << "TimeplotWidget::simuClockStep"<< m_step << m_step_time;
+      //qDebug() << "TimeplotWidget::simuClockStep"<< m_step << m_step_time ;
       for (int i_chan=1; i_chan<=4; i_chan++)
 	{      
 	  double v = m_timeplot->getVolt(i_chan);
@@ -78,7 +96,7 @@ void TimeplotWidget::simuClockStep()
       m_cnt_replot ++;
       if (m_cnt_replot == m_cnt_replot_ok)
 	{
-	  customPlot->replot();
+	  customPlotWidget->replot();
 	  m_cnt_replot = 0;
 	}
       m_step_time_last = m_step_time;
@@ -90,7 +108,7 @@ void TimeplotWidget::simuClockStep()
 
 void TimeplotWidget::clear()
 {
-  // reset plot here
+  qDebug() << "TimeplotWidget::clear" << Simulator::self()->isPaused();
 }
 
 void TimeplotWidget::setTimeplot( Timeplot* timeplot )
@@ -161,14 +179,14 @@ void TimeplotWidget::resetTimeplotWindow()
 
 void TimeplotWidget::handleScaleButton()
 {
-  qDebug() << "rescale y axis";
+  //qDebug() << "rescale y axis";
   customPlot->yAxis->rescale();
   // add an upper and lower margin
   double lower_bound = customPlot->yAxis->range().lower;
   double upper_bound = customPlot->yAxis->range().upper;
   double range = upper_bound-lower_bound;
   customPlot->yAxis->setRange(lower_bound-range*0.02,upper_bound+range*0.02);
-  customPlot->replot();
+  customPlotWidget->replot();
 }
 
 void TimeplotWidget::widgetDestroyed(QObject*)
@@ -193,7 +211,7 @@ void TimeplotWidget::time_axis_value(int val)
     {
       customPlot->xAxis->setRange(m_step_time, m_time_axis_window, Qt::AlignRight);
     }
-  customPlot->replot();
+  customPlotWidget->replot();
     }
 }
 void TimeplotWidget::set_time_plot_window_flag (bool t)

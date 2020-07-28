@@ -18,9 +18,11 @@
  ***************************************************************************/
 
 #include "customplotwidget.h"
- 
+#include "simulator.h"
+
 #include <QBrush>
 #include <QPen>
+#include <QThread>
 
 CustomPlotWidget::CustomPlotWidget(int width, int height)
   : QWidget()
@@ -40,21 +42,32 @@ CustomPlotWidget::CustomPlotWidget(int width, int height)
     customPlot->resize (800,400);
  
     customPlot->addGraph(); // red line
-    customPlot->graph(0)->setPen(QPen(Qt::red));
+    QPen* pen_red = new QPen(Qt::red);
+    int pen_width = pen_red->width()*4;
+    pen_red->setWidth(pen_width);
+    customPlot->graph(0)->setPen(*pen_red);
+    
     customPlot->addGraph(); // blue line
-    customPlot->graph(1)->setPen(QPen(Qt::blue));
+    QPen* pen_blue = new QPen(Qt::blue);
+    pen_blue->setWidth(pen_width);
+    customPlot->graph(1)->setPen(*pen_blue);
+    
     customPlot->addGraph(); // gree line
-    customPlot->graph(2)->setPen(QPen(Qt::green));
+    QPen* pen_green = new QPen(Qt::green);
+    pen_green->setWidth(pen_width);
+    customPlot->graph(2)->setPen(*pen_green);
+    
     customPlot->addGraph(); // cyan line
-    customPlot->graph(3)->setPen(QPen(Qt::cyan));
+    QPen* pen_cyan = new QPen(Qt::cyan);
+    pen_cyan->setWidth(pen_width);
+    customPlot->graph(3)->setPen(*pen_cyan);
 
     QSharedPointer<QCPAxisTickerTime> timeTicker(new QCPAxisTickerTime);
     timeTicker->setTimeFormat("%s.%z");
     customPlot->xAxis->setTicker(timeTicker);
     customPlot->axisRect()->setupFullAxesBox();
     customPlot->yAxis->setRange(-6, 6);
-
-
+     
     gridLayout->addWidget(customPlot);
     setLayout(gridLayout);
     
@@ -74,19 +87,78 @@ CustomPlotWidget::CustomPlotWidget(int width, int height)
     textItem->position->setCoords(QPointF(0, 0.5));
     textItem->setFont(QFont(font().family(), 16));
 
-   connect(customPlot, SIGNAL(mouseMove(QMouseEvent*)), this, SLOT(onMouseMove(QMouseEvent *)));
+    connect(customPlot, SIGNAL(mouseMove(QMouseEvent*)), this, SLOT(onMouseMove(QMouseEvent *)));
 
-   
+    // add a timer to prevent data scrolling when window is resized
+    m_resizing = false;
+    timer_resizing = new QTimer(this);
+    connect(timer_resizing, SIGNAL(timeout()), this, SLOT(timeoutResizing()));
+
 }
 
 QSize CustomPlotWidget::minimumSizeHint() const  {  return QSize( m_width, m_height );  }
 
 QSize CustomPlotWidget::sizeHint() const  { return QSize( m_width, m_height ); }
-
+/*
 void CustomPlotWidget::paintEvent( QPaintEvent* event )
 {
     QPainter p( this );
     //qDebug() << "CustomPlotWidget::paintEvent";
+}
+*/
+void CustomPlotWidget::resizeEvent( QResizeEvent* event )
+{
+  if (customPlot->isReplotting())
+    {
+      QThread::msleep(100);
+    }
+  if (Simulator::self()->isRunning())
+    {
+      customPlot->setVisible(false);
+      
+      if (!m_resizing)
+	{
+	  m_resizing = true;
+	  //qDebug() << "CustomPlotWidget::resizeEvent"<< m_resizing;
+	  timer_resizing->setSingleShot(true);
+	  timer_resizing->start(50);
+	}
+      else
+	{
+	  //qDebug() << "CustomPlotWidget::resizeEvent"<< timer_resizing->remainingTime() << "remaining";
+	  timer_resizing->stop();
+	  timer_resizing->setSingleShot(true);
+	  timer_resizing->start(50);
+	}
+    }
+    
+}
+  
+
+void CustomPlotWidget::replot()
+{
+  //qDebug() << "CustomPlotWidget::replot" << m_resizing << resizing();
+  if (!resizing())
+    {
+      //qDebug() << "CustomPlotWidget::replot" << m_resizing << resizing();
+      if (customPlot->isVisible()) customPlot->replot();
+    }
+  //else  qDebug() << "CustomPlotWidget::replot"<< "resizing lock refresh";
+}
+
+
+bool CustomPlotWidget::resizing()
+{
+  return m_resizing;
+}
+
+void CustomPlotWidget::timeoutResizing ()
+{
+  //qDebug() << "CustomPlotWidget::timeoutResizing" << m_resizing;
+  //qDebug() << "CustomPlotWidget::timeoutResizing" << m_resizing;
+  customPlot->setVisible(true);
+  m_resizing = false;
+  //timer_resizing->stop();
 }
 
 void CustomPlotWidget::onMouseMove(QMouseEvent * event)
@@ -114,7 +186,8 @@ void CustomPlotWidget::onMouseMove(QMouseEvent * event)
   textItem->setText(QString("x=%1 s , y=%2 V").arg(stx).arg(sty));
   textItem->position->setCoords(QPointF(x, y+offs_y));
 
-  customPlot->replot();
+  //if (customPlot->isVisible())  customPlot->replot();
+  replot();
 }
 
 

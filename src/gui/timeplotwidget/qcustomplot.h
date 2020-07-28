@@ -667,6 +667,7 @@ public:
   
   // non-virtual methods:
   void replot();
+
   
 protected:
   // property members:
@@ -3646,6 +3647,7 @@ public:
   QCP::SelectionRectMode selectionRectMode() const { return mSelectionRectMode; }
   QCPSelectionRect *selectionRect() const { return mSelectionRect; }
   bool openGl() const { return mOpenGl; }
+  bool isReplotting();
   
   // setters:
   void setViewport(const QRect &rect);

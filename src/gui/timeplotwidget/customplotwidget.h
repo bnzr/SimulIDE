@@ -39,16 +39,21 @@ class CustomPlotWidget : public QWidget
 	QCustomPlot* getCustomPlot();
 	void setTimeplotWidget (QWidget *t);
 
+	bool resizing();
+	void replot();
+
     signals:
 	void customPlotWidgetAboutToClose();
 
 	
     protected:
-        void paintEvent( QPaintEvent *event );
+        //void paintEvent( QPaintEvent *event );
+	void resizeEvent (QResizeEvent *event );
 	void closeEvent (QCloseEvent *event );
 
    private slots:
 	void onMouseMove (QMouseEvent *event);
+	void timeoutResizing ();
 	
    private:
         int m_width;
@@ -60,6 +65,8 @@ class CustomPlotWidget : public QWidget
 	QCPItemStraightLine *mouseMarkerY;
 	QPen crosshairpen;
 	QCPItemText *textItem;
+	bool m_resizing;
+	QTimer *timer_resizing;
 };
 
 #endif
