@@ -42,6 +42,7 @@
 #include "diode.h"
 #include "elcapacitor.h"
 #include "ellipse.h"
+#include "fixcursource.h"
 #include "flipflopd.h"
 #include "flipflopjk.h"
 #include "frequencimeter.h"
@@ -130,6 +131,7 @@ void ItemLibrary::loadItems()
     addItem( Timeplot::libraryItem() );
     // Sources
     addItem( LogicInput::libraryItem() );
+    addItem( FixCurSource::libraryItem() );
     addItem( Clock::libraryItem() );
     addItem( WaveGen::libraryItem() );
     addItem( VoltSource::libraryItem() );
