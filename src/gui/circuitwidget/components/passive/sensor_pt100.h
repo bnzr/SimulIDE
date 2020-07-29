@@ -18,6 +18,9 @@ class MAINMODULE_EXPORT SensorPt100 : public Component, public eElement
     //Q_PROPERTY( int     Value_Ohm  READ val     WRITE setVal    DESIGNABLE true USER true )
     Q_PROPERTY( double Sense READ getSense   WRITE setSense  DESIGNABLE true USER true )
     Q_PROPERTY( bool     Show_sense READ showSense  WRITE setShowSense DESIGNABLE true USER true )
+    Q_PROPERTY( double Sense_min READ getSenseMin WRITE setSenseMin DESIGNABLE true USER true )
+    Q_PROPERTY( double Sense_max READ getSenseMax WRITE setSenseMax DESIGNABLE true USER true )
+    Q_PROPERTY( double Sense_step READ getSenseStep WRITE setSenseStep DESIGNABLE true USER true )
 
  public:
     SensorPt100( QObject* parent, QString type, QString id );
@@ -37,7 +40,15 @@ class MAINMODULE_EXPORT SensorPt100 : public Component, public eElement
     void setResist( double r );
     void setResistSlow( double r );
     double sensorFunction ( double sense );
-    
+
+    double getSenseMin ();
+    double getSenseMax ();
+    double getSenseStep ();
+    void setSenseMin (double s);
+    void setSenseMax (double s);
+    void setSenseStep (double s);
+    void updateSenseDial ();
+     
     public slots:
       void senseChanged( int val );
       virtual void remove();
@@ -69,8 +80,11 @@ class MAINMODULE_EXPORT SensorPt100 : public Component, public eElement
     double m_tau = 0.3;  // 0.3 in water 4.0 in air
     double m_t0_tau = 0.0;
     double r0 = 100.0;
-    double coef_temp = 0.00385;
-    
+    //double coef_temp = 0.00385;  // linear approximation
+    //here we use a more realist third order polynomial approximation
+    double coef_temp_a =3.9083e-3;  // a * T
+    double coef_temp_b = -5.775e-7; // b*T2
+    double coef_temp_c =-4.183e-12;  // c*(T-100)*T3 (T < 0 only)
 };
 
 #endif

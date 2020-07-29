@@ -62,7 +62,7 @@ SensorPt100::SensorPt100 (QObject* parent, QString type, QString id)
     setValLabelPos(-16, 40, 0);
     setShowId( false );
     setShowSense ( true );
-    setShowVal( false );
+    setShowVal( true );
 
     m_dialW.setupWidget();
     m_dialW.setFixedSize( 24, 24 ); // 24,24
@@ -192,10 +192,58 @@ void SensorPt100::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QW
 		 QImage(QString(":/sensor_pt100_thermometer.png")));
 }
 
+double SensorPt100::getSenseMin ()
+{
+  return m_sense_min;
+}
+
+double SensorPt100::getSenseMax ()
+{
+  return m_sense_max;
+}
+
+double SensorPt100::getSenseStep ()
+{
+  return m_sense_step;
+}
+
+void SensorPt100::setSenseMin (double s)
+{
+  m_sense_min = s;
+  updateSenseDial();
+}
+
+void SensorPt100::setSenseMax (double s)
+{
+  m_sense_max = s;
+  updateSenseDial();
+}
+
+void SensorPt100::setSenseStep (double s)
+{
+  m_sense_step = s;
+  updateSenseDial();
+}
+
+void SensorPt100::updateSenseDial()
+{
+    m_dialW.dial->setMinimum(m_sense_min);
+    m_dialW.dial->setMaximum(m_sense_max); 
+    m_dialW.dial->setValue(m_sense_value*m_sense_unitMult);
+    m_dialW.dial->setSingleStep(m_sense_step);
+    update();
+}
+
 double SensorPt100::sensorFunction (double sense)
 {
-  double r_sense = r0*(1.0+coef_temp*sense);
-    //qDebug()<<"SensorPt100::sensorFunction"<<sense<<r_sense;
+  // linear approximation
+  // double r_sense = r0*(1.0+coef_temp*sense); // linear approximation
+  // polynomial approximation (more realistic)
+  double r_sense = r0*(1.0+coef_temp_a*sense+coef_temp_b*sense*sense);
+  if (sense < 0) {
+    r_sense += r0*coef_temp_c*(sense-100)*pow(sense,3.0);
+    //qDebug()<<"SensorPt100::sensorFunction"<<sense<<r_sense<<r0*coef_temp_c*(sense-100)*pow(sense,3.0)<<r0*coef_temp_a*sense<<r0*coef_temp_b*sense*sense;
+  }
   return r_sense;
 }
 
