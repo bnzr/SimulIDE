@@ -168,7 +168,12 @@ void Simulator::runCircuitStep()
 
         while( !m_nonLinear.isEmpty() ) // Run untill all converged
         {
-            foreach( eElement* el, m_nonLinear ) el->setVChanged();
+	  foreach( eElement* el, m_nonLinear ) {
+	    std::string ss;
+	    ss = el->getId();
+	    qDebug() << "sim" << ss.c_str();
+	    el->setVChanged();
+	  }
             m_nonLinear.clear();
 
             if( !m_eChangedNodeList.isEmpty() )
@@ -194,7 +199,7 @@ void Simulator::runExtraStep()
         solveMatrix();
         if( !m_isrunning ) return;
     }
-
+    
     // Run Fast elements
     foreach( eElement* el, m_changedFast ) el->setVChanged();
     m_changedFast.clear();
@@ -227,7 +232,7 @@ void Simulator::startSim()
     foreach( eNode* busNode, m_eNodeBusList ) busNode->initialize(); // Clear Buses
     foreach( eElement* el, m_elementList )    // Initialize all Elements
     {
-        //std::cout << "initializing  "<< el->getId() <<  std::endl;
+        std::cout << "initializing  "<< el->getId() <<  std::endl;
         if( !m_paused ) el->resetState();
         el->initialize();
     }

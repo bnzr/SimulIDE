@@ -19,46 +19,48 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "op_amp.h"
-#include "e-source.h"
+#include "op_amp_2.h"
+//#include "e-source.h"
 #include "itemlibrary.h"
 #include "connector.h"
 #include "pin.h"
 
-static const char* OpAmp_properties[] = {
+static const char* OpAmp2_properties[] = {
     QT_TRANSLATE_NOOP("App::Property","Power Pins")
 };
 
-Component* OpAmp::construct( QObject* parent, QString type, QString id )
+Component* OpAmp2::construct( QObject* parent, QString type, QString id )
 {
-        return new OpAmp( parent, type, id );
+        return new OpAmp2( parent, type, id );
 }
 
-LibraryItem* OpAmp::libraryItem()
+LibraryItem* OpAmp2::libraryItem()
 {
     return new LibraryItem(
-        tr( "OpAmp" ),
+        tr( "OpAmp2" ),
         tr( "Active" ),
         "opamp.png",
-        "opAmp",
-        OpAmp::construct );
+        "opAmp2",
+        OpAmp2::construct );
 }
 
-OpAmp::OpAmp( QObject* parent, QString type, QString id )
-     : Component( parent, type, id )
-     , eOpAmp( id.toStdString() )
+OpAmp2::OpAmp2( QObject* parent, QString type, QString id )
+  : Component( parent, type, id )
+  , eElement ( (id+"-eElement").toStdString() )
 {
-    Q_UNUSED( OpAmp_properties );
+    Q_UNUSED( OpAmp2_properties );
     
     m_area = QRect( -18, -8*2, 36, 8*2*2 );
     setLabelPos(-16,-32, 0);
     
-    setGain( 1000 );
+    setGain( 10.0 );
     m_voltPos = 12;
     m_voltNeg = -12;
-    
-    m_pin.resize( 5 );
-    
+
+    setNumEpins(7);
+    m_pin.resize( 7 );
+    //m_gain = 1000;
+
     QString newId = id;
     
     newId.append(QString("-inputNinv"));
@@ -78,10 +80,10 @@ OpAmp::OpAmp( QObject* parent, QString type, QString id )
     newId.append(QString("-output"));
     m_pin[2] = new Pin( 0, QPoint(16+8,0), newId, 2, this );
     m_ePin[2] = m_pin[2];
-    newId.append("-eSource");
-    m_output = new eSource( newId.toStdString(), m_ePin[2] );
-    //m_output->setImp( 40 );
-    m_output->setOut( true );
+    //newId.append("-eSource");
+    //m_output = new eSource( newId.toStdString(), m_ePin[2] );
+    //////m_output->setImp( 40 );
+    //m_output->setOut( true );
     
     newId = id;
     newId.append(QString("powerPos"));
@@ -96,14 +98,103 @@ OpAmp::OpAmp( QObject* parent, QString type, QString id )
     m_ePin[4] = m_pin[4];
     //newId.append("-eSource");
     //m_powerNeg = new eSource( newId.toStdString(), m_ePin[3] );
-    
+
     setPowerPins( false );
+
+    // dummy pin with gain
+    newId = id;
+    newId.append(QString("-outgain"));
+    m_pin[5] = new Pin( 0, QPoint(16+8,8), newId, 5, this );
+    m_ePin[5] = m_pin[5];
+    newId.append("-eSource");
+    m_output = new eSource( newId.toStdString(), m_ePin[5] );
+    ////m_output->setImp( 40 );
+    m_output->setOut( true );
+    m_pin[5]->setEnabled( true );
+    m_pin[5]->setVisible( true );
+
+
+    // dummy pin with out r
+    newId = id;
+    newId.append(QString("-outr"));
+    m_pin[6] = new Pin( 0, QPoint(16+8,16), newId, 6, this );
+    m_ePin[6] = m_pin[6];
+ 
+
+    // input impendance (resistive only)
+    newId = id;
+    newId.append(QString("-RIn"));
+    m_rin = new eResistor(newId.toStdString());
+    m_rin->setRes(1000000);
+    ePin* rin_pin0 = m_ePin[0];
+    m_rin->setEpin (0,rin_pin0);
+    ePin* rin_pin1 = m_ePin[1];
+    m_rin->setEpin (1,rin_pin1);
+    
+    // output impendance (resistive only)
+    newId = id;
+    newId.append(QString("-ROut"));
+    m_rout = new eResistor(newId.toStdString());
+    m_rout->setRes(10);
+    ePin* rout_pin0 = m_ePin[2];
+    m_rout->setEpin (1,rout_pin0);
+    ePin* rout_pin1 = m_ePin[6];
+    m_rout->setEpin (0,rout_pin1);
+    
+
+ 
+    Simulator::self()->addToUpdateList( this );
+    //Simulator::self()->addToChangedFast( this );
 }
-OpAmp::~OpAmp()
+OpAmp2::~OpAmp2()
 {
 }
 
-void OpAmp::setPowerPins( bool set )
+void OpAmp2::initialize()
+{
+  qDebug() << "OpAmp2::initialize" << m_ePin[0]->isConnected()<< m_ePin[1]->isConnected();
+  eNode* enod = m_pin[5]->getEnode();
+  qDebug() << "OpAmp2::initialize" << enod->getVolt();
+  //m_ePin[0]->setEnodeComp( m_ePin[1]->getEnode() );
+  //m_ePin[1]->setEnodeComp( m_ePin[0]->getEnode() );
+  if( m_ePin[0]->isConnected() ) m_ePin[0]->getEnode()->addToNoLinList(this);
+  if( m_ePin[1]->isConnected() ) m_ePin[1]->getEnode()->addToNoLinList(this);
+  if( m_ePin[2]->isConnected() ) m_ePin[2]->getEnode()->addToNoLinList(this);
+  if( m_ePin[5]->isConnected() ) m_ePin[5]->getEnode()->addToNoLinList(this);
+}
+
+void OpAmp2::resetState()
+{
+  qDebug() << "OpAmp2::resetState";
+}
+
+void OpAmp2::updateStep()
+{
+  double vd = m_ePin[0]->getVolt()-m_ePin[1]->getVolt();
+  double vo = m_gain*vd;
+  if (vo > m_voltPos) vo = m_voltPos;
+  if (vo < m_voltNeg) vo = m_voltNeg;
+  m_output->setVoltHigh(vo);
+  //m_output->stampOutput();
+  m_output->stamp();
+  //qDebug() << "OpAmp2::updateStep" << vd << vo << m_ePin[0]->getVolt() << m_ePin[1]->getVolt() << m_ePin[2]->getVolt() << m_ePin[5]->getVolt();
+  eNode* enod = m_pin[5]->getEnode();
+  qDebug() << "OpAmp2::updateStep" << enod->getVolt();
+}
+
+void OpAmp2::setVChanged()
+{
+  //qDebug() << "OpAmp2::setVChanged";
+  updateStep();
+}
+
+
+double OpAmp2::gain()                {return m_gain;}
+void   OpAmp2::setGain( double gain ){m_gain = gain;}
+
+bool OpAmp2::hasPowerPins()          {return m_powerPins;}
+
+void OpAmp2::setPowerPins( bool set )
 {
     m_pin[3]->setEnabled( set );
     m_pin[3]->setVisible( set );
@@ -113,7 +204,7 @@ void OpAmp::setPowerPins( bool set )
     m_powerPins = set;
 }
 
-QPainterPath OpAmp::shape() const
+QPainterPath OpAmp2::shape() const
 {
     QPainterPath path;
     
@@ -129,7 +220,7 @@ QPainterPath OpAmp::shape() const
     return path;
 }
 
-void OpAmp::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget )
+void OpAmp2::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget *widget )
 {
     Component::paint( p, option, widget );
 
@@ -146,4 +237,4 @@ void OpAmp::paint( QPainter *p, const QStyleOptionGraphicsItem *option, QWidget 
     p->drawPolygon(points, 4);
 }
 
-#include "moc_op_amp.cpp"
+#include "moc_op_amp_2.cpp"

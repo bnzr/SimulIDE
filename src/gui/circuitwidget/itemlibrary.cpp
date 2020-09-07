@@ -71,6 +71,7 @@
 #include "mux.h"
 #include "mux_analog.h"
 #include "op_amp.h"
+#include "op_amp_2.h"
 #include "oscope.h"
 //#include "outbus.h"
 #include "piccomponent.h"
@@ -156,6 +157,7 @@ void ItemLibrary::loadItems()
     addItem( Diode::libraryItem() );
     addItem( VoltReg::libraryItem() );
     addItem( OpAmp::libraryItem() );
+    addItem( OpAmp2::libraryItem() );
     addItem( Mosfet::libraryItem() );
     addItem( BJT::libraryItem() );
     addItem( MuxAnalog::libraryItem() );

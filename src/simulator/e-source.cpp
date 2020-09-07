@@ -68,14 +68,14 @@ void eSource::initialize()
 
 void eSource::stamp()
 {
-    //qDebug() <<"eSource::stamp"<< m_out;
+    qDebug() <<"eSource::stamp"<< m_out;
     m_ePin[0]->stampAdmitance( m_admit );
     stampOutput();
 }
 
 void eSource::stampOutput()
 {
-    //qDebug() <<"eSource::stampOutput"<< m_out<<m_voltOut<<m_imp ;
+    qDebug() <<"eSource::stampOutput"<< m_out<<m_voltOut<<m_imp ;
     m_scrEnode->setVolt(m_voltOut);
 
     m_ePin[0]->stampCurrent( m_voltOut/m_imp );

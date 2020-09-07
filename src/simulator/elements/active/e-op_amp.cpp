@@ -29,7 +29,8 @@ eOpAmp::eOpAmp( std::string id )
 {
     m_ePin.resize(5);
     m_gain = 1000;
-    
+    Simulator::self()->addToUpdateList( this );
+
     resetState();
 }
 eOpAmp::~eOpAmp()
@@ -54,6 +55,12 @@ void eOpAmp::resetState()
     m_converged = true;
 }
 
+void eOpAmp::updateStep ()
+{
+  //setVChanged();
+}
+
+
 void eOpAmp::setVChanged() // Called when input pins nodes change volt
 {
     if( m_powerPins )
@@ -63,18 +70,23 @@ void eOpAmp::setVChanged() // Called when input pins nodes change volt
     }
     else
     {
-        m_voltPos = 5;
-        m_voltNeg = 0;
+        m_voltPos = 12;
+        m_voltNeg = -12;
     }
     double vd = m_ePin[0]->getVolt()-m_ePin[1]->getVolt();
 
-    //qDebug() << "lastIn " << m_lastIn << "vd " << vd ;
+    std::string ss;
+    ss = getId();
+    qDebug() << "eOpAmp::setVChanged" << ss.c_str();
+
+    qDebug() << "eOpAmp::setVChanged" << "in +,-" << m_ePin[0]->getVolt() << m_ePin[1]->getVolt();
+    qDebug() << "eOpAmp::setVChanged" << "lastIn " << m_lastIn << "vd " << vd ;
     
     double out = vd * m_gain;
     if     ( out > m_voltPos ) out = m_voltPos;
     else if( out < m_voltNeg ) out = m_voltNeg;
     
-    //qDebug() << "lastOut " << m_lastOut << "out " << out << abs(out-m_lastOut)<< "<1e-5 ??";
+    qDebug() << "lastOut A" << m_lastOut << "out " << out << abs(out-m_lastOut)<< "<1e-5 ??";
 
     if( fabs(out-m_lastOut) < m_accuracy )
     {
@@ -105,7 +117,9 @@ void eOpAmp::setVChanged() // Called when input pins nodes change volt
     if     ( out >= m_voltPos ) out = m_voltPos;
     else if( out <= m_voltNeg ) out = m_voltNeg;
     
-    //qDebug()<< "lastOut " << m_lastOut << "out " << out << "dOut" << dOut  << "converged" << m_converged;
+    double dOut = -1e-6; // for debug
+    if( vd>0 ) dOut = 1e-6;
+    qDebug() << "lastOut B" <<  m_lastOut << "out " << out << "dOut" << dOut  << "converged" << m_converged;
     
     m_lastIn = vd;
     m_lastOut = out;

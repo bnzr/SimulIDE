@@ -36,6 +36,8 @@ eResistor::~eResistor(){
 
 void eResistor::initialize()
 {
+  
+  qDebug() << "eResistor::initialize";
     m_ePin[0]->setEnodeComp( m_ePin[1]->getEnode() );
     m_ePin[1]->setEnodeComp( m_ePin[0]->getEnode() );
 }

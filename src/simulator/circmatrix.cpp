@@ -130,7 +130,7 @@ bool CircMatrix::solveMatrix()
                 eNode* enod = m_eNodeList->at( nodeGroup[0]-1 );
                 enod->setSingle( true );
                 enod->solveSingle();
-                //qDebug() <<"CircMatrix::solveMatrix solve single"<<enod->itemId();
+                qDebug() <<"CircMatrix::solveMatrix solve single"<<enod->itemId();
             }
             else
             {
@@ -154,13 +154,13 @@ bool CircMatrix::solveMatrix()
                     {
                         if( !nodeGroup.contains( x+1 ) ) continue;
                         a[nx][ny] = &(m_circMatrix[x][y]);
-                        //qDebug() <<"CircMatrix::solveMatrix cell"<<nx<<ny<<*(a[nx][ny]);
+                        qDebug() <<"CircMatrix::solveMatrix cell"<<nx<<ny<<*(a[nx][ny]);
                         nx++;
                     }
                     b[ny] = &(m_coefVect[y]);
                     eNodeActive.append( m_eNodeList->at(y) );
-                    //eNode* enod = m_eNodeList->at(y);
-                    //qDebug() <<"CircMatrix::solveMatrix node"<<enod->itemId();
+                    eNode* enod = m_eNodeList->at(y);
+                    qDebug() <<"CircMatrix::solveMatrix node"<<enod->itemId();
                     ny++;
                 }
                 m_aList.append( a );
@@ -177,7 +177,7 @@ bool CircMatrix::solveMatrix()
             }
         }
         m_circChanged  = false;
-        //qDebug() <<"CircMatrix::solveMatrix"<<group<<"Circuits";
+        qDebug() <<"CircMatrix::solveMatrix"<<group<<"Circuits";
     }
     else
     {

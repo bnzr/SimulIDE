@@ -66,7 +66,9 @@ Rail::~Rail()
 
 void Rail::setVolt( double v )
 {
+    qDebug() << "setVolt A"  << m_value << Component::unit();
     Component::setValue( v );       // Takes care about units multiplier
+    qDebug() << "setVolt B"  << m_value << Component::unit();
     m_voltHight = m_value*m_unitMult;
     m_out->setVoltHigh( m_voltHight );
     //update();
